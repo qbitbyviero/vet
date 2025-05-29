@@ -1,4 +1,4 @@
-<!-- tienda.html: Módulo de Tienda 🛒 actualizado y unificado -->
+<!-- tienda.html: Módulo de Tienda 🛒 unificado -->
 <div class="modal-tienda">
   <h2>Tienda Online 🛒</h2>
   <!-- Productos -->
@@ -21,8 +21,8 @@
       <button type="button" class="btn-sticky" id="apply-discount">Aplicar</button>
     </div>
   </div>
-
-  <!-- Carrito Flotante -- con arrastre -->
+  
+  <!-- Carrito Flotante (arrastrable) -->
   <div id="cart" class="cart">
     <h3>Carrito</h3>
     <ul id="cart-items"></ul>
@@ -35,6 +35,7 @@
 </div>
 
 <style>
+  /* Modal unificado: misma anchura que Estética */
   .modal-tienda {
     max-width: 640px;
     margin: 0 auto;
@@ -46,19 +47,41 @@
   }
   .modal-tienda h2 { color: #0d47a1; margin-bottom: 1em; text-align: center; }
 
-  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1em; }
-  .product-card { background: #fff; border: 1px solid #0277bd; border-radius: 6px; padding: 1em; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1em;
+  }
+  .product-card {
+    background: #fff;
+    border: 1px solid #0277bd;
+    border-radius: 6px;
+    padding: 1em;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
   .product-card img { max-width: 100%; height: auto; margin-bottom: 0.5em; }
   .product-card h4 { margin: 0.5em 0; color: #0d47a1; font-size: 1em; font-weight: bold; }
   .product-card p { margin: 0.5em 0; font-weight: bold; color: #1565c0; }
   .product-card button { margin-top: 0.5em; font-size: 0.9em; }
 
-  .checkout-form { margin-top: 2em; border-top: 1px solid #0277bd; padding-top: 1em; }
+  .checkout-form {
+    margin-top: 2em;
+    border-top: 1px solid #0277bd;
+    padding-top: 1em;
+  }
   .checkout-form h3 { color: #1565c0; margin-bottom: 0.5em; }
   .checkout-form label { display: block; margin: 0.5em 0 0.2em; color: #0d47a1; }
-  .checkout-form input, .checkout-form select { padding: 0.6em; border: 1px solid #0277bd; border-radius: 4px; width: 100%; }
+  .checkout-form input,
+  .checkout-form select {
+    padding: 0.6em;
+    border: 1px solid #0277bd;
+    border-radius: 4px;
+    width: 100%;
+  }
   .discount-row { display: flex; align-items: center; gap: 0.5em; margin-bottom: 1em; }
 
+  /* Carrito arrastrable */
   .cart {
     width: 250px;
     background: #fff;
@@ -94,14 +117,40 @@
   .cart-promo { margin: 0.5em 0; }
   .cart button { width: 100%; margin-top: 1em; }
 
-  .btn-sticky { display: inline-block; padding: 0.6em 1.2em; background: #039be5; color: #e3f2fd; font-weight: bold; font-size: 0.9em; border-radius: 30px; border: none; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.3s ease; }
-  .btn-sticky::after { content: ''; position: absolute; width: 200%; height: 200%; background: #0288d1; border-radius: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.6s ease-out; z-index: -1; }
+  /* Botones pegajosos uniformes */
+  .btn-sticky {
+    display: inline-block;
+    padding: 0.6em 1.2em;
+    background: #039be5;
+    color: #e3f2fd;
+    font-weight: bold;
+    font-size: 0.9em;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+  .btn-sticky::after {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: #0288d1;
+    border-radius: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.6s ease-out;
+    z-index: -1;
+  }
   .btn-sticky:hover { transform: scale(1.05, 0.9); }
   .btn-sticky:hover::after { transform: translate(-50%, -50%) scale(1); }
 </style>
 
 <script>
-  // Productos simulados (de spreadsheet)
+  // Módulo de Tienda completo con lógica de carrito
   const products = [
     { id: 1, name: 'Shampoo de Aloe', image: 'https://via.placeholder.com/150', price: 120.00 },
     { id: 2, name: 'Cepillo para Mascotas', image: 'https://via.placeholder.com/150', price: 85.50 },
@@ -109,7 +158,6 @@
     { id: 4, name: 'Loción Hidratante', image: 'https://via.placeholder.com/150', price: 95.75 }
   ];
   const cart = [];
-
   const grid = document.getElementById('product-grid');
   const cartEl = document.getElementById('cart');
   const cartItemsEl = document.getElementById('cart-items');
@@ -120,121 +168,70 @@
   const discountTypeEl = document.getElementById('discount-type');
   const discountValueEl = document.getElementById('discount-value');
 
-  // Renderizar productos
   function renderProducts() {
     products.forEach(p => {
       const card = document.createElement('div'); card.className = 'product-card';
-      card.innerHTML = `
-        <img src="${p.image}" alt="${p.name}">
-        <h4>${p.name}</h4>
-        <p>$${p.price.toFixed(2)}</p>
-        <button class="btn-sticky">Agregar</button>
-      `;
+      card.innerHTML = \`<img src="\${p.image}" alt="\${p.name}"><h4>\${p.name}</h4><p>$\${p.price.toFixed(2)}</p><button class="btn-sticky">Agregar</button>\`;
       card.querySelector('button').onclick = () => addToCart(p);
       grid.appendChild(card);
     });
   }
 
-  // Agregar al carrito
   function addToCart(product) {
     const item = cart.find(i => i.id === product.id);
     if (item) item.qty++;
     else cart.push({ ...product, qty: 1 });
-    updateCart();
-    cartEl.classList.add('open');
+    updateCart(); cartEl.classList.add('open');
   }
 
-  // Actualizar UI del carrito
   function updateCart() {
     cartItemsEl.innerHTML = '';
     let subtotal = 0;
     cart.forEach(i => {
-      const li = document.createElement('li');
-      li.textContent = `${i.name} x${i.qty}`;
-      const btn = document.createElement('button'); btn.className = 'btn-remove'; btn.textContent = '×'; btn.onclick = () => removeFromCart(i.id);
-      li.appendChild(btn);
-      cartItemsEl.appendChild(li);
-      subtotal += i.price * i.qty;
+      const li = document.createElement('li'); li.textContent = \`\${i.name} x\${i.qty}\`;
+      const btn = document.createElement('button'); btn.className='btn-remove'; btn.textContent='×'; btn.onclick=()=>removeFromCart(i.id);
+      li.appendChild(btn); cartItemsEl.appendChild(li); subtotal += i.price * i.qty;
     });
-    subtotalEl.textContent = subtotal.toFixed(2);
-    applyDiscount();
+    subtotalEl.textContent=subtotal.toFixed(2); applyDiscount();
   }
 
-  // Quitar del carrito
   function removeFromCart(id) {
-    const idx = cart.findIndex(i => i.id === id);
-    if (idx !== -1) cart.splice(idx, 1);
+    const idx = cart.findIndex(i => i.id===id); if(idx!==-1) cart.splice(idx,1);
     updateCart();
   }
 
-  // Aplicar descuento, cupón o promoción
   function applyDiscount() {
-    const subtotal = parseFloat(subtotalEl.textContent);
-    const type = discountTypeEl.value;
-    let val = discountValueEl.value;
-    let discountAmt = 0;
-    promoEl.textContent = '';
-    if (type === 'percent') {
-      discountAmt = subtotal * (parseFloat(val) / 100 || 0);
-    } else if (type === 'fixed' || type === 'coupon') {
-      discountAmt = parseFloat(val) || 0;
-    } else if (type === 'promo') {
-      promoEl.textContent = val || '';
-      discountAmt = 0;
-    }
-    discountEl.textContent = discountAmt.toFixed(2);
-    totalEl.textContent = (subtotal - discountAmt).toFixed(2);
+    const subtotal=parseFloat(subtotalEl.textContent);
+    const type=discountTypeEl.value; let val=discountValueEl.value; let discountAmt=0; promoEl.textContent='';
+    if(type==='percent') discountAmt = subtotal * (parseFloat(val)/100||0);
+    else if(type==='fixed'||type==='coupon') discountAmt=parseFloat(val)||0;
+    else if(type==='promo'){ promoEl.textContent=val||''; discountAmt=0; }
+    discountEl.textContent=discountAmt.toFixed(2);
+    totalEl.textContent=(subtotal-discountAmt).toFixed(2);
   }
 
-  discountTypeEl.onchange = () => {
-    if (discountTypeEl.value === 'promo') {
-      discountValueEl.type = 'text';
-      discountValueEl.placeholder = 'Texto de promoción';
-      discountValueEl.value = '';
-    } else {
-      discountValueEl.type = 'number';
-      discountValueEl.placeholder = '0';
-      discountValueEl.value = '';
-    }
+  discountTypeEl.onchange=()=>{
+    if(discountTypeEl.value==='promo'){
+      discountValueEl.type='text'; discountValueEl.placeholder='Texto de promoción'; discountValueEl.value='';
+    } else { discountValueEl.type='number'; discountValueEl.placeholder='0'; discountValueEl.value=''; }
   };
-
-  document.getElementById('apply-discount').onclick = applyDiscount;
-  document.getElementById('checkout').onclick = () => {
-    const name = document.getElementById('cliente-name').value || '---';
+  document.getElementById('apply-discount').onclick=applyDiscount;
+  document.getElementById('checkout').onclick=()=>{
+    const name=document.getElementById('cliente-name').value||'---';
     alert(`Compra finalizada!\nCliente: ${name}\nTotal: $${totalEl.textContent}`);
-    cart.length = 0;
-    updateCart();
-    document.getElementById('cliente-name').value = '';
-    discountValueEl.value = '';
-    promoEl.textContent = '';
+    cart.length=0; updateCart(); document.getElementById('cliente-name').value=''; discountValueEl.value=''; promoEl.textContent='';
   };
 
-  // Inicialización
   renderProducts();
 
-  // Hacer el carrito arrastrable
-  (function() {
-    const cartDiv = document.getElementById('cart');
-    let isDragging = false, startX, startY, origX, origY;
-    cartDiv.style.cursor = 'move';
-    cartDiv.addEventListener('mousedown', e => {
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      const rect = cartDiv.getBoundingClientRect();
-      origX = rect.left;
-      origY = rect.top;
-      cartDiv.classList.remove('open');
-      e.preventDefault();
-    });
-    document.addEventListener('mousemove', e => {
-      if (!isDragging) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      cartDiv.style.position = 'fixed';
-      cartDiv.style.left = origX + dx + 'px';
-      cartDiv.style.top = origY + dy + 'px';
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
+  // Carrito arrastrable
+  (function(){
+    const cartDiv=document.getElementById('cart'); let isDrag=false, sx,sy,ox,oy;
+    cartDiv.style.cursor='move';
+    cartDiv.addEventListener('mousedown',e=>{ isDrag=true; sx=e.clientX; sy=e.clientY;
+      const r=cartDiv.getBoundingClientRect(); ox=r.left; oy=r.top; cartDiv.classList.remove('open'); e.preventDefault(); });
+    document.addEventListener('mousemove',e=>{ if(!isDrag) return; const dx=e.clientX-sx, dy=e.clientY-sy;
+      cartDiv.style.position='fixed'; cartDiv.style.left=ox+dx+'px'; cartDiv.style.top=oy+dy+'px'; });
+    document.addEventListener('mouseup',()=> isDrag=false);
   })();
 </script>
