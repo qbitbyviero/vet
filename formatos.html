@@ -1,4 +1,4 @@
-<!-- formatos.html: Módulo de Formatos 📄 con botones estilo "pegajoso" -->
+<!-- formatos.html: Módulo de Formatos 📄 mejorado -->
 <div class="modal-formatos">
   <h2>Generar Formatos 📄</h2>
   <div class="format-grid" id="format-grid">
@@ -10,15 +10,16 @@
     <button class="btn-format btn-sticky" data-file="Vacunacion.html">Vacunación</button>
     <button class="btn-format btn-sticky" data-file="Responsiva_Servicios.html">Responsiva General</button>
   </div>
+
   <div id="preview-area" class="preview-area">
-    <!-- Aquí se insertará un iframe para el formato -->
     <p style="padding:1em;color:#1565c0;">Selecciona un formato para vista previa</p>
   </div>
 </div>
 
 <style>
   .modal-formatos {
-    max-width: 700px;
+    width: 90vw;           /* Ocupa 90% del viewport */
+    max-width: 700px;      /* Igual que los demás modales */
     margin: 0 auto;
     background: #e3f2fd;
     padding: 1.5em;
@@ -46,13 +47,10 @@
     border: 1px solid #0277bd;
     border-radius: 4px;
     background: #fff;
-    height: 60vh;        /* altura fija para que quepa bien en el modal */
-    overflow: hidden;    /* el iframe controlará su propio scroll */
-  }
-  .preview-area iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
+    height: 200px;       /* altura fija para mensaje */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Botones "pegajosos" */
@@ -78,7 +76,7 @@
     background: #0288d1;
     border-radius: 40%;
     top: 50%; left: 50%;
-    transform: translate(-50%,-50%) scale(0);
+    transform: translate(-50%, -50%) scale(0);
     transition: transform 0.6s ease-out;
     z-index: -1;
   }
@@ -86,29 +84,17 @@
     transform: scale(1.05, 0.9);
   }
   .btn-sticky:hover::after {
-    transform: translate(-50%,-50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 </style>
 
 <script>
   document.querySelectorAll('.btn-format').forEach(btn => {
     btn.onclick = () => {
-      const file = btn.dataset.file;
       const preview = document.getElementById('preview-area');
-      // Mensaje de carga
-      preview.innerHTML = '<p style="padding:1em;color:#1565c0;">Cargando formato…</p>';
-      // Crear iframe
-      const iframe = document.createElement('iframe');
-      iframe.src = file;
-      // En caso de error
-      iframe.onerror = () => {
-        preview.innerHTML = '<p style="padding:1em;color:#b71c1c;">No se pudo cargar el formato.</p>';
-      };
-      // Una vez listo, reemplazamos
-      iframe.onload = () => {
-        preview.innerHTML = '';
-        preview.appendChild(iframe);
-      };
+      preview.innerHTML = `<p style="padding:1em;color:#1565c0;">
+        Has seleccionado: <strong>${btn.textContent}</strong>
+      </p>`;
     };
   });
 </script>
