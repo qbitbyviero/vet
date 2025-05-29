@@ -75,16 +75,17 @@
 </div>
 
 <style>
- .modal-clientes {
-  width: 90vw;          /* Ocupa el 90% del ancho de la ventana */
-  max-width: 700px;     /* Pero como mucho 700px */
-  margin: 0 auto;       /* Centrado horizontal */
-  background: #e3f2fd;
-  padding: 1.5em;
-  border-radius: 6px;
-  border: 2px solid #1565c0;
-  box-sizing: border-box;
-}
+  .modal-clientes {
+    /* ahora fija ancho deseado, con responsivo en móvil */
+    width: 700px;
+    max-width: 90vw;
+    margin: 0 auto;
+    background: #e3f2fd;
+    padding: 1.5em;
+    border-radius: 6px;
+    border: 2px solid #1565c0;
+    box-sizing: border-box;
+  }
   .modal-clientes h2 {
     color: #0d47a1;
     margin-bottom: 1em;
@@ -121,6 +122,7 @@
     border: 1px solid #0277bd;
     border-radius: 4px;
     margin-bottom: 0.5em;
+    box-sizing: border-box;
   }
   .radio-group {
     display: flex;
