@@ -128,20 +128,23 @@
           container.innerHTML = '<button id="close-modal">×</button>';
 
           // Parse HTML sin scripts
-          const tpl = document.createElement('template');
-          tpl.innerHTML = html.trim();
-          tpl.content.querySelectorAll('*').forEach(node => {
-            if (node.tagName !== 'SCRIPT') container.appendChild(node.cloneNode(true));
-          });
+        // Parseamos todo el HTML al fragmento
+const tpl = document.createElement('template');
+tpl.innerHTML = html.trim();
 
-          // Ejecutar scripts embebidos
-          tpl.content.querySelectorAll('script').forEach(oldScript => {
-            const newScript = document.createElement('script');
-            if (oldScript.src) newScript.src = oldScript.src;
-            else newScript.textContent = oldScript.textContent;
-            container.appendChild(newScript);
-          });
-        } catch (err) {
+// Clonamos una sola vez **todo** (sin scripts)
+const fragment = tpl.content.cloneNode(true);
+fragment.querySelectorAll('script').forEach(s => s.remove());
+container.appendChild(fragment);
+
+// Ahora añadimos y ejecutamos los scripts
+tpl.content.querySelectorAll('script').forEach(oldScript => {
+  const newScript = document.createElement('script');
+  if (oldScript.src) newScript.src = oldScript.src;
+  else newScript.textContent = oldScript.textContent;
+  container.appendChild(newScript);
+});
+catch (err) {
           const container = overlay.querySelector('.modal-overlay-content');
           container.innerHTML = '<button id="close-modal">×</button><p style="padding:1em;color:#b71c1c;">Error al cargar.</p>';
           container.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
