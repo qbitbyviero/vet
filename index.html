@@ -13,16 +13,8 @@
     header h1 { font-size: 1.8em; }
     /* Menú de navegación con efecto líquido "pegajoso" */
     nav ul { list-style: none; display: flex; justify-content: center; gap: 1em; margin: 0.5em 0; }
-    nav a.btn-sticky {
-      position: relative; display: inline-block; padding: 0.6em 1.2em;
-      background: #039be5; color: #e3f2fd; text-decoration: none;
-      font-weight: bold; border-radius: 30px; overflow: hidden; transition: transform 0.3s ease;
-    }
-    nav a.btn-sticky::after {
-      content: ''; position: absolute; width: 200%; height: 200%;
-      background: #0288d1; border-radius: 40%; top: 50%; left: 50%;
-      transform: translate(-50%, -50%) scale(0); transition: transform 0.6s ease-out; z-index: -1;
-    }
+    nav a.btn-sticky { position: relative; display: inline-block; padding: 0.6em 1.2em; background: #039be5; color: #e3f2fd; text-decoration: none; font-weight: bold; border-radius: 30px; overflow: hidden; transition: transform 0.3s ease; }
+    nav a.btn-sticky::after { content: ''; position: absolute; width: 200%; height: 200%; background: #0288d1; border-radius: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.6s ease-out; z-index: -1; }
     nav a.btn-sticky:hover { transform: scale(1.05, 0.9); }
     nav a.btn-sticky:hover::after { transform: translate(-50%, -50%) scale(1); }
     /* Calendar Styles */
@@ -118,9 +110,8 @@
       </form>
     </div>
   </main>
-
-  <script>
-    // Modal overlay logic
+ <script>
+    // 1) Overlay + carga dinámica de módulos
     const overlay = document.getElementById('modal-overlay');
     document.querySelectorAll('a[data-module]').forEach(link => {
       link.onclick = async e => {
@@ -130,12 +121,27 @@
         overlay.classList.add('visible');
         overlay.onclick = ev => { if (ev.target === overlay) overlay.classList.remove('visible'); };
         overlay.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
+
         try {
           const html = await fetch(file).then(r => r.text());
           const container = overlay.querySelector('.modal-overlay-content');
-          container.innerHTML = '<button id="close-modal">×</button>' + html;
-          container.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
-        } catch {
+          container.innerHTML = '<button id="close-modal">×</button>';
+
+          // Parse HTML sin scripts
+          const tpl = document.createElement('template');
+          tpl.innerHTML = html.trim();
+          tpl.content.querySelectorAll('*').forEach(node => {
+            if (node.tagName !== 'SCRIPT') container.appendChild(node.cloneNode(true));
+          });
+
+          // Ejecutar scripts embebidos
+          tpl.content.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) newScript.src = oldScript.src;
+            else newScript.textContent = oldScript.textContent;
+            container.appendChild(newScript);
+          });
+        } catch (err) {
           const container = overlay.querySelector('.modal-overlay-content');
           container.innerHTML = '<button id="close-modal">×</button><p style="padding:1em;color:#b71c1c;">Error al cargar.</p>';
           container.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
@@ -143,7 +149,7 @@
       };
     });
 
-    // Lógica del calendario y formularios...
+    // 2) Lógica del calendario y formularios (fuera del forEach)
     let currentDate = new Date();
     const card = document.getElementById('card');
     const daysEl = document.getElementById('days');
@@ -162,7 +168,8 @@
       for (let d = 1; d <= totalDays; d++) {
         const el = document.createElement('div');
         const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        el.textContent = d; el.dataset.date = dateStr;
+        el.textContent = d;
+        el.dataset.date = dateStr;
         if (dateStr === new Date().toISOString().slice(0,10)) el.classList.add('today');
         daysEl.appendChild(el);
       }
@@ -184,23 +191,28 @@
 
     function loadSlots(date) {
       const list = document.getElementById('slot-list'); list.innerHTML = '';
-      generateSlots([], date);
+      generateSlots(date);
     }
-    function generateSlots(booked, date) {
+    function generateSlots(date) {
       const list = document.getElementById('slot-list');
-      for (let h = 10; h < 19; h++) {
-        ['00','30'].forEach(min => {
-          const time = `${String(h).padStart(2,'0')}:${min}`;
-          const li = document.createElement('li'); li.textContent = time;
-          li.onclick = () => selectSlot(date, time);
-          list.appendChild(li);
-        });
-      }
-      const urg = document.createElement('li'); urg.textContent = '🚨 URGENCIAS'; urg.onclick = () => selectSlot(date, 'URGENCIAS'); list.appendChild(urg);
+      for (let h = 10; h < 19; h++) ['00','30'].forEach(min => {
+        const time = `${String(h).padStart(2,'0')}:${min}`;
+        const li = document.createElement('li');
+        li.textContent = time;
+        li.onclick = () => selectSlot(date, time);
+        list.appendChild(li);
+      });
+      const urg = document.createElement('li');
+      urg.textContent = '🚨 URGENCIAS';
+      urg.onclick = () => selectSlot(date, 'URGENCIAS');
+      list.appendChild(urg);
     }
 
     function selectSlot(date, time) {
-      setTimeout(() => { document.getElementById('calendar').style.display = 'none'; renderForm(date, time); }, 400);
+      setTimeout(() => {
+        document.getElementById('calendar').style.display = 'none';
+        renderForm(date, time);
+      }, 400);
     }
 
     const formDiv = document.getElementById('reservation-form');
@@ -210,13 +222,21 @@
     const newChk = document.getElementById('new-pet');
     const newFields = document.getElementById('new-pet-fields');
     newChk.onchange = () => { newFields.style.display = newChk.checked ? 'block' : 'none'; petSelect.disabled = newChk.checked; };
+
     function renderForm(date, time) {
-      formDate.value = date; formTime.value = time;
+      formDate.value = date;
+      formTime.value = time;
       petSelect.innerHTML = `<option>Firulais</option><option>Pelusa</option><option>Rex</option>`;
-      formDiv.style.display = 'block'; window.scrollTo(0, document.body.scrollHeight);
+      formDiv.style.display = 'block';
+      window.scrollTo(0, document.body.scrollHeight);
     }
     document.getElementById('cancel-form').onclick = () => { formDiv.style.display = 'none'; renderCalendar(); };
-    document.getElementById('appointment-form').onsubmit = e => { e.preventDefault(); alert('Cita guardada: ' + formDate.value + ' ' + formTime.value + ' - ' + (newChk.checked ? document.getElementById('new-pet-name').value : petSelect.value)); formDiv.style.display = 'none'; renderCalendar(); };
+    document.getElementById('appointment-form').onsubmit = e => {
+      e.preventDefault();
+      alert('Cita guardada: ' + formDate.value + ' ' + formTime.value + ' - ' +
+            (newChk.checked ? document.getElementById('new-pet-name').value : petSelect.value));
+      formDiv.style.display = 'none'; renderCalendar();
+    };
 
     renderCalendar();
   </script>
