@@ -1,0 +1,114 @@
+<!-- clientes.html: Módulo de Clientes con imágenes externas y hotspots -->
+<div class="modal-clientes">
+  <h2>Registro de Cliente 🐾</h2>
+  <form id="form-clientes">
+    <!-- Datos del Propietario -->
+    <fieldset>
+      <legend>Datos del Propietario</legend>
+      <label>Nombre Completo:</label>
+      <input type="text" name="ownerName" required />
+      <label>Teléfono:</label>
+      <input type="tel" name="ownerPhone" required />
+      <label>Correo Electrónico:</label>
+      <input type="email" name="ownerEmail" required />
+    </fieldset>
+
+    <!-- Datos de la Mascota -->
+    <fieldset>
+      <legend>Datos de la Mascota</legend>
+      <label>Nombre de la Mascota:</label>
+      <input type="text" name="petName" required />
+      <label>Especie:</label>
+      <select id="pet-species" name="species" required onchange="cargarDiagramaCliente()">
+        <option value="">-- Selecciona --</option>
+        <option value="perro">Perro</option>
+        <option value="gato">Felino</option>
+        <option value="ave">Ave</option>
+        <option value="tortuga">Tortuga</option>
+        <option value="serpiente">Serpiente</option>
+        <option value="lagarto">Lagarto</option>
+        <option value="pez">Pez</option>
+        <option value="roedor">Roedor</option>
+      </select>
+      <label>Raza:</label>
+      <input type="text" name="breed" />
+      <label>Edad (años):</label>
+      <input type="number" name="age" min="0" step="1" />
+      <label>Peso (kg):</label>
+      <input type="number" name="weight" min="0" step="0.1" />
+      <label>¿Está esterilizado?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="sterilized" value="si" /> Sí</label>
+        <label><input type="radio" name="sterilized" value="no" /> No</label>
+      </div>
+
+      <!-- Diagrama Corporal con imagen externa y hotspots -->
+      <div id="cliente-diagrama" class="diagrama-container">
+        <img id="diagrama-img" src="" alt="Diagrama mascota" />
+      </div>
+    </fieldset>
+
+    <button type="submit" class="btn-sticky">Guardar Cliente</button>
+  </form>
+</div>
+
+<style>
+  .modal-clientes { max-width: 600px; background: #e3f2fd; padding: 1.5em; border-radius: 6px; border: 2px solid #1565c0; }
+  .modal-clientes h2 { color: #0d47a1; margin-bottom: 0.5em; }
+  fieldset { border: 1px solid #0277bd; border-radius: 4px; padding: 1em; margin-bottom: 1em; }
+  legend { padding: 0 0.5em; color: #1565c0; font-weight: bold; }
+  label { display: block; margin: 0.5em 0 0.2em; color: #0d47a1; }
+  input[type=text], input[type=tel], input[type=email], input[type=number], select { width: 100%; padding: 0.6em; border: 1px solid #0277bd; border-radius: 4px; }
+  .radio-group { display: flex; gap: 1em; margin-bottom: 1em; }
+  .diagrama-container { position: relative; margin-top: 1em; border: 1px solid #1565c0; border-radius: 4px; background: #bbdefb; overflow: hidden; }
+  .diagrama-container img { display: block; width: 100%; height: auto; }
+  .hotspot { position: absolute; width: 20px; height: 20px; background: rgba(255,0,0,0.7); border-radius: 50%; pointer-events: none; }
+  .btn-sticky { display: inline-block; padding: 0.6em 1.2em; background: #039be5; color: #e3f2fd; font-weight: bold; border-radius: 30px; border: none; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.3s ease; }
+  .btn-sticky::after { content: ''; position: absolute; width: 200%; height: 200%; background: #0288d1; border-radius: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.6s ease-out; z-index: -1; }
+  .btn-sticky:hover { transform: scale(1.05, 0.9); }
+  .btn-sticky:hover::after { transform: translate(-50%, -50%) scale(1); }
+</style>
+
+<script>
+  // Mapear especie a fichero
+  const mapaImagen = {
+    perro: 'svg/perro.png',
+    gato: 'svg/felino.svg',
+    ave: 'svg/ave.png',
+    tortuga: 'svg/tortuga.svg',
+    serpiente: 'svg/serpiente.svg',
+    lagarto: 'svg/lagarto.png',
+    pez: 'svg/pez.svg',
+    roedor: 'svg/roedor.svg'
+  };
+  const img = document.getElementById('diagrama-img');
+  const cont = document.getElementById('cliente-diagrama');
+
+  function cargarDiagramaCliente() {
+    const especie = document.getElementById('pet-species').value;
+    const src = mapaImagen[especie] || '';
+    img.src = src;
+    clearHotspots();
+    if (src) {
+      img.onload = () => {
+        cont.style.minHeight = img.offsetHeight + 'px';
+      };
+      cont.addEventListener('click', addHotspot);
+    } else {
+      cont.removeEventListener('click', addHotspot);
+    }
+  }
+
+  function addHotspot(e) {
+    const rect = cont.getBoundingClientRect();
+    const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    const dot = document.createElement('div');
+    dot.className = 'hotspot';
+    dot.style.left = (x-10) + 'px'; dot.style.top = (y-10) + 'px';
+    cont.appendChild(dot);
+  }
+
+  function clearHotspots() {
+    cont.querySelectorAll('.hotspot').forEach(h => h.remove());
+  }
+</script>

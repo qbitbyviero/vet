@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Receta Médica Veterinaria</title>
+  <style>
+    /* Ajustes generales */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e0f7f7;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Contenedor principal de la receta */
+    .receta-container {
+     width: 216mm;
+      height: 139.5mm;
+      overflow: hidden;
+      background: white;
+      padding: 20px 30px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    }
+    .pdf-scale {
+     transform: scale(0.5);
+     transform-origin: top left;
+    }
+    /* Cabecera con logos y datos */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #00bfbf;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .header img {
+      height: 90px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 5px;
+    }
+
+    /* Info central en la cabecera */
+    .info {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+      margin: 0 15px;
+    }
+
+    /* Filas de datos (edad, especie, etc.) */
+    .datos-row {
+      display: flex;
+      justify-content: space-around;
+      margin: 2px 0;
+      flex-wrap: wrap;
+    }
+    .datos-row span {
+      flex: 1;
+      text-align: center;
+      min-width: 120px;
+      margin: 3px 0;
+    }
+
+    /* Tabla de medicamentos */
+    .tabla-meds {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .tabla-meds table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .tabla-meds th, .tabla-meds td {
+      border: 1px solid #00bfbf;
+      padding: 8px;
+      text-align: left;
+      word-break: break-word;
+    }
+    .tabla-meds th {
+      background-color: #00bfbf;
+      color: white;
+    }
+    /* Ajustar columnas */
+    .tabla-meds td:nth-child(1) { width: 40%; }
+    .tabla-meds td:nth-child(2) { width: 60%; }
+
+    /* Firma y pie de página */
+    .firma {
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .firma p {
+      margin: 5px 0;
+    }
+    .footer {
+      font-size: 10px;
+      color: #555;
+      margin-top: 20px;
+      padding-bottom: 15px;
+      text-align: left;
+    }
+    .medico {
+      font-size: 18px;
+      font-weight: bold;
+      color: #004d40;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Botón para generar PDF */
+    #btnPDF {
+      width: 180px;
+      padding: 8px;
+      background: #2AC3FF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 20px;
+    }
+    #btnPDF:hover {
+      background: #0093c9;
+    }
+  </style>
+
+  <!-- Librería html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <!-- Contenedor principal de la receta -->
+  <div class="receta-container" id="receta">
+    <div class="header">
+      <!-- Logo izquierdo -->
+      <img src="https://i0.wp.com/www.atmosfera.unam.mx/wp-content/uploads/2017/05/escudo-unam.png?fit=800%2C800&ssl=1" alt="UNAM">
+      
+      <div class="info">
+        <h3>Receta para <span id="nombrePaciente">[Nombre de mascota]</span></h3>
+        <!-- Fila 1: Paciente / Fecha -->
+        <div class="datos-row">
+          <span><strong>Paciente:</strong> <span id="nombrePaciente2">[Mascota]</span></span>
+          <span><strong>Fecha:</strong> <span id="fecha">[Fecha]</span></span>
+        </div>
+        <!-- Fila 2: Propietario / Teléfono -->
+        <div class="datos-row">
+          <span><strong>Propietario:</strong> <span id="propietario">[Propietario]</span></span>
+          <span><strong>Teléfono:</strong> <span id="telefono">[Teléfono]</span></span>
+        </div>
+        <!-- Fila 3: Edad / Peso -->
+        <div class="datos-row">
+          <span><strong>Edad:</strong> <span id="edad">[Edad]</span></span>
+          <span><strong>Peso:</strong> <span id="peso">[Peso]</span></span>
+        </div>
+        <!-- Fila 4: Especie / Raza -->
+        <div class="datos-row">
+          <span><strong>Especie:</strong> <span id="especie">[Especie]</span></span>
+          <span><strong>Raza:</strong> <span id="raza">[Raza]</span></span>
+        </div>
+      </div>
+
+      <!-- Logo derecho -->
+      <img src="https://i.ibb.co/dF6tyVF/poshposh.jpg" alt="Posh Posh Pets">
+    </div>
+
+    <!-- Sección de Medicamentos Recetados -->
+    <div class="tabla-meds">
+      <h4>📋 Medicamentos Recetados:</h4>
+      <table id="tablaMedicamentos">
+        <thead>
+          <tr>
+            <th>Medicamento</th>
+            <th>Indicaciones</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+          <!-- Se llena dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Firma -->
+    <div class="firma">
+      <p>_________________________________________</p>
+      <p>Firma</p>
+      <p><em>Sin firma, esta receta no tiene validez</em></p>
+    </div>
+    
+    <!-- Footer con datos de la veterinaria -->
+    <div class="footer">
+      <p class="medico">M.V.Z. Nancy Itzel Acosta Gutiérrez</p>
+      <p><strong>C.P. 12600207</strong></p>
+      <hr style="border: 1px solid #00bfbf;">
+      <p>📍 Avenida de las Civilizaciones N°3, Col. El Rosario, Azcapotzalco, CDMX</p>
+      <p>📞 52 55 34 83 06 67</p>
+    </div>
+  </div>
+
+  <!-- Botón para descargar PDF -->
+  <button id="btnPDF" onclick="generarPDF()">Descargar PDF</button>
+
+  <script>
+    // Al cargar la receta, pedimos datos al servidor
+    window.onload = function() {
+      // Asegúrate de que window.mascotaId exista
+      google.script.run
+        .withSuccessHandler(autoLlenarReceta)
+        .obtenerDatosParaReceta(window.mascotaId);
+    };
+
+    // Función para llenar la receta con los datos devueltos por "obtenerDatosParaReceta"
+    function autoLlenarReceta(datos) {
+      // Nombre de la mascota en dos lugares
+      document.getElementById("nombrePaciente").textContent = datos.nombreMascota || "No disponible";
+      document.getElementById("nombrePaciente2").textContent = datos.nombreMascota || "No disponible";
+
+      // Fecha, propietario, teléfono
+      document.getElementById("fecha").textContent = datos.fecha || "No disponible";
+      document.getElementById("propietario").textContent = datos.propietario || "No disponible";
+      document.getElementById("telefono").textContent = datos.telefono || "No disponible";
+
+      // Si la edad es "NaN año(s), NaN mes(es)", mostramos "No disponible"
+      if (!datos.edad || datos.edad.includes("NaN")) {
+        document.getElementById("edad").textContent = "No disponible";
+      } else {
+        document.getElementById("edad").textContent = datos.edad;
+      }
+
+      // Peso
+      document.getElementById("peso").textContent = datos.peso || "No disponible";
+
+      // Especie, raza
+      document.getElementById("especie").textContent = datos.especie || "No disponible";
+      document.getElementById("raza").textContent = datos.raza || "No disponible";
+
+      // Llenar la tabla de medicamentos
+      const tabla = document.getElementById("cuerpoTabla");
+      tabla.innerHTML = "";
+
+      // Si no hay medicamentos o indicaciones
+      if (!datos.medicamentos || !datos.indicaciones) {
+        tabla.innerHTML = '<tr><td colspan="2" style="text-align:center;">No hay medicamentos registrados.</td></tr>';
+        return;
+      }
+
+      const meds = datos.medicamentos.split(", ") || [datos.medicamentos];
+      const inds = datos.indicaciones.split(", ") || [datos.indicaciones];
+
+      meds.forEach((med, i) => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${med}</td>
+            <td>${inds[i] || "N/A"}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // Función para generar el PDF con html2pdf
+    function generarPDF() {
+  const element = document.getElementById('receta');
+  // Aplica la escala al contenedor para que se reduzca a la mitad
+  element.classList.add('pdf-scale');
+  
+  html2pdf().set({
+    margin: 5, // Ajusta el margen según sea necesario
+    filename: 'Receta.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 1,  // Usamos 1 ya que la reducción se realiza vía CSS
+      useCORS: true,
+      scrollY: 0  // Para evitar desplazamientos verticales
+    },
+    jsPDF: { 
+      unit: 'mm',
+      format: [216, 139.5],  // Dimensiones deseadas: 216mm x 139.5mm
+      orientation: 'portrait'
+    }
+  }).from(element).save().then(() => {
+    // Una vez generado el PDF, quita la clase para restaurar el modal
+    element.classList.remove('pdf-scale');
+  });
+}
+  </script>
+</body>
+</html>

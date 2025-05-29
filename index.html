@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veterinaria 🐾 - Agenda de Citas</title>
+  <style>
+    /* Reset y tipografía */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto', sans-serif; background: #e3f2fd; color: #0d47a1; }
+    header { background: #2196f3; color: #e3f2fd; padding: 1em; display: flex; align-items: center; justify-content: center; gap: 1em; }
+    header img { height: 50px; }
+    header h1 { font-size: 1.8em; }
+    /* Menú de navegación con efecto líquido "pegajoso" */
+    nav ul { list-style: none; display: flex; justify-content: center; gap: 1em; margin: 0.5em 0; }
+    nav a.btn-sticky {
+      position: relative; display: inline-block; padding: 0.6em 1.2em;
+      background: #039be5; color: #e3f2fd; text-decoration: none;
+      font-weight: bold; border-radius: 30px; overflow: hidden; transition: transform 0.3s ease;
+    }
+    nav a.btn-sticky::after {
+      content: ''; position: absolute; width: 200%; height: 200%;
+      background: #0288d1; border-radius: 40%; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0); transition: transform 0.6s ease-out; z-index: -1;
+    }
+    nav a.btn-sticky:hover { transform: scale(1.05, 0.9); }
+    nav a.btn-sticky:hover::after { transform: translate(-50%, -50%) scale(1); }
+    /* Calendar Styles */
+    .calendar { width: 90vw; max-width: 700px; perspective: 1000px; margin: 1em auto; }
+    .calendar-card { width: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.8s; }
+    .calendar-card.flipped1 { transform: rotateY(-180deg); }
+    .calendar { border: 2px solid #1565c0; border-radius: 6px; background: #bbdefb; margin-bottom: 1em; }
+    .front, .back { backface-visibility: hidden; position: absolute; width: 100%; top: 0; left: 0; padding: 1em; }
+    .front .month-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em; }
+    .front .month-header button { background: none; border: none; color: #0d47a1; font-size: 1.2em; cursor: pointer; }
+    .front .weekdays, .front .days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+    .front .weekdays div { font-weight: bold; padding: 0.3em 0; }
+    .front .days div { padding: 0.5em 0; cursor: pointer; border-radius: 4px; transition: background 0.2s; border: 1px solid transparent; }
+    .front .days div:hover { background: #90caf9; border-color: #1565c0; }
+    .front .today { background: #82b1ff; }
+    .back { transform: rotateY(180deg); background: #e3f2fd; box-shadow: 0 5px 20px rgba(0,0,0,0.2); min-height: 300px; border: 2px solid #1565c0; border-radius: 6px; }
+    /* Horarios */
+    #slot-list { list-style: none; max-height: 300px; overflow-y: auto; margin-bottom: 1em; padding: 0; }
+    #slot-list li { padding: 0.5em; margin: 0.2em 0; background: #e1f5fe; border: 1px solid #0277bd; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+    #slot-list li:hover { background: #b3e5fc; }
+    #slot-list li.ocupado { background: #ffcdd2; color: #b71c1c; border-color: #b71c1c; cursor: not-allowed; }
+    .cancel-btn { background: #e53935; color: #fff; border: none; border-radius: 4px; padding: 0.5em; cursor: pointer; }
+    /* Formulario */
+    #reservation-form { display: none; width: 80vw; max-width: 500px; background: #e3f2fd; padding: 1.5em; border-radius: 6px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 2px solid #1565c0; margin: 0 auto 2em; }
+    #reservation-form h2 { margin-bottom: 0.5em; color: #0d47a1; }
+    #reservation-form label { display: block; margin: 0.5em 0 0.2em; }
+    #reservation-form input[type=text], #reservation-form select { width: 100%; padding: 0.6em; margin-bottom: 0.6em; border: 1px solid #0277bd; border-radius: 4px; }
+    #reservation-form button { background: #0277bd; color: #fff; border: none; border-radius: 4px; padding: 0.6em; cursor: pointer; width: 48%; margin-right: 4%; }
+    #reservation-form button.cancel-btn { margin-right: 0; background: #e53935; }
+    /* Overlay de modal global */
+    #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; overflow: auto; z-index: 1000; }
+    #modal-overlay.visible { display: flex; }
+    .modal-overlay-content { background: #e3f2fd; border: 2px solid #1565c0; border-radius: 6px; padding: 1em; position: relative; max-width: 90%; max-height: 90%; overflow: auto; }
+    #close-modal { position: absolute; top: 0.5em; right: 0.5em; background: #e53935; color: #fff; border: none; border-radius: 4px; width: 1.5em; height: 1.5em; font-size: 1em; line-height: 1.5em; text-align: center; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="img/logo.png" alt="Logo Veterinaria" />
+    <h1>Clínica Veterinaria</h1>
+  </header>
+  <nav>
+    <ul>
+      <li><a href="#" data-module="clientes.html" class="btn-sticky">👤 Clientes</a></li>
+      <li><a href="#" data-module="estetica.html" class="btn-sticky">✂️ Estética</a></li>
+      <li><a href="#" data-module="consulta.html" class="btn-sticky">🩺 Consulta</a></li>
+      <li><a href="#" data-module="tienda.html" class="btn-sticky">🛒 Tienda</a></li>
+      <li><a href="#" data-module="formatos.html" class="btn-sticky">📄 Formatos</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overlay para modales -->
+  <div id="modal-overlay"></div>
+
+  <main>
+    <div class="calendar" id="calendar">
+      <div class="calendar-card" id="card">
+        <!-- Pantalla 1: Calendario -->
+        <div class="front">
+          <div class="month-header">
+            <button id="prev-month">❮</button>
+            <div class="month-title" id="month-year"></div>
+            <button id="next-month">❯</button>
+          </div>
+          <div class="weekdays"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+          <div class="days" id="days"></div>
+        </div>
+        <!-- Pantalla 2: Horarios -->
+        <div class="back">
+          <h2>Horarios para <span id="slot-date"></span></h2>
+          <ul id="slot-list"></ul>
+          <button class="cancel-btn" id="back-to-calendar">Volver</button>
+        </div>
+      </div>
+    </div>
+    <!-- Pantalla 3: Formulario -->
+    <div id="reservation-form">
+      <h2>Agendar cita</h2>
+      <form id="appointment-form">
+        <label>Fecha:</label>
+        <input type="text" id="form-date" readonly />
+        <label>Hora:</label>
+        <input type="text" id="form-time" readonly />
+        <label>Mascota existente:</label>
+        <select id="mascota"></select>
+        <label><input type="checkbox" id="new-pet"/> Nueva mascota</label>
+        <div id="new-pet-fields" style="display:none;">
+          <label>Nombre de mascota:</label><input type="text" id="new-pet-name" />
+          <label>Especie:</label><input type="text" id="new-pet-species" />
+        </div>
+        <button type="submit">Guardar</button>
+        <button type="button" id="cancel-form" class="cancel-btn">Cancelar</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Modal overlay logic
+    const overlay = document.getElementById('modal-overlay');
+    document.querySelectorAll('a[data-module]').forEach(link => {
+      link.onclick = async e => {
+        e.preventDefault();
+        const file = link.dataset.module;
+        overlay.innerHTML = '<div class="modal-overlay-content"><button id="close-modal">×</button><p style="padding:1em;">Cargando...</p></div>';
+        overlay.classList.add('visible');
+        overlay.onclick = ev => { if (ev.target === overlay) overlay.classList.remove('visible'); };
+        overlay.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
+        try {
+          const html = await fetch(file).then(r => r.text());
+          const container = overlay.querySelector('.modal-overlay-content');
+          container.innerHTML = '<button id="close-modal">×</button>' + html;
+          container.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
+        } catch {
+          const container = overlay.querySelector('.modal-overlay-content');
+          container.innerHTML = '<button id="close-modal">×</button><p style="padding:1em;color:#b71c1c;">Error al cargar.</p>';
+          container.querySelector('#close-modal').onclick = () => overlay.classList.remove('visible');
+        }
+      };
+    });
+
+    // Lógica del calendario y formularios...
+    let currentDate = new Date();
+    const card = document.getElementById('card');
+    const daysEl = document.getElementById('days');
+    const monthYearEl = document.getElementById('month-year');
+
+    function renderCalendar() {
+      document.getElementById('calendar').style.display = 'block';
+      document.getElementById('reservation-form').style.display = 'none';
+      const y = currentDate.getFullYear();
+      const m = currentDate.getMonth();
+      monthYearEl.textContent = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      daysEl.innerHTML = '';
+      const firstDay = new Date(y, m, 1).getDay() || 7;
+      const totalDays = new Date(y, m + 1, 0).getDate();
+      for (let i = 1; i < firstDay; i++) daysEl.appendChild(document.createElement('div'));
+      for (let d = 1; d <= totalDays; d++) {
+        const el = document.createElement('div');
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        el.textContent = d; el.dataset.date = dateStr;
+        if (dateStr === new Date().toISOString().slice(0,10)) el.classList.add('today');
+        daysEl.appendChild(el);
+      }
+      activateDateClicks();
+    }
+    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
+    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
+
+    function activateDateClicks() {
+      document.querySelectorAll('#days div[data-date]').forEach(el => {
+        el.onclick = () => {
+          document.getElementById('slot-date').textContent = el.dataset.date;
+          card.classList.add('flipped1');
+          loadSlots(el.dataset.date);
+        };
+      });
+    }
+    document.getElementById('back-to-calendar').onclick = () => { card.classList.remove('flipped1'); renderCalendar(); };
+
+    function loadSlots(date) {
+      const list = document.getElementById('slot-list'); list.innerHTML = '';
+      generateSlots([], date);
+    }
+    function generateSlots(booked, date) {
+      const list = document.getElementById('slot-list');
+      for (let h = 10; h < 19; h++) {
+        ['00','30'].forEach(min => {
+          const time = `${String(h).padStart(2,'0')}:${min}`;
+          const li = document.createElement('li'); li.textContent = time;
+          li.onclick = () => selectSlot(date, time);
+          list.appendChild(li);
+        });
+      }
+      const urg = document.createElement('li'); urg.textContent = '🚨 URGENCIAS'; urg.onclick = () => selectSlot(date, 'URGENCIAS'); list.appendChild(urg);
+    }
+
+    function selectSlot(date, time) {
+      setTimeout(() => { document.getElementById('calendar').style.display = 'none'; renderForm(date, time); }, 400);
+    }
+
+    const formDiv = document.getElementById('reservation-form');
+    const formDate = document.getElementById('form-date');
+    const formTime = document.getElementById('form-time');
+    const petSelect = document.getElementById('mascota');
+    const newChk = document.getElementById('new-pet');
+    const newFields = document.getElementById('new-pet-fields');
+    newChk.onchange = () => { newFields.style.display = newChk.checked ? 'block' : 'none'; petSelect.disabled = newChk.checked; };
+    function renderForm(date, time) {
+      formDate.value = date; formTime.value = time;
+      petSelect.innerHTML = `<option>Firulais</option><option>Pelusa</option><option>Rex</option>`;
+      formDiv.style.display = 'block'; window.scrollTo(0, document.body.scrollHeight);
+    }
+    document.getElementById('cancel-form').onclick = () => { formDiv.style.display = 'none'; renderCalendar(); };
+    document.getElementById('appointment-form').onsubmit = e => { e.preventDefault(); alert('Cita guardada: ' + formDate.value + ' ' + formTime.value + ' - ' + (newChk.checked ? document.getElementById('new-pet-name').value : petSelect.value)); formDiv.style.display = 'none'; renderCalendar(); };
+
+    renderCalendar();
+  </script>
+</body>
+</html>
