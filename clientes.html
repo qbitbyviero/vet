@@ -1,95 +1,118 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veterinaria 🐾 - Agenda de Citas</title>
-  <!-- Enlace a CSS general -->
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <header>
-    <img src="img/logo.png" alt="Logo Veterinaria" />
-    <h1>Clínica Veterinaria</h1>
-  </header>
-
-  <nav>
-    <ul>
-      <li><a href="#" data-module="clientes.html" class="button-86">👤 Clientes</a></li>
-      <li><a href="#" data-module="estetica.html" class="button-86">✂️ Estética</a></li>
-      <li><a href="#" data-module=" consulta.html " class="button-86"> 🩺 Consulta </a></li>
-      <li><a href="#" data-module=" tienda.html " class="button-86"> 🛒 Tienda </a></li>
-      <li><a href="#" data-module=" formatos.html " class="button-86"> 📄 Formatos </a></li>
-    </ul>
-  </nav>
-
-  <!-- Overlay para cargar los módulos -->
-  <div id="modal-overlay"></div>
-
-  <main>
-    <!-- Calendario -->
-    <div class="calendar" id="calendar">
-      <div class="calendar-card" id="card">
-        <!-- PANEL FRONTAL: Selección de mes y día -->
-        <div class="front">
-          <div class="month-header">
-            <button class="button-86" id="prev-month">❮</button>
-            <div class="month-title" id="month-year"></div>
-            <button class="button-86" id="next-month">❯</button>
-          </div>
-          <div class="weekdays">
-            <div>Lun</div>
-            <div>Mar</div>
-            <div>Mié</div>
-            <div>Jue</div>
-            <div>Vie</div>
-            <div>Sáb</div>
-            <div>Dom</div>
-          </div>
-          <div class="days" id="days"></div>
+<!-- clientes.html: Módulo de Clientes 🐾 mejorado -->
+<div class="modal-clientes">
+  <h2>Registro de Cliente 🐾</h2>
+  <form id="form-clientes">
+    <!-- Datos del Propietario -->
+    <fieldset>
+      <legend>Datos del Propietario</legend>
+      <div class="grid-two-cols">
+        <div class="form-group">
+          <label for="ownerName">Nombre Completo:</label>
+          <input type="text" id="ownerName" name="ownerName" required />
         </div>
-
-        <!-- PANEL TRASERO: Selección de horario -->
-        <div class="back">
-          <h2>Horarios para <span id="slot-date"></span></h2>
-          <ul id="slot-list"></ul>
-          <button class="button-86" id="back-to-calendar">Volver</button>
+        <div class="form-group">
+          <label for="ownerPhone">Teléfono:</label>
+          <input type="tel" id="ownerPhone" name="ownerPhone" required />
+        </div>
+        <div class="form-group">
+          <label for="ownerEmail">Correo Electrónico:</label>
+          <input type="email" id="ownerEmail" name="ownerEmail" required />
         </div>
       </div>
-    </div>
+    </fieldset>
 
-    <!-- Formulario para agendar cita -->
-    <div id="reservation-form">
-      <h2>Agendar cita</h2>
-      <form id="appointment-form">
-        <label>Fecha:</label>
-        <input type="text" id="form-date" readonly />
-
-        <label>Hora:</label>
-        <input type="text" id="form-time" readonly />
-
-        <label>Mascota existente:</label>
-        <select id="mascota"></select>
-
-        <label>
-          <input type="checkbox" id="new-pet" />
-          Nueva mascota
-        </label>
-        <div id="new-pet-fields" style="display: none;">
-          <label>Nombre de mascota:</label>
-          <input type="text" id="new-pet-name" />
-
-          <label>Especie:</label>
-          <input type="text" id="new-pet-species" />
+    <!-- Datos de la Mascota -->
+    <fieldset>
+      <legend>Datos de la Mascota</legend>
+      <div class="grid-two-cols">
+        <div class="form-group">
+          <label for="petName">Nombre Mascota:</label>
+          <input type="text" id="petName" name="petName" required />
         </div>
+        <div class="form-group">
+          <label for="pet-species">Especie:</label>
+          <select id="pet-species" name="species" required onchange="cargarDiagramaCliente()">
+            <option value="">-- Selecciona --</option>
+            <option value="perro">Perro</option>
+            <option value="gato">Felino</option>
+            <option value="ave">Ave</option>
+            <option value="tortuga">Tortuga</option>
+            <option value="serpiente">Serpiente</option>
+            <option value="lagarto">Lagarto</option>
+            <option value="pez">Pez</option>
+            <option value="roedor">Roedor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="breed">Raza:</label>
+          <input type="text" id="breed" name="breed" />
+        </div>
+        <div class="form-group">
+          <label for="age">Edad (años):</label>
+          <input type="number" id="age" name="age" min="0" step="1" />
+        </div>
+        <div class="form-group">
+          <label for="weight">Peso (kg):</label>
+          <input type="number" id="weight" name="weight" min="0" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>¿Está esterilizado?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="sterilized" value="si" /> Sí</label>
+            <label><input type="radio" name="sterilized" value="no" /> No</label>
+          </div>
+        </div>
+      </div>
 
-        <button type="submit" class="button-86">Guardar</button>
-        <button type="button" class="button-86" id="cancel-form">Cancelar</button>
-      </form>
-    </div>
-  </main>
+      <!-- Diagrama Corporal con hotspots -->
+      <div id="cliente-diagrama" class="diagrama-container">
+        <img id="diagrama-img" src="" alt="Diagrama mascota" />
+      </div>
+    </fieldset>
 
-  <!-- Enlace a JavaScript general -->
-  <script src="main.js"></script>
-</body>
-</html>
+    <button type="submit" class="button-86">Guardar Cliente</button>
+  </form>
+</div>
+
+<script>
+  const mapaImagen = {
+    perro: 'svg/perro.png',
+    gato: 'svg/felino.svg',
+    ave: 'svg/ave.png',
+    tortuga: 'svg/tortuga.svg',
+    serpiente: 'svg/serpiente.svg',
+    lagarto: 'svg/lagarto.png',
+    pez: 'svg/pez.svg',
+    roedor: 'svg/roedor.svg'
+  };
+  const img = document.getElementById('diagrama-img');
+  const cont = document.getElementById('cliente-diagrama');
+
+  function cargarDiagramaCliente() {
+    const especie = document.getElementById('pet-species').value;
+    const src = mapaImagen[especie] || '';
+    img.src = src;
+    clearHotspots();
+    if (src) {
+      img.onload = () => { cont.style.minHeight = img.offsetHeight + 'px'; };
+      cont.addEventListener('click', addHotspot);
+    } else {
+      cont.removeEventListener('click', addHotspot);
+    }
+  }
+
+  function addHotspot(e) {
+    const rect = cont.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const dot = document.createElement('div');
+    dot.className = 'hotspot';
+    dot.style.left = (x - 10) + 'px';
+    dot.style.top = (y - 10) + 'px';
+    cont.appendChild(dot);
+  }
+
+  function clearHotspots() {
+    cont.querySelectorAll('.hotspot').forEach(h => h.remove());
+  }
+</script>
