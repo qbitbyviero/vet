@@ -2,99 +2,45 @@
 <div class="modal-formatos">
   <h2>Generar Formatos 📄</h2>
   <div class="format-grid" id="format-grid">
-    <button class="btn-format btn-sticky" data-file="Certificado_Salud.html">Certificado de Salud</button>
-    <button class="btn-format btn-sticky" data-file="Hospitalizacion.html">Hospitalización</button>
-    <button class="btn-format btn-sticky" data-file="Estetica_Formato.html">Estética</button>
-    <button class="btn-format btn-sticky" data-file="Eutanasia.html">Eutanasia</button>
-    <button class="btn-format btn-sticky" data-file="Pension.html">Pensión</button>
-    <button class="btn-format btn-sticky" data-file="Vacunacion.html">Vacunación</button>
-    <button class="btn-format btn-sticky" data-file="Responsiva_Servicios.html">Responsiva General</button>
+    <button class="button-86 btn-format" data-file="Certificado_Salud.html">
+      Certificado de Salud
+    </button>
+    <button class="button-86 btn-format" data-file="Hospitalizacion.html">
+      Hospitalización
+    </button>
+    <button class="button-86 btn-format" data-file="Estetica_Formato.html">
+      Estética
+    </button>
+    <button class="button-86 btn-format" data-file="Eutanasia.html">
+      Eutanasia
+    </button>
+    <button class="button-86 btn-format" data-file="Pension.html">
+      Pensión
+    </button>
+    <button class="button-86 btn-format" data-file="Vacunacion.html">
+      Vacunación
+    </button>
+    <button class="button-86 btn-format" data-file="Responsiva_Servicios.html">
+      Responsiva General
+    </button>
   </div>
 
   <div id="preview-area" class="preview-area">
-    <p style="padding:1em;color:#1565c0;">Selecciona un formato para vista previa</p>
+    <p style="padding:1em;color:#1565c0;">
+      Selecciona un formato para vista previa
+    </p>
   </div>
 </div>
-
-<style>
-  .modal-formatos {
-    width: 90vw;           /* Ocupa 90% del viewport */
-    max-width: 700px;      /* Igual que los demás modales */
-    margin: 0 auto;
-    background: #e3f2fd;
-    padding: 1.5em;
-    border-radius: 6px;
-    border: 2px solid #1565c0;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal-formatos h2 {
-    color: #0d47a1;
-    margin-bottom: 1em;
-    text-align: center;
-  }
-  .format-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1em;
-  }
-  .btn-format {
-    width: 100%;
-    text-align: center;
-  }
-  .preview-area {
-    margin-top: 1.5em;
-    border: 1px solid #0277bd;
-    border-radius: 4px;
-    background: #fff;
-    height: 200px;       /* altura fija para mensaje */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Botones "pegajosos" */
-  .btn-sticky {
-    display: inline-block;
-    padding: 0.6em 1.2em;
-    background: #039be5;
-    color: #e3f2fd;
-    font-weight: bold;
-    font-size: 1em;
-    border-radius: 30px;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-    text-align: center;
-  }
-  .btn-sticky::after {
-    content: '';
-    position: absolute;
-    width: 200%; height: 200%;
-    background: #0288d1;
-    border-radius: 40%;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.6s ease-out;
-    z-index: -1;
-  }
-  .btn-sticky:hover {
-    transform: scale(1.05, 0.9);
-  }
-  .btn-sticky:hover::after {
-    transform: translate(-50%, -50%) scale(1);
-  }
-</style>
 
 <script>
   document.querySelectorAll('.btn-format').forEach(btn => {
     btn.onclick = () => {
       const preview = document.getElementById('preview-area');
-      preview.innerHTML = `<p style="padding:1em;color:#1565c0;">
-        Has seleccionado: <strong>${btn.textContent}</strong>
-      </p>`;
+      preview.innerHTML = `
+        <p style="padding:1em;color:#1565c0;">
+          Has seleccionado: <strong>${btn.textContent}</strong>
+        </p>
+      `;
     };
   });
 </script>
