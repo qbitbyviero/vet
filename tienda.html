@@ -1,32 +1,36 @@
 <!-- tienda.html: Módulo de Tienda 🛒 unificado -->
+
 <div class="modal-tienda">
   <h2>Tienda Online 🛒</h2>
 
-  <!-- Productos (estáticos de prueba + dinámicos) -->
+  <!-- Productos (estáticos + dinámicos) -->
   <div class="product-grid" id="product-grid">
-    <!-- Prueba estática: estos siempre salen -->
+    <!-- Cada tarjeta de producto -->
     <div class="product-card">
       <img src="https://via.placeholder.com/150" alt="Shampoo de Aloe" />
       <h4>Shampoo de Aloe</h4>
-      <p>$120.00</p>
+      <p class="price">$120.00</p>
       <button class="button-86 add-to-cart" data-product-id="1">Agregar</button>
     </div>
+
     <div class="product-card">
       <img src="https://via.placeholder.com/150" alt="Cepillo para Mascotas" />
       <h4>Cepillo para Mascotas</h4>
-      <p>$85.50</p>
+      <p class="price">$85.50</p>
       <button class="button-86 add-to-cart" data-product-id="2">Agregar</button>
     </div>
+
     <div class="product-card">
       <img src="https://via.placeholder.com/150" alt="Jabón Antipulgas" />
       <h4>Jabón Antipulgas</h4>
-      <p>$150.00</p>
+      <p class="price">$150.00</p>
       <button class="button-86 add-to-cart" data-product-id="3">Agregar</button>
     </div>
+
     <div class="product-card">
       <img src="https://via.placeholder.com/150" alt="Loción Hidratante" />
       <h4>Loción Hidratante</h4>
-      <p>$95.75</p>
+      <p class="price">$95.75</p>
       <button class="button-86 add-to-cart" data-product-id="4">Agregar</button>
     </div>
   </div>
@@ -34,10 +38,11 @@
   <!-- Formulario de Cliente y Descuento -->
   <div class="checkout-form">
     <h3>Detalles de la Compra</h3>
-    <label>Nombre del Cliente:</label>
+
+    <label for="cliente-name">Nombre del Cliente:</label>
     <input type="text" id="cliente-name" placeholder="Nombre completo..." />
 
-    <label>Descuento:</label>
+    <label for="discount-type">Descuento:</label>
     <div class="discount-row">
       <select id="discount-type">
         <option value="percent">Porcentaje (%)</option>
@@ -51,7 +56,7 @@
   </div>
 </div>
 
-<!-- Carrito Flotante (siempre presente, aparece al cargar el módulo) -->
+<!-- Carrito Flotante (aparece automáticamente cuando cargas tienda) -->
 <div id="cart" class="cart open">
   <h3>Carrito</h3>
   <ul id="cart-items"></ul>
@@ -63,6 +68,9 @@
 </div>
 
 <script>
+  // Misma lógica de JS que ya tienes, pero asegúrate de que 'fetch' use la ruta '/vet/...'
+  // (Ver explicación del path en el anterior mensaje)
+
   // Datos de prueba
   const products = [
     { id: 1, name: 'Shampoo de Aloe', image: 'https://via.placeholder.com/150', price: 120.00 },
@@ -111,8 +119,7 @@
         cart.push({ ...product, qty: 1 });
       }
       updateCart();
-      // Asegurarse de que el carrito esté abierto
-      cartEl.classList.add('open');
+      cartEl.classList.add('open'); // Asegura que el carrito esté visible
     };
   });
 
@@ -159,9 +166,7 @@
   // Finalizar compra (simulado)
   document.getElementById('checkout').onclick = () => {
     const name = document.getElementById('cliente-name').value || '---';
-    alert(`Compra finalizada! 
-Cliente: ${name} 
-Total: $${totalEl.textContent}`);
+    alert(`Compra finalizada!\nCliente: ${name}\nTotal: $${totalEl.textContent}`);
     cart.length = 0;
     updateCart();
     document.getElementById('cliente-name').value = '';
