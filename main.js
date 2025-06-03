@@ -4,26 +4,24 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // ======================================
-  // 0) CONFIGURACIÓN: URL DE TU WEB APP
+  // 0) URL DE TU WEB APP (Apps Script)
   // ======================================
-  // Sustituye esta URL por la que te devolvió tu Apps Script al hacer "Deploy → Web App"
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwlhwZw4lH8o0gVYjyYl025S7b0jVknWS4MegoUjk2oFcvsM0eU0VblmS7O9o5RkkxL1Q/exec";
+  // Pega aquí la URL EXACTA que te devuelve tu Apps Script (termina en /exec).
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyshr2Bqh1aCf9swF2ocYGXQMnvuey7GQ8EfCDjOFVMe3ym4xtuLfuOdFtjxre2r9rqKw/exec";
 
   // ============================
-  // 1) AUXILIAR: JSONP REQUEST
+  // 1) JSONP REQUEST (para GET)
   // ============================
-  // Inserta un <script> que llama al servidor con ?callback=___
+  // Inserta dinámicamente un <script> con callback para evitar CORS en GET
   function jsonpRequest(url) {
     return new Promise((resolve, reject) => {
       const callbackName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-      // Definimos la función global que recibirá la respuesta
       window[callbackName] = function(data) {
         resolve(data);
         delete window[callbackName];
         script.remove();
       };
       const script = document.createElement("script");
-      // Asegurarse de no duplicar &callback= si ya existe
       const separator = url.includes("?") ? "&" : "?";
       script.src = url + separator + "callback=" + callbackName;
       script.onerror = () => {
@@ -38,14 +36,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   // 2) CACHE PARA CLIENTES Y CITAS
   // ============================
-  let __clientsCache = null;      // [{ "cliente Id", "Nombre del propietario", ..., "Esterilizado", ...}, ...]
-  let __appointmentsCache = {};   // { "YYYY-MM-DD": [ { Fecha, Hora, "ID cliente", "Nombre de la mascota", Motivo}, ... ] }
+  let __clientsCache = null;      // Aquí guardaremos [{…}, {…}, …] de “Clientes”
+  let __allCitasCache = null;     // Aquí guardaremos TODO el arreglo de “Citas” de la hoja
+  let __appointmentsCount = {};   // Mapa { "YYYY-MM-DD": número_de_citas }
 
   /**
    * loadAllClients()
-   *  - Si __clientsCache ya tiene datos, los devuelve.
-   *  - Si no, hace JSONP a GAS_BASE_URL + "?sheet=Clientes".
-   *  - Guarda en cache y retorna.
+   * — Si ya existe __clientsCache, lo devuelve.
+   * — Sino, hace JSONP a “?sheet=Clientes”, guarda en cache y devuelve.
    */
   async function loadAllClients() {
     if (Array.isArray(__clientsCache)) {
@@ -54,10 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const url = GAS_BASE_URL + "?sheet=Clientes";
       const data = await jsonpRequest(url);
-      // data será algo como:
-      // [ { "cliente Id":"1", "Nombre del propietario":"Juan Pérez", "Número de Teléfono":"555-1234", "Correo":"juan@ejemplo.com",
-      //     "Nombre de la mascota":"Firulais", "Especie":"Perro", "Raza":"Labrador", "Edad":"4", "Peso":"20", "Esterilizado":"Sí", "Observaciones":"" },
-      //   {...}, ... ]
+      // data: [ { "cliente Id":"1", "Nombre del propietario":"Juan …", … }, … ]
       __clientsCache = data;
       return __clientsCache;
     } catch (err) {
@@ -67,33 +62,74 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * loadAppointmentsByDate(fecha)
-   *  - Recibe fecha en "YYYY-MM-DD".
-   *  - Si ya existe __appointmentsCache[fecha], lo devuelve.
-   *  - Si no, hace JSONP a GAS_BASE_URL + "?sheet=Citas", filtra por fecha, guarda en cache y devuelve.
+   * loadAllCitas()
+   * — Si ya existe __allCitasCache, lo devuelve.
+   * — Sino, hace JSONP a “?sheet=Citas”, guarda en cache, arma el mapa __appointmentsCount y devuelve.
    */
-  async function loadAppointmentsByDate(fecha) {
-    if (Array.isArray(__appointmentsCache[fecha])) {
-      return __appointmentsCache[fecha];
+  async function loadAllCitas() {
+    if (Array.isArray(__allCitasCache)) {
+      return __allCitasCache;
     }
     try {
       const url = GAS_BASE_URL + "?sheet=Citas";
-      const allCitas = await jsonpRequest(url);
-      // allCitas: [ { "Fecha":"2025-06-05", "Hora":"10:30", "ID cliente":"2", "Nombre de la mascota":"Firulais", "Motivo":"Vacunas" }, ... ]
-      const citasDelDia = allCitas.filter(cita => cita["Fecha"] === fecha);
-      __appointmentsCache[fecha] = citasDelDia;
-      return citasDelDia;
+      const data = await jsonpRequest(url);
+      // data: [ { "Fecha":"2025-06-05", "Hora":"10:30", "ID cliente":"2", "Nombre de la mascota":"Firulais", "Motivo":"Vacunas" }, … ]
+      __allCitasCache = data;
+
+      // Construir el mapa de conteo por fecha
+      __appointmentsCount = {};
+      data.forEach(cita => {
+        const f = cita["Fecha"];
+        if (!__appointmentsCount[f]) __appointmentsCount[f] = 0;
+        __appointmentsCount[f]++;
+      });
+
+      return __allCitasCache;
     } catch (err) {
-      console.error("Error cargando citas:", err);
+      console.error("Error cargando todas las citas:", err);
       return [];
     }
   }
 
   /**
+   * getCountByDate(fecha)
+   * — Retorna cuántas citas hay en esa fecha, usando el mapa __appointmentsCount.
+   * — Si no existe, devuelve 0.
+   */
+  function getCountByDate(fecha) {
+    return __appointmentsCount[fecha] || 0;
+  }
+
+  /**
+   * addNewClient(clienteObj)
+   * — Hace POST a “?sheet=Clientes” con el JSON de clienteObj.
+   * — Recibe JSON { success:true, "cliente Id": nuevoId }.
+   * — Invalida __clientsCache para la próxima vez.
+   */
+  async function addNewClient(clienteObj) {
+    try {
+      const url = GAS_BASE_URL + "?sheet=Clientes";
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clienteObj)
+      });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const data = await resp.json();
+      // data: { success:true, "cliente Id": 42 }
+      __clientsCache = null; // invalidamos cache para que refresque
+      return data;
+    } catch (err) {
+      console.error("Error agregando cliente:", err);
+      throw err;
+    }
+  }
+
+  /**
    * addNewAppointment(citaObj)
-   *  - Envía un POST (XHR normal, no JSONP) a GAS_BASE_URL + "?sheet=Citas"
-   *  - citaObj = { "Fecha": "...", "Hora": "...", "ID cliente":"...", "Nombre de la mascota":"...", "Motivo":"..." }
-   *  - Invalida cache para la fecha específica.
+   * — Hace POST a “?sheet=Citas” con citaObj.
+   * — Recibe JSON { success:true }.
+   * — Invalida __allCitasCache para la próxima vez.
    */
   async function addNewAppointment(citaObj) {
     try {
@@ -104,11 +140,11 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(citaObj)
       });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const data = await resp.json(); 
-      if (citaObj.Fecha) {
-        delete __appointmentsCache[citaObj.Fecha];
-      }
-      return data; // { success: true }
+      const data = await resp.json(); // { success:true }
+      // Invalidar cache de citas
+      __allCitasCache = null;
+      __appointmentsCount = {};
+      return data;
     } catch (err) {
       console.error("Error agregando cita:", err);
       throw err;
@@ -123,17 +159,19 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.classList.remove("visible");
     overlay.innerHTML = "";
   }
+
   document.querySelectorAll('a[data-module]').forEach(link => {
     link.addEventListener("click", async (e) => {
       e.preventDefault();
       const file = link.dataset.module.trim();
+
       overlay.innerHTML = `
         <div class="modal-overlay-content">
           <button id="close-modal" aria-label="Cerrar módulo">×</button>
           <div class="loading-msg">Cargando...</div>
-        </div>
-      `;
+        </div>`;
       overlay.classList.add("visible");
+
       overlay.addEventListener("click", ev => {
         if (ev.target === overlay) closeModal();
       });
@@ -199,20 +237,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * renderCalendar()
-   *  - Muestra panel de calendario y oculta formulario.
-   *  - Dibuja cada día del mes con data-date="YYYY-MM-DD".
-   *  - Para cada día, llama loadAppointmentsByDate y asigna clase según #citas.
+   * — Muestra el calendario y oculta el formulario.
+   * — Llama a loadAllCitas() UNA SOLA VEZ para poblar el mapa __appointmentsCount.
+   * — Dibuja cada día del mes y le asigna clase (“full”, “medium”, “low”) según conteo.
    */
   async function renderCalendar() {
     document.getElementById("calendar").style.display = "block";
     reservationFormDiv.style.display = "none";
 
+    // 1) Asegurarnos de cargar TODO el arreglo de “Citas” UNA SOLA VEZ
+    await loadAllCitas();
+
     const y = currentDate.getFullYear();
     const m = currentDate.getMonth();
-    monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
-      month: "long",
-      year: "numeric"
-    });
+    monthYearEl.textContent = currentDate.toLocaleString("es-ES", { month: "long", year: "numeric" });
 
     daysEl.innerHTML = "";
     const firstDayIndex = (new Date(y, m, 1).getDay() || 7);
@@ -230,11 +268,10 @@ document.addEventListener("DOMContentLoaded", () => {
       dayCell.textContent = d;
       dayCell.dataset.date = dateStr;
 
-      // Pedir cuántas citas hay en esa fecha
-      const citas = await loadAppointmentsByDate(dateStr);
-      const count = citas.length;
+      // Obtener cuántas citas hay para esa fecha (del mapa ya armado)
+      const count = getCountByDate(dateStr);
       if (count >= 4) {
-        dayCell.classList.add("full");      // 4 o más citas → sin espacio
+        dayCell.classList.add("full");      // 4 o más → sin espacio
       } else if (count === 3) {
         dayCell.classList.add("medium");    // 3 citas → pocas plazas
       } else if (count > 0) {
@@ -243,18 +280,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (count > 0) {
         dayCell.setAttribute("data-count", count);
       }
-
       // Marcar hoy
       if (dateStr === new Date().toISOString().slice(0, 10)) {
         dayCell.classList.add("today");
       }
-
       daysEl.appendChild(dayCell);
     }
     activateDateClicks();
   }
 
-  // Habilitar clic en cada <div data-date>
+  // Habilitar clic en cada día (que tenga data-date)
   function activateDateClicks() {
     document.querySelectorAll("#days div[data-date]").forEach(el => {
       el.addEventListener("click", () => {
@@ -265,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Animación: voltear tarjeta para ver horarios
+  // Animación “flip” para mostrar horario
   function flipToSlots(date) {
     card.classList.add("flipped1");
     setTimeout(() => loadSlots(date), 400);
@@ -273,14 +308,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * loadSlots(fecha)
-   *  - Trae citas de la fecha (JSONP).
-   *  - Genera <li> 10:00–18:30 cada 30m; si hay cita, la marca como ocupada.
+   * — Obtiene del mapa __appointmentsCount las citas de todo el mes.
+   * — Para la fecha “fecha” en concreto, reconstruye el mapa “hora→datosCita” localmente
+   *   usando loadAllCitas() (que ya está en cache).
+   * — Luego dibuja los <li> de 10:00 a 18:30; si la hora coincide con cita, la marca ocupada,
+   *   si no, la deja clickeable para agendarla.
    */
   async function loadSlots(fecha) {
     slotListEl.innerHTML = "";
-    const citas = await loadAppointmentsByDate(fecha);
+    const allCitas = await loadAllCitas();
+    // Filtrar sólo las citas de este “fecha”
+    const citasDelDia = allCitas.filter(c => c["Fecha"] === fecha);
     const mapaCitas = {};
-    citas.forEach(cita => {
+    citasDelDia.forEach(cita => {
       mapaCitas[cita["Hora"]] = {
         mascota: cita["Nombre de la mascota"],
         motivo: cita["Motivo"],
@@ -305,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
         slotListEl.appendChild(li);
       });
     }
-    // URGENCIAS
+    // Opción de URGENCIAS
     const urg = document.createElement("li");
     urg.textContent = "🚨 URGENCIAS";
     urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
@@ -320,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * selectSlot(fecha, hora)
-   *  - Oculta calendario y llama renderForm para mostrar el formulario.
+   * — Oculta el calendario y muestra el formulario para agendar.
    */
   function selectSlot(fecha, hora) {
     const backPanel = document.querySelector(".back");
@@ -341,9 +381,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * renderForm(fecha, hora)
-   *  - Pone fecha/hora en el formulario.
-   *  - Llama a populateClientPetFields para rellenar <select id="mascota">.
-   *  - Al cambiar mascota, muestra datos del dueño y muestra “Corregir datos”.
+   * — Asigna fecha/hora a los campos del formulario.
+   * — Llama a populateClientPetFields(...) para rellenar <select id="mascota"> con todas las mascotas.
+   * — Agrega listener a ese <select> para mostrar datos del dueño y habilitar “Corregir datos”.
+   * — Si “Nueva mascota” está marcado, muestra el sub‐formulario completo para crear un cliente.
    */
   async function renderForm(fecha, hora) {
     formDate.value = fecha;
@@ -353,11 +394,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ownerInfoDiv.innerHTML = "";
     document.getElementById("edit-client-btn").style.display = "none";
     document.getElementById("edit-client-fields").style.display = "none";
+    document.getElementById("edit-age").value = "";
+    document.getElementById("edit-weight").value = "";
+    document.getElementById("edit-email").value = "";
 
-    // Llenar <select id="mascota">
+    // 1) Rellenar <select id="mascota"> con todas las mascotas existentes
     await populateClientPetFields(reservationFormDiv);
 
-    // Al cambiar de mascota:
+    // 2) Cuando el usuario elija una mascota, mostrar datos del dueño
     const selPet = document.getElementById("mascota");
     selPet.addEventListener("change", async () => {
       const petSeleccionada = selPet.value;
@@ -367,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const clientes = await loadAllClients();
+      // Encontrar la fila cuyo “Nombre de la mascota” coincide
       const fila = clientes.find(c => c["Nombre de la mascota"] === petSeleccionada);
       if (fila) {
         ownerInfoDiv.innerHTML = `
@@ -384,22 +429,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Ocultar nueva mascota si estaba marcada
+    // 3) Ocultar “nueva mascota” si estaba marcado antes
     newChk.checked = false;
     newPetFields.style.display = "none";
     document.getElementById("new-pet-name").value = "";
     document.getElementById("new-pet-species").value = "";
 
-    // Scroll hacia el formulario
+    // Hacer scroll hasta el formulario
     reservationFormDiv.scrollIntoView({ behavior: "smooth" });
   }
 
-  // Toggle nueva mascota
+  // Toggle “Nueva mascota” (mostrar/ocultar sub‐formulario de cliente)
   newChk.addEventListener("change", () => {
     if (newChk.checked) {
       newPetFields.style.display = "block";
       document.getElementById("mascota").disabled = true;
-      document.getElementById("owner-info").innerHTML = "";
+      ownerInfoDiv.innerHTML = "";
       document.getElementById("edit-client-btn").style.display = "none";
       document.getElementById("edit-client-fields").style.display = "none";
     } else {
@@ -408,13 +453,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Cancelar el formulario y volver al calendario
+  // Cancelar formulario y volver al calendario
   document.getElementById("cancel-form").addEventListener("click", () => {
     reservationFormDiv.style.display = "none";
     renderCalendar();
   });
 
-  // Botón “Corregir datos”: mostrar inputs de edición
+  // Botón “Corregir datos cliente” → Mostrar inputs para editar Edad, Peso y Correo
   document.getElementById("edit-client-btn").addEventListener("click", async () => {
     const petSeleccionada = document.getElementById("mascota").value;
     if (!petSeleccionada) return;
@@ -429,8 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("edit-client-fields").style.display = "block";
   });
 
-  // Guardar cambios del cliente (POR AHORA, MUESTRA UN ALERT. Para persistir, hay que implementar updateClient en Apps Script)
-  document.getElementById("save-client-changes").addEventListener("click", async () => {
+  // “Guardar cambios cliente” → (POR AHORA) solamente hace un alert
+  document.getElementById("save-client-changes").addEventListener("click", () => {
     const petSeleccionada = document.getElementById("mascota").value;
     const age = document.getElementById("edit-age").value;
     const weight = document.getElementById("edit-weight").value;
@@ -447,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("edit-client-fields").style.display = "none";
   });
 
-  // Manejar envío del formulario de cita
+  // Enviar formulario de cita (tanto para mascota existente como nueva)
   document.getElementById("appointment-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const fecha = formDate.value;
@@ -456,10 +501,58 @@ document.addEventListener("DOMContentLoaded", () => {
     let clienteId, nombreMascota, motivo;
 
     if (nuevaMascota) {
-      alert("Alta de nueva mascota aún no implementada en este formulario.");
-      return;
+      // 1) Recopilar datos del mini‐formulario de “Clientes”
+      const propietario = document.getElementById("new-owner-name").value.trim();
+      const telefono   = document.getElementById("new-owner-phone").value.trim();
+      const correo     = document.getElementById("new-owner-email").value.trim();
+      nombreMascota    = document.getElementById("new-pet-name").value.trim();
+      const especie    = document.getElementById("new-pet-species").value.trim();
+      const raza       = document.getElementById("new-pet-breed").value.trim();
+      const edad       = document.getElementById("new-pet-age").value.trim();
+      const peso       = document.getElementById("new-pet-weight").value.trim();
+      const esterilizado= document.querySelector('input[name="new-pet-sterilizado"]:checked') 
+                           ? document.querySelector('input[name="new-pet-sterilizado"]:checked').value 
+                           : "";
+      const observaciones = document.getElementById("new-pet-notes").value.trim();
+
+      // Validaciones mínimas:
+      if (!propietario || !telefono || !correo || !nombreMascota) {
+        alert("Debe llenar todos los campos de propietario y nombre de mascota.");
+        return;
+      }
+      // 2) Llamar a addNewClient para crear el cliente en la hoja “Clientes”
+      try {
+        const clienteObj = {
+          "Nombre del propietario": propietario,
+          "Número de Teléfono": telefono,
+          "Correo": correo,
+          "Nombre de la mascota": nombreMascota,
+          "Especie": especie,
+          "Raza": raza,
+          "Edad": edad,
+          "Peso": peso,
+          "Esterilizado": esterilizado,
+          "Observaciones": observaciones
+        };
+        const resp = await addNewClient(clienteObj);
+        // resp = { success:true, "cliente Id": 123 }
+        clienteId = resp["cliente Id"];
+      } catch (err) {
+        alert("Error al dar de alta el nuevo cliente: " + err.message);
+        return;
+      }
+      motivo = prompt("Ingrese el motivo de la cita para " + nombreMascota + ":");
+      if (!motivo) {
+        alert("La cita debe tener un motivo.");
+        return;
+      }
     } else {
+      // Mascota existente
       nombreMascota = document.getElementById("mascota").value;
+      if (!nombreMascota) {
+        alert("Seleccione primero una mascota existente o marque Nueva mascota.");
+        return;
+      }
       const clientes = await loadAllClients();
       const fila = clientes.find(c => c["Nombre de la mascota"] === nombreMascota);
       if (!fila) {
@@ -474,26 +567,28 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Construir objeto para guardar en “Citas”
+    // 3) Construir objeto para guardar en “Citas”
     const nuevaCita = {
       "Fecha": fecha,
       "Hora": hora,
-      "ID cliente": clienteId,
+      "ID cliente": clienteId + "",
       "Nombre de la mascota": nombreMascota,
       "Motivo": motivo
     };
 
+    // 4) Enviar a Apps Script para que lo guarde en la hoja “Citas”
     try {
       await addNewAppointment(nuevaCita);
       alert("¡Cita guardada con éxito!");
       reservationFormDiv.style.display = "none";
+      // Volver a cargar calendario para ver inmediatamente el cambio
       renderCalendar();
     } catch (err) {
       alert("Error al guardar la cita: " + err.message);
     }
   });
 
-  // Navegar meses
+  // Navegar meses en el calendario
   document.getElementById("prev-month").addEventListener("click", () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
     renderCalendar();
@@ -507,7 +602,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
 
   // ========================================
-  // 5) Función para poblar <select class="pet-select">
+  // 5) poblarClientPetFields(container)
+  //    — Rellena todos los <select class="pet-select"> y <select class="client-select"> dentro de un contenedor
+  //    — En nuestro caso, solo nos importa el <select class="pet-select"> para “Nombre de la mascota”
   // ========================================
   async function populateClientPetFields(container) {
     const clients = await loadAllClients();
@@ -527,6 +624,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     });
+  }
+
+  // ========================================
+  // 6) getCountByDate(fecha) → Retorna #citas en esa fecha
+  // ========================================
+  function getCountByDate(fecha) {
+    return __appointmentsCount[fecha] || 0;
   }
 
 });
