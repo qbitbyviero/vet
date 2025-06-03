@@ -1,39 +1,70 @@
-<!-- tienda.html: Módulo de Tienda 🛒 unificado -->
+<!-- tienda.html: Módulo de Tienda 🛒 profesionalizado -->
+
+<!-- 1. Contenedor principal del modal-tienda -->
 <div class="modal-tienda">
   <h2>Tienda Online 🛒</h2>
 
-  <!-- Grid de productos -->
-  <div class="product-grid" id="product-grid">
-    <div class="product-card">
-      <img src="https://via.placeholder.com/150" alt="Shampoo de Aloe" />
+  <!-- 2. Grid de productos en miniatura -->
+  <div class="product-grid">
+    <!-- PRODUCTO 1 -->
+    <div
+      class="product-item"
+      data-id="1"
+      data-name="Shampoo de Aloe"
+      data-desc="Shampoo suave con aloe vera para el cuidado del pelaje. Ideal para todo tipo de pelaje, hidrata y deja un brillo natural."
+      data-price="120.00"
+      data-discount="10"
+      data-image="fotos/muestra.jpg"
+    >
+      <img src="fotos/muestra.jpg" alt="Shampoo de Aloe" />
       <h4>Shampoo de Aloe</h4>
-      <p class="price">$120.00</p>
-      <button class="button-86 add-to-cart" data-product-id="1">Agregar</button>
     </div>
 
-    <div class="product-card">
-      <img src="https://via.placeholder.com/150" alt="Cepillo para Mascotas" />
+    <!-- PRODUCTO 2 -->
+    <div
+      class="product-item"
+      data-id="2"
+      data-name="Cepillo para Mascotas"
+      data-desc="Cepillo ergonómico con cerdas suaves para deshacer nudos y eliminar pelo muerto."
+      data-price="85.50"
+      data-discount="0"
+      data-image="fotos/muestra.jpg"
+    >
+      <img src="fotos/muestra.jpg" alt="Cepillo para Mascotas" />
       <h4>Cepillo para Mascotas</h4>
-      <p class="price">$85.50</p>
-      <button class="button-86 add-to-cart" data-product-id="2">Agregar</button>
     </div>
 
-    <div class="product-card">
-      <img src="https://via.placeholder.com/150" alt="Jabón Antipulgas" />
+    <!-- PRODUCTO 3 -->
+    <div
+      class="product-item"
+      data-id="3"
+      data-name="Jabón Antipulgas"
+      data-desc="Jabón formulado con ingredientes activos para eliminación de pulgas y garrapatas."
+      data-price="150.00"
+      data-discount="15"
+      data-image="fotos/muestra.jpg"
+    >
+      <img src="fotos/muestra.jpg" alt="Jabón Antipulgas" />
       <h4>Jabón Antipulgas</h4>
-      <p class="price">$150.00</p>
-      <button class="button-86 add-to-cart" data-product-id="3">Agregar</button>
     </div>
 
-    <div class="product-card">
-      <img src="https://via.placeholder.com/150" alt="Loción Hidratante" />
+    <!-- PRODUCTO 4 -->
+    <div
+      class="product-item"
+      data-id="4"
+      data-name="Loción Hidratante"
+      data-desc="Loción hidratante para piel seca, con vitaminas y aceites naturales."
+      data-price="95.75"
+      data-discount="5"
+      data-image="fotos/muestra.jpg"
+    >
+      <img src="fotos/muestra.jpg" alt="Loción Hidratante" />
       <h4>Loción Hidratante</h4>
-      <p class="price">$95.75</p>
-      <button class="button-86 add-to-cart" data-product-id="4">Agregar</button>
     </div>
   </div>
+  <!-- / .product-grid -->
 
-  <!-- Formulario de Cliente y Descuento -->
+  <!-- 3. Formulario de “Detalles de Compra” -->
   <div class="checkout-form">
     <h3>Detalles de la Compra</h3>
 
@@ -52,9 +83,11 @@
       <button type="button" class="button-86" id="apply-discount">Aplicar</button>
     </div>
   </div>
+  <!-- / .checkout-form -->
 </div>
+<!-- / .modal-tienda -->
 
-<!-- Carrito Flotante (arrastrable) -->
+<!-- 4. Carrito Flotante (arrastrable) -->
 <div id="cart" class="cart open">
   <h3>Carrito</h3>
   <ul id="cart-items"></ul>
@@ -65,17 +98,123 @@
   <button type="button" class="button-86" id="checkout">Finalizar Compra</button>
 </div>
 
-<script>
-  // Asegúrate en tu main.js de llamar a "/vet/tienda.html" en lugar de "tienda.html"
-  // (Para que GitHub Pages lo encuentre correctamente)
+<!-- 5. Ficha de detalle: oculto por defecto -->
+<div class="product-detail-overlay" id="product-detail-overlay">
+  <div class="product-detail">
+    <button class="detail-close" id="detail-close">&times;</button>
+    <img src="" alt="" id="detail-image" class="detail-image" />
+    <h3 id="detail-name" class="detail-title"></h3>
+    <p id="detail-desc" class="detail-desc"></p>
+    <p class="detail-price">Precio: $<span id="detail-price">0.00</span></p>
+    <p class="detail-discount" id="detail-discount-text"></p>
+    <div class="quantity-control">
+      <button class="qty-btn" id="qty-decrease">−</button>
+      <span id="qty-value">1</span>
+      <button class="qty-btn" id="qty-increase">+</button>
+    </div>
+    <button class="button-86" id="add-to-cart-detail">Agregar al carrito</button>
+  </div>
+</div>
 
-  // MISMA LÓGICA DE JS que ya tienes, no hace falta cambiar aquí
-  const products = [
-    { id: 1, name: 'Shampoo de Aloe', image: 'https://via.placeholder.com/150', price: 120.00 },
-    { id: 2, name: 'Cepillo para Mascotas', image: 'https://via.placeholder.com/150', price: 85.50 },
-    { id: 3, name: 'Jabón Antipulgas', image: 'https://via.placeholder.com/150', price: 150.00 },
-    { id: 4, name: 'Loción Hidratante', image: 'https://via.placeholder.com/150', price: 95.75 }
-  ];
+<script>
+  /********************************************
+   * 1) Mostrar/Ocultar “Ficha de Detalle”    *
+   ********************************************/
+  const overlay = document.getElementById('product-detail-overlay');
+  const detailImage = document.getElementById('detail-image');
+  const detailName = document.getElementById('detail-name');
+  const detailDesc = document.getElementById('detail-desc');
+  const detailPrice = document.getElementById('detail-price');
+  const detailDiscountText = document.getElementById('detail-discount-text');
+  const qtyValueSpan = document.getElementById('qty-value');
+  let currentItemData = null; // Para almacenar los datos del producto seleccionado
+
+  // Al presionar la “X” de cierre
+  document.getElementById('detail-close').onclick = () => {
+    overlay.classList.remove('visible');
+    qtyValueSpan.textContent = '1';
+  };
+
+  // Cuando se hace clic en un .product-item (miniatura), rellenar y mostrar la ficha
+  document.querySelectorAll('.product-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = item.dataset.id;
+      const name = item.dataset.name;
+      const desc = item.dataset.desc;
+      const price = item.dataset.price;
+      const discount = item.dataset.discount;
+      const image = item.dataset.image;
+
+      // Guardamos en currentItemData para luego agregar al carrito
+      currentItemData = { id, name, desc, price, discount, image, qty: 1 };
+
+      // Rellenar ficha:
+      detailImage.src = image;
+      detailImage.alt = name;
+      detailName.textContent = name;
+      detailDesc.textContent = desc;
+      detailPrice.textContent = parseFloat(price).toFixed(2);
+
+      if (parseFloat(discount) > 0) {
+        detailDiscountText.textContent = "Descuento: " + parseFloat(discount).toFixed(0) + "%";
+      } else {
+        detailDiscountText.textContent = "";
+      }
+
+      // Mostrar overlay
+      overlay.classList.add('visible');
+    });
+  });
+
+  /*****************************************************
+   * 2) Controles de cantidad (+ / −) en la ficha detalle *
+   *****************************************************/
+  document.getElementById('qty-increase').onclick = () => {
+    let q = parseInt(qtyValueSpan.textContent);
+    qtyValueSpan.textContent = ++q;
+    currentItemData.qty = q;
+  };
+  document.getElementById('qty-decrease').onclick = () => {
+    let q = parseInt(qtyValueSpan.textContent);
+    if (q > 1) {
+      qtyValueSpan.textContent = --q;
+      currentItemData.qty = q;
+    }
+  };
+
+  /*********************************************************
+   * 3) Agregar la cantidad seleccionada al carrito          *
+   *********************************************************/
+  document.getElementById('add-to-cart-detail').onclick = () => {
+    if (!currentItemData) return;
+    // Reutilizamos la misma lógica de carrito (ya deberías tener algo similar en tu main.js)
+    const { id, name, price, qty, discount } = currentItemData;
+    const priceNum = parseFloat(price);
+    const discountNum = parseFloat(discount) || 0;
+    // Calcular precio con descuento (si aplica)
+    let finalPrice = priceNum;
+    if (discountNum > 0) {
+      finalPrice = priceNum * (1 - discountNum / 100);
+    }
+
+    // Buscar si ya existe en carrito
+    const existing = cart.find(item => item.id === id);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cart.push({ id, name, price: finalPrice, qty });
+    }
+    updateCart();
+
+    // Cerrar overlay y reiniciar cantidad
+    overlay.classList.remove('visible');
+    qtyValueSpan.textContent = '1';
+  };
+
+  /****************************************************************
+   * 4) Lógica del carrito (igual a la que ya tienes en tu main.js) *
+   ****************************************************************/
+  const products = []; // (no es necesario llenar aquí; usamos currentItemData dinámicamente)
   const cart = [];
   const cartEl = document.getElementById('cart');
   const cartItemsEl = document.getElementById('cart-items');
@@ -93,7 +232,7 @@
       const li = document.createElement('li');
       li.textContent = `${item.name} x${item.qty}`;
       const btn = document.createElement('button');
-      btn.className = 'button-86 btn-remove';
+      btn.className = 'button-86 btn-remove small-remove';
       btn.textContent = '×';
       btn.onclick = () => removeFromCart(item.id);
       li.appendChild(btn);
@@ -103,18 +242,6 @@
     subtotalEl.textContent = subtotal.toFixed(2);
     applyDiscount();
   }
-
-  document.querySelectorAll('.add-to-cart').forEach(btn => {
-    btn.onclick = () => {
-      const prodId = parseInt(btn.dataset.productId);
-      const product = products.find(p => p.id === prodId);
-      const existing = cart.find(i => i.id === prodId);
-      if (existing) existing.qty++;
-      else cart.push({ ...product, qty: 1 });
-      updateCart();
-      cartEl.classList.add('open');
-    };
-  });
 
   function removeFromCart(id) {
     const idx = cart.findIndex(i => i.id === id);
@@ -128,9 +255,14 @@
     let val = discountValueEl.value;
     let discountAmt = 0;
     promoEl.textContent = '';
-    if (type === 'percent') discountAmt = subtotal * (parseFloat(val) / 100 || 0);
-    else if (type === 'fixed' || type === 'coupon') discountAmt = parseFloat(val) || 0;
-    else if (type === 'promo') { promoEl.textContent = val || ''; discountAmt = 0; }
+    if (type === 'percent') {
+      discountAmt = subtotal * (parseFloat(val) / 100 || 0);
+    } else if (type === 'fixed' || type === 'coupon') {
+      discountAmt = parseFloat(val) || 0;
+    } else if (type === 'promo') {
+      promoEl.textContent = val || '';
+      discountAmt = 0;
+    }
     discountEl.textContent = discountAmt.toFixed(2);
     totalEl.textContent = (subtotal - discountAmt).toFixed(2);
   }
@@ -158,7 +290,8 @@
     promoEl.textContent = '';
   };
 
-  (function() {
+  // Carrito arrastrable (igual a lo que ya tienes)
+  (function () {
     const cartDiv = document.getElementById('cart');
     let dragging = false, startX, startY, origX, origY;
     cartDiv.addEventListener('mousedown', e => {
@@ -178,8 +311,9 @@
       cartDiv.style.left = origX + (e.clientX - startX) + 'px';
       cartDiv.style.top = origY + (e.clientY - startY) + 'px';
     });
-    document.addEventListener('mouseup', () => dragging = false);
+    document.addEventListener('mouseup', () => (dragging = false));
   })();
 
+  // Inicializar carrito vacío
   updateCart();
 </script>
