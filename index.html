@@ -66,6 +66,27 @@
     #new-pet-fields {
       background: #f3e5f5;
     }
+    /* Botón de Configuración en la esquina inferior derecha */
+    #btn-config {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: #039be5;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 3.2rem;
+      height: 3.2rem;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    #btn-config:hover {
+      background: #0288d1;
+    }
   </style>
 </head>
 <body>
@@ -117,13 +138,13 @@
     <div id="reservation-form" style="display:none;">
       <h2>Agendar cita</h2>
       <form id="appointment-form">
-        <label>Fecha:</label>
+        <label for="form-date">Fecha:</label>
         <input type="text" id="form-date" readonly />
 
-        <label>Hora:</label>
+        <label for="form-time">Hora:</label>
         <input type="text" id="form-time" readonly />
 
-        <label>Mascota existente:</label>
+        <label for="mascota">Mascota existente:</label>
         <select id="mascota" class="pet-select">
           <option value="">Cargando mascotas…</option>
         </select>
@@ -134,13 +155,13 @@
           Corregir datos
         </button>
         <div id="edit-client-fields" style="display:none;">
-          <label>Edad (años):</label>
+          <label for="edit-age">Edad (años):</label>
           <input type="number" id="edit-age" min="0" />
 
-          <label>Peso (kg):</label>
+          <label for="edit-weight">Peso (kg):</label>
           <input type="number" id="edit-weight" step="0.1" min="0" />
 
-          <label>Correo:</label>
+          <label for="edit-email">Correo:</label>
           <input type="email" id="edit-email" />
 
           <button type="button" id="save-client-changes" class="button-86 small">
@@ -154,29 +175,29 @@
         </label>
         <div id="new-pet-fields" style="display:none;">
           <h4>Datos del propietario</h4>
-          <label>Nombre del propietario:</label>
+          <label for="new-owner-name">Nombre del propietario:</label>
           <input type="text" id="new-owner-name" />
 
-          <label>Número de Teléfono:</label>
+          <label for="new-owner-phone">Número de Teléfono:</label>
           <input type="tel" id="new-owner-phone" />
 
-          <label>Correo:</label>
+          <label for="new-owner-email">Correo:</label>
           <input type="email" id="new-owner-email" />
 
           <h4>Datos de la mascota</h4>
-          <label>Nombre de la mascota:</label>
+          <label for="new-pet-name">Nombre de la mascota:</label>
           <input type="text" id="new-pet-name" />
 
-          <label>Especie:</label>
+          <label for="new-pet-species">Especie:</label>
           <input type="text" id="new-pet-species" />
 
-          <label>Raza:</label>
+          <label for="new-pet-breed">Raza:</label>
           <input type="text" id="new-pet-breed" />
 
-          <label>Edad (años):</label>
+          <label for="new-pet-age">Edad (años):</label>
           <input type="number" id="new-pet-age" min="0" />
 
-          <label>Peso (kg):</label>
+          <label for="new-pet-weight">Peso (kg):</label>
           <input type="number" id="new-pet-weight" step="0.1" min="0" />
 
           <label>Esterilizado:</label>
@@ -185,7 +206,7 @@
             <label><input type="radio" name="new-pet-sterilizado" value="No" /> No</label>
           </div>
 
-          <label>Observaciones:</label>
+          <label for="new-pet-notes">Observaciones:</label>
           <textarea id="new-pet-notes" rows="2"></textarea>
         </div>
 
@@ -194,6 +215,9 @@
       </form>
     </div>
   </main>
+
+  <!-- Botón de Configuración (esquina inferior derecha) -->
+  <button id="btn-config" title="Configuración">⚙️</button>
 
   <script src="main.js"></script>
 </body>
