@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * loadAllClients()
-   * — Si estamos en cache, lo devuelve.
+   * — Si está en cache, lo devuelve.
    * — Si no, hace jsonpRequest(GAS_BASE_URL+"?sheet=Clientes").
    */
   async function loadAllClients() {
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * loadAllCitas()
-   * — Si estamos en cache, lo devuelve.
+   * — Si está en cache, lo devuelve.
    * — Si no, hace jsonpRequest(GAS_BASE_URL+"?sheet=Citas"),
    *   construye __appointmentsCount y guarda en cache.
    */
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       __allCitasCache = data;
       __appointmentsCount = {};
       data.forEach(cita => {
-        const f = cita["Fecha"];
+        const f = (cita["Fecha"] || "").trim();
         if (!__appointmentsCount[f]) __appointmentsCount[f] = 0;
         __appointmentsCount[f]++;
       });
@@ -251,27 +251,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * loadSlots(fecha)
-   * — Filtra en memoria las citas de “fecha” y arma un mapa hora→datosCita.
-   * — Dibuja cada <li> desde 10:00 a 18:30. Si ya hay cita, la muestra como “Mascota → Motivo”
-   *   y no permite seleccionarla. Si está libre, la hace clickable para selectSlot().
+   * — Toma todas las citas ya cargadas en memoria (loadAllCitas),
+   *   construye un mapa hora→datosCita usando cita["Hora"].trim().
+   * — Luego dibuja cada <li> desde 10:00 hasta 18:30. Si la hora coincide
+   *   con una cita existente, se marca “ocupado” y no es clickable.
    */
   async function loadSlots(fecha) {
     slotListEl.innerHTML = "";
+    // 1) Traer todas las citas de la hoja (o de cache si ya se cargaron)
     const allCitas = await loadAllCitas();
-    const citasDelDia = allCitas.filter(c => c["Fecha"] === fecha);
+    // 2) Filtrar solo las de la fecha solicitada
+    const citasDelDia = allCitas.filter(c =>
+      (c["Fecha"] || "").trim() === fecha.trim()
+    );
+
+    // 3) Construir un diccionario { "10:00": {...}, "10:30": {...} }
     const mapaCitas = {};
     citasDelDia.forEach(cita => {
-      mapaCitas[cita["Hora"]] = {
-        mascota: cita["Nombre de la mascota"],
-        motivo: cita["Motivo"],
-        clienteId: cita["ID cliente"]
-      };
+      const horaAlmacenada = String(cita["Hora"] || "").trim();
+      if (horaAlmacenada) {
+        mapaCitas[horaAlmacenada] = {
+          mascota: String(cita["Nombre de la mascota"] || "").trim(),
+          motivo: String(cita["Motivo"] || "").trim(),
+          clienteId: String(cita["ID cliente"] || "").trim()
+        };
+      }
     });
 
+    // 4) Para cada franja de 30 min entre 10:00 y 18:30
     for (let h = 10; h < 19; h++) {
       ["00", "30"].forEach(min => {
         const time = `${String(h).padStart(2, "0")}:${min}`;
         const li = document.createElement("li");
+        // Si existe en mapaCitas (tras trim), marcar “ocupado”
         if (mapaCitas[time]) {
           const data = mapaCitas[time];
           li.textContent = `${time}  ${data.mascota} → ${data.motivo}`;
@@ -279,13 +291,15 @@ document.addEventListener("DOMContentLoaded", () => {
           li.style.cursor = "not-allowed";
           li.style.opacity = "0.7";
         } else {
+          // Horario libre: sí es clickable
           li.textContent = time;
           li.addEventListener("click", () => selectSlot(fecha, time));
         }
         slotListEl.appendChild(li);
       });
     }
-    // Opción “URGENCIAS”
+
+    // 5) “URGENCIAS” siempre disponible
     const urg = document.createElement("li");
     urg.textContent = "🚨 URGENCIAS";
     urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
@@ -295,6 +309,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Volver del panel “back” al calendario
   backToCalendarBtn.addEventListener("click", () => {
     card.classList.remove("flipped1");
+    __allCitasCache = null;
+    __appointmentsCount = {};
     renderCalendar();
   });
 
@@ -508,7 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 3) Pedir motivo de la cita
       motivo = prompt("Ingrese el motivo de la cita para " + nombreMascota + ":");
-      if (!motivo || motivo.trim() === "") {
+      if (!motivo || !motivo.trim()) {
         alert("La cita debe tener un motivo.");
         return;
       }
@@ -527,13 +543,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       clienteId = fila["cliente Id"];
       motivo = prompt("Ingrese el motivo de la cita para " + nombreMascota + ":");
-      if (!motivo || motivo.trim() === "") {
+      if (!motivo || !motivo.trim()) {
         alert("La cita debe tener un motivo.");
         return;
       }
     }
 
-    // 4) Crear la cita vía JSONP GET
+    // Crear la cita vía JSONP GET
     const paramsCita = {
       sheet: "Citas",
       nuevo: "true",
@@ -555,7 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       alert("¡Cita guardada con éxito!");
-      // — LIMPIAR CACHE DE CITAS para que el calendario recargue con los datos actualizados
+      // — LIMPIAR cache de citas para que el calendario recargue con datos nuevos
       __allCitasCache = null;
       __appointmentsCount = {};
       reservationFormDiv.style.display = "none";
