@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 0) CONFIGURACIÓN: URL DE TU WEB APP
   // ======================================
   // Sustituye esta URL por la que te devolvió tu Apps Script al hacer "Deploy → Web App"
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwKIpSWIwBmr8dK-Lif9zI87sn0getjJOajYnv4eDcq42PfJ8Sp90gKdVQUX8OQ2Oj3/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwlhwZw4lH8o0gVYjyYl025S7b0jVknWS4MegoUjk2oFcvsM0eU0VblmS7O9o5RkkxL1Q/exec";
 
   // ============================
   // 1) AUXILIAR: JSONP REQUEST
