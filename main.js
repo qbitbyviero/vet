@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[data-module]').forEach(link => {
     link.addEventListener('click', async e => {
       e.preventDefault();
-      const file = "/vet/" + el.dataset.module;
+      const file = "/vet/" + el.dataset.module; // por ejemplo: "/vet/tienda.html"
       // Mostrar overlay y botón de cierre
       overlay.innerHTML = `
         <div class="modal-overlay-content">
