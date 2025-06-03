@@ -14,21 +14,25 @@
       cursor: pointer;
       position: relative;
     }
+    /* 4 o más citas → rojo */
     #days div.full {
       background: #ef5350;
       color: #fff;
       border-radius: 4px;
     }
+    /* 3 citas → gris */
     #days div.medium {
       background: #bdbdbd;
       color: #000;
       border-radius: 4px;
     }
+    /* 1 o 2 citas → azul claro */
     #days div.low {
       background: #90caf9;
       color: #000;
       border-radius: 4px;
     }
+    /* Tooltip con número de citas */
     #days div[data-date][data-count]::after {
       content: attr(data-count) " cita(s)";
       position: absolute;
@@ -48,7 +52,7 @@
     #days div[data-date][data-count]:hover::after {
       display: block;
     }
-    /* Estilos para formulario de corrección */
+    /* Estilos para el sub‐formulario de corrección de cliente */
     .edit-client-fields {
       margin-top: 0.5em;
       padding: 0.5em;
@@ -73,13 +77,37 @@
       padding: 5px 10px;
       font-size: 14px;
     }
+    /* El sub‐formulario “Nueva mascota/cliente” */
+    .new-client-fields {
+      margin-top: 0.5em;
+      padding: 0.5em;
+      background: #f9f9f9;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+    }
+    .new-client-fields label {
+      display: block;
+      margin: 0.3em 0 0.1em;
+      font-weight: 500;
+    }
+    .new-client-fields input,
+    .new-client-fields select,
+    .new-client-fields textarea {
+      width: 100%;
+      padding: 0.4em;
+      border: 1px solid #0277bd;
+      border-radius: 4px;
+      margin-bottom: 0.5em;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
   <header>
     <img src="img/logo.png" alt="Logo Veterinaria" />
-    <h1>Clínica Veterinaria v2.2 </h1>
+    <h1>Clínica Veterinaria</h1>
   </header>
+
   <nav>
     <ul>
       <li><a href="#" data-module="clientes.html" class="button-86">👤 Clientes</a></li>
@@ -132,17 +160,17 @@
 
         <label>Mascota existente:</label>
         <select id="mascota" class="pet-select">
-          <option value="">Cargando mascotas...</option>
+          <option value="">Cargando mascotas…</option>
         </select>
 
         <div id="owner-info" style="margin:0.5em 0; color:#0d47a1;"></div>
 
-        <!-- Botón para corregir datos de este cliente/mascota -->
+        <!-- Botón para corregir datos cliente (Edad, Peso, Correo) -->
         <button type="button" id="edit-client-btn" class="button-86 small" style="display:none;">
           Corregir datos
         </button>
 
-        <!-- Bloque oculto para editar “Edad”, “Peso” y “Correo” -->
+        <!-- Campos ocultos para editar Edad, Peso y Correo -->
         <div id="edit-client-fields" class="edit-client-fields" style="display:none;">
           <label for="edit-age">Edad (años):</label>
           <input type="number" id="edit-age" min="0" />
@@ -162,12 +190,43 @@
           <input type="checkbox" id="new-pet" />
           Nueva mascota
         </label>
-        <div id="new-pet-fields" style="display: none;">
-          <label>Nombre de mascota:</label>
+
+        <!-- Sub‐formulario para dar de alta nuevo cliente (nueva mascota) -->
+        <div id="new-pet-fields" class="new-client-fields" style="display:none;">
+          <h4>Datos del propietario</h4>
+          <label for="new-owner-name">Nombre del propietario:</label>
+          <input type="text" id="new-owner-name" />
+
+          <label for="new-owner-phone">Número de Teléfono:</label>
+          <input type="tel" id="new-owner-phone" />
+
+          <label for="new-owner-email">Correo:</label>
+          <input type="email" id="new-owner-email" />
+
+          <h4>Datos de la mascota</h4>
+          <label for="new-pet-name">Nombre de la mascota:</label>
           <input type="text" id="new-pet-name" />
 
-          <label>Especie:</label>
+          <label for="new-pet-species">Especie:</label>
           <input type="text" id="new-pet-species" />
+
+          <label for="new-pet-breed">Raza:</label>
+          <input type="text" id="new-pet-breed" />
+
+          <label for="new-pet-age">Edad (años):</label>
+          <input type="number" id="new-pet-age" min="0" />
+
+          <label for="new-pet-weight">Peso (kg):</label>
+          <input type="number" id="new-pet-weight" step="0.1" min="0" />
+
+          <label>Esterilizado:</label>
+          <div>
+            <label><input type="radio" name="new-pet-sterilizado" value="Sí" /> Sí</label>
+            <label><input type="radio" name="new-pet-sterilizado" value="No" /> No</label>
+          </div>
+
+          <label for="new-pet-notes">Observaciones:</label>
+          <textarea id="new-pet-notes" rows="2"></textarea>
         </div>
 
         <button type="submit" class="button-86" style="margin-top:1em;">Guardar cita</button>
