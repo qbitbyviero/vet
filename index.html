@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veterinaria 🐾 - Agenda de Citas</title>
-  <!-- Enlace a CSS general -->
   <link rel="stylesheet" href="styles.css" />
   <style>
     /* ===================================
@@ -14,25 +13,21 @@
       cursor: pointer;
       position: relative;
     }
-    /* 4 o más citas → rojo */
     #days div.full {
       background: #ef5350;
       color: #fff;
       border-radius: 4px;
     }
-    /* 3 citas → gris */
     #days div.medium {
       background: #bdbdbd;
       color: #000;
       border-radius: 4px;
     }
-    /* 1 o 2 citas → azul claro */
     #days div.low {
       background: #90caf9;
       color: #000;
       border-radius: 4px;
     }
-    /* Tooltip con número de citas */
     #days div[data-date][data-count]::after {
       content: attr(data-count) " cita(s)";
       position: absolute;
@@ -52,60 +47,34 @@
     #days div[data-date][data-count]:hover::after {
       display: block;
     }
-    /* Estilos para el sub‐formulario de corrección de cliente */
-    .edit-client-fields {
-      margin-top: 0.5em;
-      padding: 0.5em;
-      background: #f1f1f1;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .edit-client-fields label {
-      display: block;
-      margin: 0.3em 0 0.1em;
-      font-weight: 500;
-    }
-    .edit-client-fields input {
-      width: 100%;
-      padding: 0.4em;
-      border: 1px solid #0277bd;
-      border-radius: 4px;
-      margin-bottom: 0.5em;
-      box-sizing: border-box;
-    }
+    /* Botones pequeños */
     .button-86.small {
-      padding: 5px 10px;
-      font-size: 14px;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      margin-top: 0.5rem;
     }
-    /* El sub‐formulario “Nueva mascota/cliente” */
-    .new-client-fields {
-      margin-top: 0.5em;
-      padding: 0.5em;
-      background: #f9f9f9;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-    }
-    .new-client-fields label {
-      display: block;
-      margin: 0.3em 0 0.1em;
-      font-weight: 500;
-    }
-    .new-client-fields input,
-    .new-client-fields select,
-    .new-client-fields textarea {
-      width: 100%;
-      padding: 0.4em;
+    /* Sub‐formulario para corregir cliente */
+    #edit-client-fields {
       border: 1px solid #0277bd;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
       border-radius: 4px;
-      margin-bottom: 0.5em;
-      box-sizing: border-box;
+      background: #e1f5fe;
+    }
+    /* Sub‐formulario para “Nueva mascota” */
+    #new-pet-fields {
+      border: 1px solid #0277bd;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
+      border-radius: 4px;
+      background: #f3e5f5;
     }
   </style>
 </head>
 <body>
   <header>
     <img src="img/logo.png" alt="Logo Veterinaria" />
-    <h1>Clínica Veterinaria</h1>
+    <h1>Clínica Veterinaria v2.4</h1>
   </header>
 
   <nav>
@@ -118,14 +87,13 @@
     </ul>
   </nav>
 
-  <!-- Overlay para cargar los módulos -->
+  <!-- Overlay para módulos -->
   <div id="modal-overlay"></div>
 
   <main>
-    <!-- Calendario -->
+    <!-- CALENDARIO -->
     <div class="calendar" id="calendar">
       <div class="calendar-card" id="card">
-        <!-- PANEL FRONTAL: Selección de mes y día -->
         <div class="front">
           <div class="month-header">
             <button class="button-86" id="prev-month">❮</button>
@@ -138,8 +106,6 @@
           </div>
           <div class="days" id="days"></div>
         </div>
-
-        <!-- PANEL TRASERO: Selección de horario -->
         <div class="back">
           <h2>Horarios para <span id="slot-date"></span></h2>
           <ul id="slot-list"></ul>
@@ -148,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Formulario para agendar cita -->
+    <!-- FORMULARIO DE CITA -->
     <div id="reservation-form" style="display:none;">
       <h2>Agendar cita</h2>
       <form id="appointment-form">
@@ -165,20 +131,17 @@
 
         <div id="owner-info" style="margin:0.5em 0; color:#0d47a1;"></div>
 
-        <!-- Botón para corregir datos cliente (Edad, Peso, Correo) -->
         <button type="button" id="edit-client-btn" class="button-86 small" style="display:none;">
           Corregir datos
         </button>
-
-        <!-- Campos ocultos para editar Edad, Peso y Correo -->
-        <div id="edit-client-fields" class="edit-client-fields" style="display:none;">
-          <label for="edit-age">Edad (años):</label>
+        <div id="edit-client-fields" style="display:none;">
+          <label>Edad (años):</label>
           <input type="number" id="edit-age" min="0" />
 
-          <label for="edit-weight">Peso (kg):</label>
+          <label>Peso (kg):</label>
           <input type="number" id="edit-weight" step="0.1" min="0" />
 
-          <label for="edit-email">Correo:</label>
+          <label>Correo:</label>
           <input type="email" id="edit-email" />
 
           <button type="button" id="save-client-changes" class="button-86 small">
@@ -186,37 +149,35 @@
           </button>
         </div>
 
-        <label style="margin-top:1em;">
+        <label style="margin-top:1rem;">
           <input type="checkbox" id="new-pet" />
           Nueva mascota
         </label>
-
-        <!-- Sub‐formulario para dar de alta nuevo cliente (nueva mascota) -->
-        <div id="new-pet-fields" class="new-client-fields" style="display:none;">
+        <div id="new-pet-fields" style="display:none;">
           <h4>Datos del propietario</h4>
-          <label for="new-owner-name">Nombre del propietario:</label>
+          <label>Nombre del propietario:</label>
           <input type="text" id="new-owner-name" />
 
-          <label for="new-owner-phone">Número de Teléfono:</label>
+          <label>Número de Teléfono:</label>
           <input type="tel" id="new-owner-phone" />
 
-          <label for="new-owner-email">Correo:</label>
+          <label>Correo:</label>
           <input type="email" id="new-owner-email" />
 
           <h4>Datos de la mascota</h4>
-          <label for="new-pet-name">Nombre de la mascota:</label>
+          <label>Nombre de la mascota:</label>
           <input type="text" id="new-pet-name" />
 
-          <label for="new-pet-species">Especie:</label>
+          <label>Especie:</label>
           <input type="text" id="new-pet-species" />
 
-          <label for="new-pet-breed">Raza:</label>
+          <label>Raza:</label>
           <input type="text" id="new-pet-breed" />
 
-          <label for="new-pet-age">Edad (años):</label>
+          <label>Edad (años):</label>
           <input type="number" id="new-pet-age" min="0" />
 
-          <label for="new-pet-weight">Peso (kg):</label>
+          <label>Peso (kg):</label>
           <input type="number" id="new-pet-weight" step="0.1" min="0" />
 
           <label>Esterilizado:</label>
@@ -225,7 +186,7 @@
             <label><input type="radio" name="new-pet-sterilizado" value="No" /> No</label>
           </div>
 
-          <label for="new-pet-notes">Observaciones:</label>
+          <label>Observaciones:</label>
           <textarea id="new-pet-notes" rows="2"></textarea>
         </div>
 
@@ -235,7 +196,6 @@
     </div>
   </main>
 
-  <!-- Enlace a JavaScript general -->
   <script src="main.js"></script>
 </body>
 </html>
