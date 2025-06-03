@@ -1,11 +1,9 @@
 <!-- tienda.html: Módulo de Tienda 🛒 unificado -->
-
 <div class="modal-tienda">
   <h2>Tienda Online 🛒</h2>
 
-  <!-- Productos (estáticos + dinámicos) -->
+  <!-- Grid de productos -->
   <div class="product-grid" id="product-grid">
-    <!-- Cada tarjeta de producto -->
     <div class="product-card">
       <img src="https://via.placeholder.com/150" alt="Shampoo de Aloe" />
       <h4>Shampoo de Aloe</h4>
@@ -56,7 +54,7 @@
   </div>
 </div>
 
-<!-- Carrito Flotante (aparece automáticamente cuando cargas tienda) -->
+<!-- Carrito Flotante (arrastrable) -->
 <div id="cart" class="cart open">
   <h3>Carrito</h3>
   <ul id="cart-items"></ul>
@@ -68,10 +66,10 @@
 </div>
 
 <script>
-  // Misma lógica de JS que ya tienes, pero asegúrate de que 'fetch' use la ruta '/vet/...'
-  // (Ver explicación del path en el anterior mensaje)
+  // Asegúrate en tu main.js de llamar a "/vet/tienda.html" en lugar de "tienda.html"
+  // (Para que GitHub Pages lo encuentre correctamente)
 
-  // Datos de prueba
+  // MISMA LÓGICA DE JS que ya tienes, no hace falta cambiar aquí
   const products = [
     { id: 1, name: 'Shampoo de Aloe', image: 'https://via.placeholder.com/150', price: 120.00 },
     { id: 2, name: 'Cepillo para Mascotas', image: 'https://via.placeholder.com/150', price: 85.50 },
@@ -88,7 +86,6 @@
   const discountTypeEl = document.getElementById('discount-type');
   const discountValueEl = document.getElementById('discount-value');
 
-  // Función para actualizar visual del carrito
   function updateCart() {
     cartItemsEl.innerHTML = '';
     let subtotal = 0;
@@ -107,44 +104,33 @@
     applyDiscount();
   }
 
-  // Añadir producto al carrito
   document.querySelectorAll('.add-to-cart').forEach(btn => {
     btn.onclick = () => {
       const prodId = parseInt(btn.dataset.productId);
       const product = products.find(p => p.id === prodId);
       const existing = cart.find(i => i.id === prodId);
-      if (existing) {
-        existing.qty++;
-      } else {
-        cart.push({ ...product, qty: 1 });
-      }
+      if (existing) existing.qty++;
+      else cart.push({ ...product, qty: 1 });
       updateCart();
-      cartEl.classList.add('open'); // Asegura que el carrito esté visible
+      cartEl.classList.add('open');
     };
   });
 
-  // Quitar producto del carrito
   function removeFromCart(id) {
     const idx = cart.findIndex(i => i.id === id);
     if (idx !== -1) cart.splice(idx, 1);
     updateCart();
   }
 
-  // Aplicar descuento o promoción
   function applyDiscount() {
     const subtotal = parseFloat(subtotalEl.textContent);
     const type = discountTypeEl.value;
     let val = discountValueEl.value;
     let discountAmt = 0;
     promoEl.textContent = '';
-    if (type === 'percent') {
-      discountAmt = subtotal * (parseFloat(val) / 100 || 0);
-    } else if (type === 'fixed' || type === 'coupon') {
-      discountAmt = parseFloat(val) || 0;
-    } else if (type === 'promo') {
-      promoEl.textContent = val || '';
-      discountAmt = 0;
-    }
+    if (type === 'percent') discountAmt = subtotal * (parseFloat(val) / 100 || 0);
+    else if (type === 'fixed' || type === 'coupon') discountAmt = parseFloat(val) || 0;
+    else if (type === 'promo') { promoEl.textContent = val || ''; discountAmt = 0; }
     discountEl.textContent = discountAmt.toFixed(2);
     totalEl.textContent = (subtotal - discountAmt).toFixed(2);
   }
@@ -160,10 +146,8 @@
       discountValueEl.value = '';
     }
   };
-
   document.getElementById('apply-discount').onclick = applyDiscount;
 
-  // Finalizar compra (simulado)
   document.getElementById('checkout').onclick = () => {
     const name = document.getElementById('cliente-name').value || '---';
     alert(`Compra finalizada!\nCliente: ${name}\nTotal: $${totalEl.textContent}`);
@@ -174,7 +158,6 @@
     promoEl.textContent = '';
   };
 
-  // Hacer que el carrito sea arrastrable
   (function() {
     const cartDiv = document.getElementById('cart');
     let dragging = false, startX, startY, origX, origY;
@@ -198,6 +181,5 @@
     document.addEventListener('mouseup', () => dragging = false);
   })();
 
-  // Inicializar carrito vacío
   updateCart();
 </script>
