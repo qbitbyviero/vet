@@ -580,14 +580,22 @@ td {
     transform: translate(-5rem, 0);
   }
 }
-/*=======tienda=========*/
 /* ============================
-   ESTILOS PARA EL MÓDULO TIENDA
+   AJUSTES ESPECÍFICOS PARA TIENDA
    ============================ */
 
-/* Contenedor principal del modal (modal-tienda ya lo tienes) */
+/* Limitar ancho del modal */
+.modal-tienda {
+  max-width: 600px;
+  width: 90vw;
+  margin: 0 auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Título más grande y centrado */
 .modal-tienda h2 {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
   text-align: center;
   color: #0d47a1;
 }
@@ -595,9 +603,9 @@ td {
 /* Grid de productos */
 .product-grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  margin-bottom: 2rem;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin-bottom: 1.5rem;
 }
 
 /* Tarjeta de producto */
@@ -608,6 +616,9 @@ td {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 1rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -620,34 +631,40 @@ td {
   max-width: 100%;
   border-radius: 4px;
   margin-bottom: 0.8rem;
+  object-fit: cover;
+  height: 120px;
 }
 
 .product-card h4 {
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 0.25rem;
   color: #0d47a1;
   font-size: 1rem;
 }
 
 .product-card .price {
-  margin: 0.5rem 0;
+  margin: 0.25rem 0 1rem;
   font-weight: bold;
   color: #1565c0;
 }
 
 .product-card .button-86 {
-  margin-top: 0.8rem;
-  /* Si quieres un ancho fijo en el botón: width: 100%; */
+  margin-top: auto;
+  align-self: center;
+  width: 80%;
 }
 
 /* Formulario de checkout */
 .checkout-form {
   border-top: 1px solid #0277bd;
   padding-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .checkout-form h3 {
   color: #1565c0;
   margin-bottom: 0.5rem;
+  text-align: center;
+  font-size: 1.1rem;
 }
 
 .checkout-form label {
@@ -695,7 +712,7 @@ td {
 }
 
 .cart.open {
-  right: 1rem; /* lo hace visible */
+  right: 1rem;
 }
 
 .cart h3 {
@@ -744,7 +761,7 @@ td {
   width: 100%;
 }
 
-/* Ajuste responsivo: si la pantalla es muy chica, el carrito ocupa menos espacio */
+/* Responsive para pantallas pequeñas */
 @media (max-width: 600px) {
   .cart {
     width: 200px;
