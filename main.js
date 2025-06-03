@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 0) CONFIGURACIÓN: URL DE TU WEB APP
   // ======================================
   // Sustituye esta URL por la que te devuelva tu Apps Script al hacer "Deploy → Web App"
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyROj2914A5Gv5BEuMuDAJ4NwehwuRQjMEZZo7hmU9UOl6HSoR0JXeE3BM591TJYZ8m/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwKIpSWIwBmr8dK-Lif9zI87sn0getjJOajYnv4eDcq42PfJ8Sp90gKdVQUX8OQ2Oj3/exec";
 
   // ============================
   // 1) CACHE PARA CLIENTES Y CITAS
