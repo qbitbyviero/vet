@@ -3,37 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veterinaria 🐾 - Agenda de Citas v2.1</title>
+  <title>Veterinaria 🐾 - Agenda de Citas</title>
   <!-- Enlace a CSS general -->
   <link rel="stylesheet" href="styles.css" />
   <style>
     /* ===================================
        Estilos adicionales para el calendario
        =================================== */
-    /* Cada día del calendario se representará con esta clase */
     #days div[data-date] {
       cursor: pointer;
       position: relative;
     }
-    /* Día “sin espacio” = 4 o más citas: color rojo */
     #days div.full {
       background: #ef5350;
       color: #fff;
       border-radius: 4px;
     }
-    /* Día “pocas plazas” = 3 citas: color gris */
     #days div.medium {
       background: #bdbdbd;
       color: #000;
       border-radius: 4px;
     }
-    /* Día “espacios disponibles” < 3 citas: color azul claro */
     #days div.low {
       background: #90caf9;
       color: #000;
       border-radius: 4px;
     }
-    /* Tooltip al pasar sobre un día que tenga citas (opcional) */
     #days div[data-date][data-count]::after {
       content: attr(data-count) " cita(s)";
       position: absolute;
@@ -53,17 +48,40 @@
     #days div[data-date][data-count]:hover::after {
       display: block;
     }
+    /* Estilos para formulario de corrección */
+    .edit-client-fields {
+      margin-top: 0.5em;
+      padding: 0.5em;
+      background: #f1f1f1;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .edit-client-fields label {
+      display: block;
+      margin: 0.3em 0 0.1em;
+      font-weight: 500;
+    }
+    .edit-client-fields input {
+      width: 100%;
+      padding: 0.4em;
+      border: 1px solid #0277bd;
+      border-radius: 4px;
+      margin-bottom: 0.5em;
+      box-sizing: border-box;
+    }
+    .button-86.small {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <header>
     <img src="img/logo.png" alt="Logo Veterinaria" />
-    <h1>Clínica Veterinaria</h1>
+    <h1>Clínica Veterinaria v2.2 </h1>
   </header>
-
   <nav>
     <ul>
-      <!-- Asegúrate de no dejar espacios dentro de data-module -->
       <li><a href="#" data-module="clientes.html" class="button-86">👤 Clientes</a></li>
       <li><a href="#" data-module="estetica.html" class="button-86">✂️ Estética</a></li>
       <li><a href="#" data-module="consulta.html" class="button-86">🩺 Consulta</a></li>
@@ -119,7 +137,28 @@
 
         <div id="owner-info" style="margin:0.5em 0; color:#0d47a1;"></div>
 
-        <label>
+        <!-- Botón para corregir datos de este cliente/mascota -->
+        <button type="button" id="edit-client-btn" class="button-86 small" style="display:none;">
+          Corregir datos
+        </button>
+
+        <!-- Bloque oculto para editar “Edad”, “Peso” y “Correo” -->
+        <div id="edit-client-fields" class="edit-client-fields" style="display:none;">
+          <label for="edit-age">Edad (años):</label>
+          <input type="number" id="edit-age" min="0" />
+
+          <label for="edit-weight">Peso (kg):</label>
+          <input type="number" id="edit-weight" step="0.1" min="0" />
+
+          <label for="edit-email">Correo:</label>
+          <input type="email" id="edit-email" />
+
+          <button type="button" id="save-client-changes" class="button-86 small">
+            Guardar cambios cliente
+          </button>
+        </div>
+
+        <label style="margin-top:1em;">
           <input type="checkbox" id="new-pet" />
           Nueva mascota
         </label>
@@ -131,8 +170,8 @@
           <input type="text" id="new-pet-species" />
         </div>
 
-        <button type="submit" class="button-86">Guardar</button>
-        <button type="button" class="button-86" id="cancel-form">Cancelar</button>
+        <button type="submit" class="button-86" style="margin-top:1em;">Guardar cita</button>
+        <button type="button" class="button-86" id="cancel-form" style="margin-top:1em;">Cancelar</button>
       </form>
     </div>
   </main>
