@@ -6,6 +6,54 @@
   <title>Veterinaria 🐾 - Agenda de Citas</title>
   <!-- Enlace a CSS general -->
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ===================================
+       Estilos adicionales para el calendario
+       =================================== */
+    /* Cada día del calendario se representará con esta clase */
+    #days div[data-date] {
+      cursor: pointer;
+      position: relative;
+    }
+    /* Día “sin espacio” = 4 o más citas: color rojo */
+    #days div.full {
+      background: #ef5350;
+      color: #fff;
+      border-radius: 4px;
+    }
+    /* Día “pocas plazas” = 3 citas: color gris */
+    #days div.medium {
+      background: #bdbdbd;
+      color: #000;
+      border-radius: 4px;
+    }
+    /* Día “espacios disponibles” < 3 citas: color azul claro */
+    #days div.low {
+      background: #90caf9;
+      color: #000;
+      border-radius: 4px;
+    }
+    /* Tooltip al pasar sobre un día que tenga citas (opcional) */
+    #days div[data-date][data-count]::after {
+      content: attr(data-count) " cita(s)";
+      position: absolute;
+      top: -1.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 0.2em 0.5em;
+      font-size: 0.8em;
+      border-radius: 3px;
+      white-space: nowrap;
+      display: none;
+      pointer-events: none;
+      z-index: 5;
+    }
+    #days div[data-date][data-count]:hover::after {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -15,7 +63,7 @@
 
   <nav>
     <ul>
-      <!-- Fíjate que he eliminado los espacios dentro de data-module -->
+      <!-- Asegúrate de no dejar espacios dentro de data-module -->
       <li><a href="#" data-module="clientes.html" class="button-86">👤 Clientes</a></li>
       <li><a href="#" data-module="estetica.html" class="button-86">✂️ Estética</a></li>
       <li><a href="#" data-module="consulta.html" class="button-86">🩺 Consulta</a></li>
@@ -55,7 +103,7 @@
     </div>
 
     <!-- Formulario para agendar cita -->
-    <div id="reservation-form">
+    <div id="reservation-form" style="display:none;">
       <h2>Agendar cita</h2>
       <form id="appointment-form">
         <label>Fecha:</label>
@@ -65,7 +113,11 @@
         <input type="text" id="form-time" readonly />
 
         <label>Mascota existente:</label>
-        <select id="mascota"></select>
+        <select id="mascota" class="pet-select">
+          <option value="">Cargando mascotas...</option>
+        </select>
+
+        <div id="owner-info" style="margin:0.5em 0; color:#0d47a1;"></div>
 
         <label>
           <input type="checkbox" id="new-pet" />
