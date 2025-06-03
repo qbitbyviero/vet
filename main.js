@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ======================================
   // 0) URL DE TU WEB APP (Apps Script)
   // ======================================
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwKIpSWIwBmr8dK-Lif9zI87sn0getjJOajYnv4eDcq42PfJ8Sp90gKdVQUX8OQ2Oj3/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbwmKOasmVtpKEuUFD2r3IAG_mbOL87W-7b_r2q_h5wL1hiz0k0ja6m4G7ZqHQJoxj_NaQ/exec";
 
   // ============================
   // 1) JSONP REQUEST (para GET)
