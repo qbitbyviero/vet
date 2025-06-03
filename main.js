@@ -19,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[data-module]').forEach(link => {
     link.addEventListener('click', async e => {
       e.preventDefault();
-      const file = "/vet/" + el.dataset.module; // por ejemplo: "/vet/tienda.html"
+
+      // CORRECCIÓN: usar "link.dataset.module" en lugar de "el"
+      // Asegúrate de cambiar "/vet/" si tu carpeta es distinta
+      const file = "/vet/" + link.dataset.module;
+
       // Mostrar overlay y botón de cierre
       overlay.innerHTML = `
         <div class="modal-overlay-content">
@@ -88,31 +92,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const backToCalendarBtn = document.getElementById('back-to-calendar');
   const slotListEl = document.getElementById('slot-list');
 
-  // Renderiza el calendario del mes actual
+  // Renderizar el calendario del mes actual
   function renderCalendar() {
-    // Mostrar panel calendario y ocultar formulario de reserva
     document.getElementById('calendar').style.display = 'block';
     reservationFormDiv.style.display = 'none';
-    // Obtiene año y mes
     const y = currentDate.getFullYear();
     const m = currentDate.getMonth();
     monthYearEl.textContent = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
     daysEl.innerHTML = '';
-    // Calcula primer día de la semana (Lun=1 ... Dom=7)
     const firstDayIndex = (new Date(y, m, 1).getDay() || 7);
     const totalDays = new Date(y, m + 1, 0).getDate();
-    // Celdas vacías hasta el primer día
     for (let i = 1; i < firstDayIndex; i++) {
-      const emptyCell = document.createElement('div');
-      daysEl.appendChild(emptyCell);
+      daysEl.appendChild(document.createElement('div'));
     }
-    // Rellenar días del mes
     for (let d = 1; d <= totalDays; d++) {
       const dayCell = document.createElement('div');
       const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       dayCell.textContent = d;
       dayCell.dataset.date = dateStr;
-      // Si es día actual, agregar clase “today”
       if (dateStr === new Date().toISOString().slice(0, 10)) {
         dayCell.classList.add('today');
       }
@@ -121,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activateDateClicks();
   }
 
-  // Habilita clic en cada día
+  // Habilitar clic en cada día
   function activateDateClicks() {
     document.querySelectorAll('#days div[data-date]').forEach(el => {
       el.addEventListener('click', () => {
@@ -134,9 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Animación: voltear calendario y mostrar lista de horarios
   function flipToSlots(date) {
-    // Aplica la clase “flipped1” para rotar la card
     card.classList.add('flipped1');
-    // Cargar horarios luego de la animación
     setTimeout(() => loadSlots(date), 400);
   }
 
@@ -166,23 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Al seleccionar un slot, animar hacia el formulario
   function selectSlot(date, time) {
-    // Pequeña animación de opacidad antes de mostrar el formulario
     const backPanel = document.querySelector('.back');
     backPanel.style.transition = 'opacity 0.3s ease';
     backPanel.style.opacity = '0';
     setTimeout(() => {
-      // Ocultar calendario/slots
       document.getElementById('calendar').style.display = 'none';
-      // Preparar y mostrar formulario
       renderForm(date, time);
       reservationFormDiv.style.opacity = '0';
       reservationFormDiv.style.display = 'block';
-      // Animar aparición del formulario
       setTimeout(() => {
         reservationFormDiv.style.transition = 'opacity 0.4s ease';
         reservationFormDiv.style.opacity = '1';
       }, 50);
-      // Resetear opacidad panel de slots
       backPanel.style.opacity = '1';
     }, 300);
   }
@@ -191,18 +181,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderForm(date, time) {
     formDate.value = date;
     formTime.value = time;
-    // Simulación de mascotas existentes
     petSelect.innerHTML = `
       <option>Firulais</option>
       <option>Pelusa</option>
       <option>Rex</option>
     `;
-    // Reset campos nueva mascota
     newChk.checked = false;
     newPetFields.style.display = 'none';
     document.getElementById('new-pet-name').value = '';
     document.getElementById('new-pet-species').value = '';
-    // Desplazar hacia el formulario
     reservationFormDiv.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -226,7 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Manejo de envío de formulario
   document.getElementById('appointment-form').addEventListener('submit', e => {
     e.preventDefault();
-    alert(`Cita guardada:\nFecha: ${formDate.value}\nHora: ${formTime.value}\n${newChk.checked ? `Nueva mascota: ${document.getElementById('new-pet-name').value}` : `Mascota existente: ${petSelect.value}`}`);
+    alert(`Cita guardada:\nFecha: ${formDate.value}\nHora: ${formTime.value}\n${
+      newChk.checked
+        ? `Nueva mascota: ${document.getElementById('new-pet-name').value}`
+        : `Mascota existente: ${petSelect.value}`
+    }`);
     reservationFormDiv.style.display = 'none';
     renderCalendar();
   });
