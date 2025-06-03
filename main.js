@@ -7,18 +7,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // 0) CONFIGURACIÓN: URL DE TU WEB APP
   // ======================================
   // Sustituye esta URL por la que te devolvió tu Apps Script al hacer "Deploy → Web App"
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyROj2914A5Gv5BEuMuDAJ4NwehwuRQjMEZZo7hmU9UOl6HSoR0JXeE3BM591TJYZ8m/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbw1jcFpWi_8Yxs7ZFdx2TToXNWEoznyy8YzQitR_NwyGlwWIbPQaPk_SuLbu-mwIFejIg/exec";
 
   // ============================
   // 1) CACHE PARA CLIENTES Y CITAS
   // ============================
   let __clientsCache = null;      // guardará [{ID,...,"Nombre mascota",...}, ...]
-  let __appointmentsCache = {};   // map { "YYYY-MM-DD": [ { hora:"10:30", mascota:"Fido", motivo:"Vacunas", clienteId:"3" }, ... ] }
+  let __appointmentsCache = {};   // map { "YYYY-MM-DD": [ { Fecha, Hora, "ID cliente", "Nombre mascota", Motivo }, ... ] }
 
   /**
    * loadAllClients()
    *  - Si ya tenemos __clientsCache (array), lo devolvemos.
-   *  - Si no, hacemos un fetch GET a GAS_BASE_URL + "?sheet=Clientes" (o sin params si tu Apps Script ya devuelve clientes por defecto).
+   *  - Si no, hacemos un fetch GET a GAS_BASE_URL + "?sheet=Clientes".
    *  - Guardamos la respuesta (arreglo de objetos) en __clientsCache y la retornamos.
    */
   async function loadAllClients() {
@@ -26,9 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return __clientsCache;
     }
     try {
-      // Si tu Apps Script está configurado para devolver "Clientes" por defecto en doGet(), basta con usar GAS_BASE_URL.
-      // Si en tu Apps Script haces switch por parámetro sheet=Clientes o sheet=Citas, entonces harías:
-      // const url = GAS_BASE_URL + "?sheet=Clientes";
       const url = GAS_BASE_URL + "?sheet=Clientes";
       const resp = await fetch(url, {
         method: "GET",
@@ -36,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       const data = await resp.json();
-      __clientsCache = data; // Guarda [{ID, "Nombre completo", "Nombre mascota", ...}, ...]
+      __clientsCache = data; // Guarda [{ID, "Nombre completo", "Teléfono", "Correo electrónico", "Nombre mascota", ...}, ...]
       return __clientsCache;
     } catch (err) {
       console.error("Error cargando clientes:", err);
@@ -48,9 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
    * loadAppointmentsByDate(fecha)
    *  - Fecha en formato "YYYY-MM-DD".
    *  - Si ya está en __appointmentsCache[fecha], devolvemos ese arreglo.
-   *  - Si no, hacemos fetch GET a GAS_BASE_URL+"?sheet=Citas" y filtramos solo las citas de esa fecha.
+   *  - Si no, hacemos fetch GET a GAS_BASE_URL + "?sheet=Citas" y filtramos solo las citas de esa fecha.
    *  - Guardamos en cache por fecha y devolvemos el arreglo de citas para ese día.
-   *  - Cada cita debe tener al menos: { fecha: "YYYY-MM-DD", hora:"HH:MM", mascota:"NombreMascota", motivo:"Texto", clienteId:"3" }
    */
   async function loadAppointmentsByDate(fecha) {
     if (Array.isArray(__appointmentsCache[fecha])) {
@@ -63,10 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" }
       });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const allCitas = await resp.json(); 
-      // Esperamos que allCitas sea algo como:
-      // [ { "Fecha": "2025-06-05", "Hora": "10:30", "ID cliente": "2", "Nombre mascota": "Firulais", "Motivo": "Vacunas" }, ... ]
-      // Filtramos solo fecha = parametro
+      const allCitas = await resp.json();
+      // allCitas ejemplo: [ { "Fecha": "2025-06-05", "Hora": "10:30", "ID cliente": "2", "Nombre mascota": "Firulais", "Motivo": "Vacunas" }, ... ]
       const citasDelDia = allCitas.filter(cita => cita["Fecha"] === fecha);
       __appointmentsCache[fecha] = citasDelDia;
       return citasDelDia;
@@ -78,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * addNewClient(clienteObj)
-   *  - Envía un POST a GAS_BASE_URL con sheet=Clientes para agregar un cliente nuevo.
+   *  - Envía un POST a GAS_BASE_URL + "?sheet=Clientes" para agregar un cliente nuevo.
    *  - clienteObj debe tener exactamente las mismas claves que los encabezados en la hoja "Clientes".
    *  - Invalida __clientsCache para que la próxima llamada recargue desde la hoja.
    */
@@ -102,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /**
    * addNewAppointment(citaObj)
-   *  - Envía un POST a GAS_BASE_URL con sheet=Citas para agregar una cita nueva.
+   *  - Envía un POST a GAS_BASE_URL + "?sheet=Citas" para agregar una cita nueva.
    *  - citaObj debe tener claves: "Fecha", "Hora", "ID cliente", "Nombre mascota", "Motivo"
    *  - Invalida __appointmentsCache para la fecha afectada
    */
@@ -233,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     daysEl.innerHTML = "";
-    const firstDayIndex = new Date(y, m, 1).getDay() || 7;
+    const firstDayIndex = (new Date(y, m, 1).getDay() || 7);
     const totalDays = new Date(y, m + 1, 0).getDate();
 
     // Espacios vacíos hasta el primer día
@@ -275,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Cada día clickable que tenga data-date
   function activateDateClicks() {
     document.querySelectorAll("#days div[data-date]").forEach(el => {
-      el.addEventListener("click", async () => {
+      el.addEventListener("click", () => {
         const selectedDate = el.dataset.date;
         document.getElementById("slot-date").textContent = selectedDate;
         flipToSlots(selectedDate);
@@ -319,18 +313,18 @@ document.addEventListener("DOMContentLoaded", () => {
           // Ya hay cita en esta hora: mostrar “Mascota → Motivo” y no permitir seleccionarlo
           const data = mapaCitas[time];
           li.textContent = `${time}  ${data.mascota} → ${data.motivo}`;
-          li.classList.add("occupied"); 
+          li.classList.add("occupied");
           li.style.cursor = "not-allowed";
           li.style.opacity = "0.7";
         } else {
-          // Hora disponible: clickable para elegir ese slot
+          // Hora libre: clickable
           li.textContent = time;
           li.addEventListener("click", () => selectSlot(fecha, time));
         }
         slotListEl.appendChild(li);
       });
     }
-    // Última opción de “URGENCIAS”
+    // Opción final “URGENCIAS”
     const urg = document.createElement("li");
     urg.textContent = "🚨 URGENCIAS";
     urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
@@ -391,7 +385,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       // Buscar en el arreglo global de clientes la mascota seleccionada
       const clientes = await loadAllClients();
-      // Puede haber varias filas con la misma mascota, pero asumimos que cada mascota es única.
       const fila = clientes.find(c => c["Nombre mascota"] === petSeleccionada);
       if (fila) {
         ownerInfoDiv.innerHTML = `
@@ -440,17 +433,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let clienteId, nombreMascota, motivo;
 
     if (nuevaMascota) {
-      // Si es una nueva mascota, pedimos al usuario que capture también:
-      // - Nombre completo del dueño
-      // - Teléfono, correo
-      // - Datos de la mascota (Nombre, especie, raza, edad, peso, esterilizado)
-      // Para simplificar, aquí solo vamos a alertar que “no se implementa alta de nueva mascota aún”.
+      // Aquí podrías implementar alta de nuevo cliente/mascota.
       alert("Dar de alta nueva mascota no está implementado en este formulario.");
       return;
     } else {
       // Mascota existente: tomamos el valor del <select id="mascota"> (es “Nombre mascota”)
       nombreMascota = document.getElementById("mascota").value;
-      // Encontrar el cliente en la lista global
       const clientes = await loadAllClients();
       const fila = clientes.find(c => c["Nombre mascota"] === nombreMascota);
       if (!fila) {
@@ -458,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       clienteId = fila["ID"];
-      // Pedimos el “motivo” de la cita al usuario (puedes reemplazarlo por un campo en el formulario si lo deseas)
+      // Pedimos el “motivo” de la cita
       motivo = prompt("Ingrese el motivo de la cita para " + nombreMascota + ":");
       if (!motivo) {
         alert("La cita debe tener un motivo.");
@@ -505,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function populateClientPetFields(container) {
     const clients = await loadAllClients();
 
-    // 4.1) Rellenar <select class="client-select">
+    // Rellenar <select class="client-select"> (si existiera en otros modales)
     container.querySelectorAll("select.client-select").forEach(selectEl => {
       selectEl.innerHTML = "";
       const placeholder = document.createElement("option");
@@ -520,7 +508,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // 4.2) Rellenar <select class="pet-select">
+    // Rellenar <select class="pet-select"> (ej. el del formulario de cita)
     container.querySelectorAll("select.pet-select").forEach(selectEl => {
       selectEl.innerHTML = "";
       const placeholder = document.createElement("option");
