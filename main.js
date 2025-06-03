@@ -2,62 +2,206 @@
 // main.js (JavaScript General)
 // =======================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-  /* =================================
-     1) MODAL OVERLAY + CARGA DE MÓDULOS
-     ================================= */
-  const overlay = document.getElementById('modal-overlay');
+  // ======================================
+  // 0) CONFIGURACIÓN: URL de tu Web App
+  // ======================================
+  // Sustituye esta URL por la que te proporcionó tu Apps Script al hacer "Deploy → Web App"
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyROj2914A5Gv5BEuMuDAJ4NwehwuRQjMEZZo7hmU9UOl6HSoR0JXeE3BM591TJYZ8m/exec";
 
-  // Función para cerrar modal
-  function closeModal() {
-    overlay.classList.remove('visible');
-    overlay.innerHTML = ''; // Limpiar contenido
+  // ============================
+  // 1) CACHE PARA CLIENTES Y MASCOTAS
+  // ============================
+  // Almacenará en memoria el arreglo de clientes/mascotas para no pedirlo repetidamente
+  let __clientsCache = null;
+
+  /**
+   * loadAllClients()
+   *   - Si ya hemos cargado antes la lista de clientes, la devuelve del cache.
+   *   - Si no, hace una petición GET a GAS_BASE_URL para obtener el JSON de todos los clientes.
+   *   - Guarda el resultado en __clientsCache y lo retorna.
+   *   - En caso de error, devuelve un arreglo vacío.
+   */
+  async function loadAllClients() {
+    if (Array.isArray(__clientsCache)) {
+      return __clientsCache;
+    }
+    try {
+      const resp = await fetch(GAS_BASE_URL, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const data = await resp.json();
+      // data debe ser un array de objetos: [{ ID, "Nombre completo", "Nombre mascota", … }, …]
+      __clientsCache = data;
+      return __clientsCache;
+    } catch (err) {
+      console.error("Error cargando clientes desde Apps Script:", err);
+      return [];
+    }
   }
 
-  // Abrir módulo al hacer clic en enlace de nav
+  /**
+   * populateClientPetFields(container)
+   *   - Busca, dentro de `container` (un elemento HTML), todos los <select> con clase "client-select"
+   *     y los rellena con las opciones de “Nombre completo” de los clientes.
+   *   - Busca todos los <select> con clase "pet-select" y los rellena con las opciones de “Nombre mascota”,
+   *     concatenando entre paréntesis el nombre del dueño para que sea más legible.
+   *   - Esta función invoca loadAllClients() y espera a que el JSON esté disponible.
+   */
+  async function populateClientPetFields(container) {
+    const clients = await loadAllClients(); // Obtener el arreglo de clientes (cache)
+
+    // ===== 1. Rellenar <select class="client-select"> =====
+    container.querySelectorAll("select.client-select").forEach(selectEl => {
+      // Limpiar cualquier opción previa
+      selectEl.innerHTML = "";
+      // Opción placeholder
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Seleccione un cliente";
+      selectEl.appendChild(placeholder);
+
+      // Agregar una <option> por cada cliente
+      clients.forEach(cliente => {
+        const opt = document.createElement("option");
+        // Como value podemos usar el ID (si existe) o el nombre completo
+        opt.value = cliente["ID"] || cliente["Nombre completo"];
+        opt.textContent = cliente["Nombre completo"];
+        selectEl.appendChild(opt);
+      });
+    });
+
+    // ===== 2. Rellenar <select class="pet-select"> =====
+    container.querySelectorAll("select.pet-select").forEach(selectEl => {
+      selectEl.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Seleccione una mascota";
+      selectEl.appendChild(placeholder);
+
+      clients.forEach(cliente => {
+        const petName = cliente["Nombre mascota"];
+        if (petName && petName.trim() !== "") {
+          const opt = document.createElement("option");
+          // Value podría ser simplemente el nombre de la mascota,
+          // o si quieres distinguir duplicados,: `${cliente["ID"]}|${petName}`
+          opt.value = petName;
+          // Mostrar, por ejemplo, “Luna (dueño: Ana Martínez)”
+          opt.textContent = `${petName} (dueño: ${cliente["Nombre completo"]})`;
+          selectEl.appendChild(opt);
+        }
+      });
+    });
+  }
+
+  /**
+   * addNewClient(clienteObj)
+   *   - Envía un POST a GAS_BASE_URL para agregar un nuevo cliente en la hoja de cálculo.
+   *   - clienteObj debe tener exactamente las mismas claves que los encabezados en la hoja “Clientes”.
+   *   - Ejemplo de clienteObj:
+   *     {
+   *       "ID": "5",
+   *       "Nombre completo": "Pedro López",
+   *       "Teléfono": "555-123-456",
+   *       "Correo electrónico": "pedro@example.com",
+   *       "Nombre mascota": "Toby",
+   *       "Especie mascota": "perro",
+   *       "Raza mascota": "Beagle",
+   *       "Edad mascota": "3",
+   *       "Peso mascota": "10.2",
+   *       "Esterilizado": "Sí"
+   *     }
+   *   - Invalida el cache para que la próxima vez que llamemos a loadAllClients()
+   *     recargue la lista completa.
+   */
+  async function addNewClient(clienteObj) {
+    try {
+      const resp = await fetch(GAS_BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clienteObj)
+      });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const data = await resp.json();
+      // Invalida cache para forzar recarga en próximas llamadas
+      __clientsCache = null;
+      return data; // Debe devolver { success: true } o un objeto con error
+    } catch (err) {
+      console.error("Error agregando cliente:", err);
+      throw err;
+    }
+  }
+
+  // ================================================
+  // 2) MODAL OVERLAY + CARGA DINÁMICA DE MÓDULOS (HTML)
+  // ================================================
+  const overlay = document.getElementById("modal-overlay");
+
+  // Función para cerrar el modal
+  function closeModal() {
+    overlay.classList.remove("visible");
+    overlay.innerHTML = "";
+  }
+
+  // Cada vez que se hace clic en <a data-module="archivo.html">, cargamos ese HTML en el overlay
   document.querySelectorAll('a[data-module]').forEach(link => {
-    link.addEventListener('click', async e => {
+    link.addEventListener("click", async e => {
       e.preventDefault();
 
-      // CORRECCIÓN: usar "link.dataset.module" en lugar de "el"
-      // Asegúrate de cambiar "/vet/" si tu carpeta es distinta
-      const file = "/vet/" + link.dataset.module;
+      // Ruta al archivo HTML a cargar. Ajusta si tu carpeta es distinta.
+      // Por ejemplo, si tu index.html está en la raíz y los modulos están junto a él:
+      const file = link.dataset.module.trim();
 
-      // Mostrar overlay y botón de cierre
+      // 1) Mostrar overlay con indicador de carga y botón de cierre
       overlay.innerHTML = `
         <div class="modal-overlay-content">
           <button id="close-modal" aria-label="Cerrar módulo">×</button>
           <div class="loading-msg">Cargando...</div>
         </div>
       `;
-      overlay.classList.add('visible');
+      overlay.classList.add("visible");
 
-      // Cerrar al hacer clic en fondo oscuro
-      overlay.addEventListener('click', ev => {
+      // 2) Cerrar si hacen clic en el fondo oscuro
+      overlay.addEventListener("click", ev => {
         if (ev.target === overlay) closeModal();
       });
-
-      // Cerrar al hacer clic en "×"
-      overlay.querySelector('#close-modal').addEventListener('click', closeModal);
+      // 3) Cerrar si hacen clic en la “×”
+      overlay.querySelector("#close-modal").addEventListener("click", closeModal);
 
       try {
+        // 4) Traer el HTML del módulo (clientes.html, consulta.html, etc.)
         const html = await fetch(file).then(r => r.text());
-        const container = overlay.querySelector('.modal-overlay-content');
-        // Reemplazar “Cargando...” por contenido del módulo
+        const container = overlay.querySelector(".modal-overlay-content");
+
+        // Sustituir “Cargando...” por un contenedor vacío + botón de cierre
         container.innerHTML = `<button id="close-modal" aria-label="Cerrar módulo">×</button>`;
-        const tpl = document.createElement('template');
+
+        // Parsear el HTML en un TEMPLATE
+        const tpl = document.createElement("template");
         tpl.innerHTML = html.trim();
-        // Extraer y volver a agregar scripts
-        const scripts = tpl.content.querySelectorAll('script');
+
+        // Extraer todos los scripts para agregarlos más tarde
+        const scripts = tpl.content.querySelectorAll("script");
+        // Clonar el contenido sin scripts
         const fragment = tpl.content.cloneNode(true);
-        fragment.querySelectorAll('script').forEach(s => s.remove());
-        const contentDiv = document.createElement('div');
+        fragment.querySelectorAll("script").forEach(s => s.remove());
+
+        // 5) Crear un DIV que contendrá todo el HTML del módulo (sin los <script>)
+        const contentDiv = document.createElement("div");
         contentDiv.appendChild(fragment);
+        // Insertarlo en el overlay
         container.appendChild(contentDiv);
-        // Agregar scripts al final para que se ejecuten
+
+        // 6) ¡Populate automático de selects! (clientes/mascotas)
+        await populateClientPetFields(container);
+
+        // 7) Ahora reinsertamos todos los <script> que estaban en el módulo,
+        //    para que se ejecuten su lógica interna (event listeners, etc.)
         scripts.forEach(oldScript => {
-          const newScript = document.createElement('script');
+          const newScript = document.createElement("script");
           if (oldScript.src) {
             newScript.src = oldScript.src;
           } else {
@@ -65,173 +209,78 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           container.appendChild(newScript);
         });
+
+        // 8) Reagregar listener de cierre al nuevo botón “×”
+        container.querySelector("#close-modal").addEventListener("click", closeModal);
       } catch (err) {
-        const container = overlay.querySelector('.modal-overlay-content');
+        // Si hay error al cargar el archivo HTML
+        const container = overlay.querySelector(".modal-overlay-content");
         container.innerHTML = `
           <button id="close-modal" aria-label="Cerrar módulo">×</button>
           <p style="padding:1em;color:#b71c1c;">Error al cargar el módulo.</p>
         `;
-        container.querySelector('#close-modal').addEventListener('click', closeModal);
+        container.querySelector("#close-modal").addEventListener("click", closeModal);
       }
     });
   });
 
-  /* ===================================
-     2) LÓGICA DEL CALENDARIO + ANIMACIONES
-     =================================== */
+  // ===================================
+  // 3) LÓGICA DEL CALENDARIO + ANIMACIONES
+  // ===================================
   let currentDate = new Date();
-  const card = document.getElementById('card');
-  const daysEl = document.getElementById('days');
-  const monthYearEl = document.getElementById('month-year');
-  const reservationFormDiv = document.getElementById('reservation-form');
-  const formDate = document.getElementById('form-date');
-  const formTime = document.getElementById('form-time');
-  const petSelect = document.getElementById('mascota');
-  const newChk = document.getElementById('new-pet');
-  const newPetFields = document.getElementById('new-pet-fields');
-  const backToCalendarBtn = document.getElementById('back-to-calendar');
-  const slotListEl = document.getElementById('slot-list');
+  const card = document.getElementById("card");
+  const daysEl = document.getElementById("days");
+  const monthYearEl = document.getElementById("month-year");
+  const reservationFormDiv = document.getElementById("reservation-form");
+  const formDate = document.getElementById("form-date");
+  const formTime = document.getElementById("form-time");
+  const petSelect = document.getElementById("mascota");
+  const newChk = document.getElementById("new-pet");
+  const newPetFields = document.getElementById("new-pet-fields");
+  const backToCalendarBtn = document.getElementById("back-to-calendar");
+  const slotListEl = document.getElementById("slot-list");
 
-  // Renderizar el calendario del mes actual
+  // Renderizar calendario
   function renderCalendar() {
-    document.getElementById('calendar').style.display = 'block';
-    reservationFormDiv.style.display = 'none';
+    document.getElementById("calendar").style.display = "block";
+    reservationFormDiv.style.display = "none";
     const y = currentDate.getFullYear();
     const m = currentDate.getMonth();
-    monthYearEl.textContent = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-    daysEl.innerHTML = '';
-    const firstDayIndex = (new Date(y, m, 1).getDay() || 7);
+    monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
+      month: "long",
+      year: "numeric"
+    });
+    daysEl.innerHTML = "";
+    const firstDayIndex = new Date(y, m, 1).getDay() || 7; // Lunes=1 … Domingo=7
     const totalDays = new Date(y, m + 1, 0).getDate();
+    // Celdas vacías hasta el primer día
     for (let i = 1; i < firstDayIndex; i++) {
-      daysEl.appendChild(document.createElement('div'));
+      daysEl.appendChild(document.createElement("div"));
     }
+    // Dibujar cada día
     for (let d = 1; d <= totalDays; d++) {
-      const dayCell = document.createElement('div');
-      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayCell = document.createElement("div");
+      const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       dayCell.textContent = d;
       dayCell.dataset.date = dateStr;
+      // Marcar hoy
       if (dateStr === new Date().toISOString().slice(0, 10)) {
-        dayCell.classList.add('today');
+        dayCell.classList.add("today");
       }
       daysEl.appendChild(dayCell);
     }
     activateDateClicks();
   }
 
-  // Habilitar clic en cada día
+  // Habilitar clic en cada celda de fecha
   function activateDateClicks() {
-    document.querySelectorAll('#days div[data-date]').forEach(el => {
-      el.addEventListener('click', () => {
+    document.querySelectorAll("#days div[data-date]").forEach(el => {
+      el.addEventListener("click", () => {
         const selectedDate = el.dataset.date;
-        document.getElementById('slot-date').textContent = selectedDate;
+        document.getElementById("slot-date").textContent = selectedDate;
         flipToSlots(selectedDate);
       });
     });
   }
 
-  // Animación: voltear calendario y mostrar lista de horarios
-  function flipToSlots(date) {
-    card.classList.add('flipped1');
-    setTimeout(() => loadSlots(date), 400);
-  }
-
-  // Cargar slots de 10:00 a 18:30 + URGENCIAS
-  function loadSlots(date) {
-    slotListEl.innerHTML = '';
-    for (let h = 10; h < 19; h++) {
-      ['00', '30'].forEach(min => {
-        const time = `${String(h).padStart(2, '0')}:${min}`;
-        const li = document.createElement('li');
-        li.textContent = time;
-        li.addEventListener('click', () => selectSlot(date, time));
-        slotListEl.appendChild(li);
-      });
-    }
-    const urg = document.createElement('li');
-    urg.textContent = '🚨 URGENCIAS';
-    urg.addEventListener('click', () => selectSlot(date, 'URGENCIAS'));
-    slotListEl.appendChild(urg);
-  }
-
-  // Regresa del “back” al calendario normal
-  backToCalendarBtn.addEventListener('click', () => {
-    card.classList.remove('flipped1');
-    renderCalendar();
-  });
-
-  // Al seleccionar un slot, animar hacia el formulario
-  function selectSlot(date, time) {
-    const backPanel = document.querySelector('.back');
-    backPanel.style.transition = 'opacity 0.3s ease';
-    backPanel.style.opacity = '0';
-    setTimeout(() => {
-      document.getElementById('calendar').style.display = 'none';
-      renderForm(date, time);
-      reservationFormDiv.style.opacity = '0';
-      reservationFormDiv.style.display = 'block';
-      setTimeout(() => {
-        reservationFormDiv.style.transition = 'opacity 0.4s ease';
-        reservationFormDiv.style.opacity = '1';
-      }, 50);
-      backPanel.style.opacity = '1';
-    }, 300);
-  }
-
-  // Renderizar formulario con fecha, hora y lista de mascotas
-  function renderForm(date, time) {
-    formDate.value = date;
-    formTime.value = time;
-    petSelect.innerHTML = `
-      <option>Firulais</option>
-      <option>Pelusa</option>
-      <option>Rex</option>
-    `;
-    newChk.checked = false;
-    newPetFields.style.display = 'none';
-    document.getElementById('new-pet-name').value = '';
-    document.getElementById('new-pet-species').value = '';
-    reservationFormDiv.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  // Toggle campos “nueva mascota”
-  newChk.addEventListener('change', () => {
-    if (newChk.checked) {
-      newPetFields.style.display = 'block';
-      petSelect.disabled = true;
-    } else {
-      newPetFields.style.display = 'none';
-      petSelect.disabled = false;
-    }
-  });
-
-  // Cancelar formulario y regresar al calendario
-  document.getElementById('cancel-form').addEventListener('click', () => {
-    reservationFormDiv.style.display = 'none';
-    renderCalendar();
-  });
-
-  // Manejo de envío de formulario
-  document.getElementById('appointment-form').addEventListener('submit', e => {
-    e.preventDefault();
-    alert(`Cita guardada:\nFecha: ${formDate.value}\nHora: ${formTime.value}\n${
-      newChk.checked
-        ? `Nueva mascota: ${document.getElementById('new-pet-name').value}`
-        : `Mascota existente: ${petSelect.value}`
-    }`);
-    reservationFormDiv.style.display = 'none';
-    renderCalendar();
-  });
-
-  // Navegar meses
-  document.getElementById('prev-month').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-  });
-  document.getElementById('next-month').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-  });
-
-  // Render inicial del calendario
-  renderCalendar();
-});
+  //
