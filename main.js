@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ======================================
   // 0) URL DE TU WEB APP (Apps Script)
   // ======================================
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycby3Z7p-ZYJM0G2SioDISGSYT8oJg2UjBvpeyA--U7LpfoZcpAZzTkaAAaWGivcUPr1dDQ/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzGVv9jqm9c9xY84nNDa5eYLPrwlPzEpjJq2tSP0GEtkz5O0GDNWEDYa-fTVo_RiSDWLQ/exec";
 
   // ============================
   // 1) JSONP REQUEST (para evitar CORS)
@@ -33,9 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================
   // 2) CACHE PARA CLIENTES Y CITAS
   // ============================
-  let __clientsCache    = null;      // Array de { "cliente Id", "Nombre del propietario", …, "Nombre de la mascota", … }
-  let __allCitasCache   = null;      // Array de { "Fecha","Hora","ID cliente","Nombre de la mascota","Motivo" }
-  let __appointmentsCount = {};      // { "YYYY-MM-DD": númeroDeCitas, … }
+  let __clientsCache      = null;      // Array de { "cliente Id", "Nombre del propietario", …, "Nombre de la mascota", … }
+  let __allCitasCache     = null;      // Array de { "Fecha","Hora","ID cliente","Nombre de la mascota","Motivo" }
+  let __appointmentsCount = {};        // { "YYYY-MM-DD": númeroDeCitas, … }
 
   /**
    * loadAllClients()
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return __clientsCache;
     }
     try {
-      const url = GAS_BASE_URL + "?sheet=Clientes";
+      const url  = GAS_BASE_URL + "?sheet=Clientes";
       const data = await jsonpRequest(url);
       __clientsCache = data;
       return __clientsCache;
@@ -68,9 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return __allCitasCache;
     }
     try {
-      const url = GAS_BASE_URL + "?sheet=Citas";
+      const url  = GAS_BASE_URL + "?sheet=Citas";
       const data = await jsonpRequest(url);
-      __allCitasCache = data;
+      __allCitasCache     = data;
       __appointmentsCount = {};
       data.forEach(cita => {
         const f = (cita["Fecha"] || "").trim();
@@ -119,14 +119,14 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.querySelector("#close-modal").addEventListener("click", closeModal);
 
       try {
-        const html = await fetch(file).then(r => r.text());
+        const html      = await fetch(file).then(r => r.text());
         const container = overlay.querySelector(".modal-overlay-content");
         container.innerHTML = `<button id="close-modal" aria-label="Cerrar módulo">×</button>`;
         const tpl = document.createElement("template");
         tpl.innerHTML = html.trim();
 
         // Extraer y remover <script> antes de inyectar el HTML
-        const scripts = tpl.content.querySelectorAll("script");
+        const scripts  = tpl.content.querySelectorAll("script");
         const fragment = tpl.content.cloneNode(true);
         fragment.querySelectorAll("script").forEach(s => s.remove());
 
@@ -182,10 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
    *   arma __appointmentsCount y dibuja cada día con su color.
    */
   async function renderCalendar() {
-    document.getElementById("calendar").style.display     = "block";
-    reservationFormDiv.style.display                      = "none";
+    document.getElementById("calendar").style.display = "block";
+    reservationFormDiv.style.display = "none";
 
-    // 1) Cargar TODAS las citas en memoria (o recargar si se limpió caché)
+    // 1) Cargar TODAS las citas en memoria
     await loadAllCitas();
 
     const y = currentDate.getFullYear(),
@@ -208,9 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let d = 1; d <= totalDays; d++) {
       const dayCell = document.createElement("div");
       const dateStr = `${y}-${String(m + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      dayCell.textContent       = d;
-      dayCell.dataset.date      = dateStr;
-      const count               = getCountByDate(dateStr);
+      dayCell.textContent  = d;
+      dayCell.dataset.date = dateStr;
+
+      const count = getCountByDate(dateStr);
       if (count >= 4) {
         dayCell.classList.add("full");    // 4 o más → sin espacio
       } else if (count === 3) {
@@ -225,6 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (dateStr === new Date().toISOString().slice(0,10)) {
         dayCell.classList.add("today");
       }
+
       daysEl.appendChild(dayCell);
     }
     activateDateClicks();
@@ -256,12 +258,19 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function loadSlots(fecha) {
     slotListEl.innerHTML = "";
+
     // 1) Traer todas las citas (cache o remoto)
     const allCitas = await loadAllCitas();
+
+    // ** DEBUG OPCIONAL ** Para ver qué estás recibiendo:
+    // console.log("TODAS las citas leídas de la hoja:", allCitas);
+
     // 2) Filtrar solo las de la fecha indicada
     const citasDelDia = allCitas.filter(c =>
       (c["Fecha"] || "").trim() === fecha.trim()
     );
+
+    // console.log(`Citas filtradas para ${fecha}:`, citasDelDia);
 
     // 3) Construir un diccionario { "10:00": {...}, "10:30": {...} }
     const mapaCitas = {};
@@ -269,8 +278,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const horaAlmacenada = String(cita["Hora"] || "").trim();
       if (horaAlmacenada) {
         mapaCitas[horaAlmacenada] = {
-          mascota: String(cita["Nombre de la mascota"] || "").trim(),
-          motivo:  String(cita["Motivo"] || "").trim(),
+          mascota:  String(cita["Nombre de la mascota"] || "").trim(),
+          motivo:   String(cita["Motivo"] || "").trim(),
           clienteId: String(cita["ID cliente"] || "").trim()
         };
       }
@@ -307,8 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Volver del panel “back” al calendario
   backToCalendarBtn.addEventListener("click", () => {
     card.classList.remove("flipped1");
-    __allCitasCache = null;       // 👉 limpiamos caché de citas
-    __appointmentsCount = {};
+    __allCitasCache     = null;     // 👉 limpiamos caché de citas
+    __appointmentsCount  = {};
     renderCalendar();
   });
 
@@ -322,10 +331,10 @@ document.addEventListener("DOMContentLoaded", () => {
     backPanel.style.transition = "opacity 0.3s ease";
     backPanel.style.opacity = "0";
     setTimeout(() => {
-      document.getElementById("calendar").style.display     = "none";
+      document.getElementById("calendar").style.display = "none";
       renderForm(fecha, hora);
-      reservationFormDiv.style.opacity                        = "0";
-      reservationFormDiv.style.display                        = "block";
+      reservationFormDiv.style.opacity = "0";
+      reservationFormDiv.style.display = "block";
       setTimeout(() => {
         reservationFormDiv.style.transition = "opacity 0.4s ease";
         reservationFormDiv.style.opacity    = "1";
@@ -346,12 +355,12 @@ document.addEventListener("DOMContentLoaded", () => {
     formTime.value = hora;
 
     // Limpiar estado previo
-    ownerInfoDiv.innerHTML                        = "";
+    ownerInfoDiv.innerHTML = "";
     document.getElementById("edit-client-btn").style.display    = "none";
     document.getElementById("edit-client-fields").style.display = "none";
-    document.getElementById("edit-age").value     = "";
-    document.getElementById("edit-weight").value  = "";
-    document.getElementById("edit-email").value   = "";
+    document.getElementById("edit-age").value   = "";
+    document.getElementById("edit-weight").value= "";
+    document.getElementById("edit-email").value = "";
 
     // 1) Llenar <select id="mascota" class="pet-select">
     await populateClientPetFields(reservationFormDiv);
@@ -386,16 +395,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3) Ocultar sub-formulario de “nueva mascota” (si quedó marcado)
     newChk.checked = false;
     newPetFields.style.display = "none";
-    document.getElementById("new-owner-name").value     = "";
-    document.getElementById("new-owner-phone").value    = "";
-    document.getElementById("new-owner-email").value    = "";
-    document.getElementById("new-pet-name").value       = "";
-    document.getElementById("new-pet-species").value    = "";
-    document.getElementById("new-pet-breed").value      = "";
-    document.getElementById("new-pet-age").value        = "";
-    document.getElementById("new-pet-weight").value     = "";
+    document.getElementById("new-owner-name").value  = "";
+    document.getElementById("new-owner-phone").value = "";
+    document.getElementById("new-owner-email").value= "";
+    document.getElementById("new-pet-name").value    = "";
+    document.getElementById("new-pet-species").value = "";
+    document.getElementById("new-pet-breed").value   = "";
+    document.getElementById("new-pet-age").value     = "";
+    document.getElementById("new-pet-weight").value  = "";
     document.querySelectorAll('input[name="new-pet-sterilizado"]').forEach(r => r.checked = false);
-    document.getElementById("new-pet-notes").value      = "";
+    document.getElementById("new-pet-notes").value   = "";
 
     reservationFormDiv.scrollIntoView({ behavior: "smooth" });
   }
@@ -404,13 +413,13 @@ document.addEventListener("DOMContentLoaded", () => {
   newChk.addEventListener("change", () => {
     if (newChk.checked) {
       newPetFields.style.display = "block";
-      document.getElementById("mascota").disabled       = true;
-      ownerInfoDiv.innerHTML                            = "";
-      document.getElementById("edit-client-btn").style.display    = "none";
+      document.getElementById("mascota").disabled = true;
+      ownerInfoDiv.innerHTML = "";
+      document.getElementById("edit-client-btn").style.display = "none";
       document.getElementById("edit-client-fields").style.display = "none";
     } else {
       newPetFields.style.display = "none";
-      document.getElementById("mascota").disabled       = false;
+      document.getElementById("mascota").disabled = false;
     }
   });
 
@@ -457,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Al enviar el formulario “Guardar cita”:
    * — Si es “Nueva mascota”, primero crea el cliente nuevo (JSONP GET con `nuevo=true`).
-   * — Luego, crea la cita (también JSONP GET con `nuevo=true`).
+   * — Luego, crea la cita (JSONP GET con `nuevo=true`).
    * — Tras guardarla, vacía el cache de citas y vuelve a renderCalendar().
    */
   document.getElementById("appointment-form").addEventListener("submit", async (e) => {
@@ -571,8 +580,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       alert("¡Cita guardada con éxito!");
-      // —👉 LIMPIAR la caché para forzar recarga del calendario
-      __allCitasCache = null;
+      // —👉 LIMPIAR la caché para forzar recarga
+      __allCitasCache     = null;
       __appointmentsCount = {};
       reservationFormDiv.style.display = "none";
       renderCalendar();
