@@ -639,4 +639,6 @@ function getCountByDate(fecha) {
       });
     });
   }
+window.loadAllCitas = loadAllCitas;
+window.__appointmentsCount = __appointmentsCount;
 });
