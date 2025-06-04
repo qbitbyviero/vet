@@ -87,21 +87,22 @@ async function loadAllCitas() {
     __appointmentsCount = {};
 
     data.forEach(cita => {
-      let rawFecha = cita["Fecha"];
-      if (rawFecha instanceof Date) {
-        const yyyy = rawFecha.getFullYear();
-        const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
-        const dd = String(rawFecha.getDate()).padStart(2, "0");
-        rawFecha = `${yyyy}-${mm}-${dd}`;
-      } else {
-        rawFecha = normalizeDate((rawFecha || "").trim());
-      }
+  let rawFecha = cita["Fecha"];
+  
+  if (Object.prototype.toString.call(rawFecha) === "[object Date]") {
+    const yyyy = rawFecha.getFullYear();
+    const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
+    const dd = String(rawFecha.getDate()).padStart(2, "0");
+    rawFecha = `${yyyy}-${mm}-${dd}`;
+  } else {
+    rawFecha = normalizeDate((rawFecha || "").trim());
+  }
 
-      if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
-      __appointmentsCount[rawFecha]++;
-      cita["Fecha"] = rawFecha; // 👉 Esto es clave para el filtrado posterior
-    });
-
+  // 👇 Esta parte estaba mal
+  if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
+  __appointmentsCount[rawFecha]++;
+  cita["Fecha"] = rawFecha; // Muy importante: normalizamos la fecha en el objeto
+});
     return __allCitasCache;
   } catch (err) {
     console.error("Error cargando citas:", err);
