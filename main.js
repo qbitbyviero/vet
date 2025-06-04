@@ -85,19 +85,29 @@ async function loadAllCitas() {
     const data = await jsonpRequest(url);
     __allCitasCache     = data;
     __appointmentsCount = {};
+
     data.forEach(cita => {
-      const f = normalizeDate((cita["Fecha"] || "").trim());
-      if (!__appointmentsCount[f]) __appointmentsCount[f] = 0;
-      __appointmentsCount[f]++;
-      cita["Fecha"] = f; // 👉 Esto es clave para el filtrado posterior
+      let rawFecha = cita["Fecha"];
+      if (rawFecha instanceof Date) {
+        const yyyy = rawFecha.getFullYear();
+        const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
+        const dd = String(rawFecha.getDate()).padStart(2, "0");
+        rawFecha = `${yyyy}-${mm}-${dd}`;
+      } else {
+        rawFecha = normalizeDate((rawFecha || "").trim());
+      }
+
+      if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
+      __appointmentsCount[rawFecha]++;
+      cita["Fecha"] = rawFecha; // 👉 Esto es clave para el filtrado posterior
     });
+
     return __allCitasCache;
   } catch (err) {
     console.error("Error cargando citas:", err);
     return [];
   }
 }
-
 /**
  * getCountByDate(fecha)
  * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
