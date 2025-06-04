@@ -30,68 +30,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ============================
-  // 2) CACHE PARA CLIENTES Y CITAS
-  // ============================
-  let __clientsCache      = null;      // Array de { "cliente Id", "Nombre del propietario", …, "Nombre de la mascota", … }
-  let __allCitasCache     = null;      // Array de { "Fecha","Hora","ID cliente","Nombre de la mascota","Motivo" }
-  let __appointmentsCount = {};        // { "YYYY-MM-DD": númeroDeCitas, … }
+// ============================
+// 2) CACHE PARA CLIENTES Y CITAS
+// ============================
+let __clientsCache      = null;  // Array de clientes
+let __allCitasCache     = null;  // Array de citas
+let __appointmentsCount = {};    // Conteo por fecha
 
-  /**
-   * loadAllClients()
-   * — Si está en cache, lo devuelve.
-   * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Clientes").
-   */
-  async function loadAllClients() {
-    if (Array.isArray(__clientsCache)) {
-      return __clientsCache;
-    }
-    try {
-      const url  = GAS_BASE_URL + "?sheet=Clientes";
-      const data = await jsonpRequest(url);
-      __clientsCache = data;
-      return __clientsCache;
-    } catch (err) {
-      console.error("Error cargando clientes:", err);
-      return [];
-    }
+/**
+ * normalizeDate(dateStr)
+ * Convierte fechas tipo dd/mm/yyyy a YYYY-MM-DD
+ */
+function normalizeDate(dateStr) {
+  if (!dateStr) return "";
+  if (dateStr.includes("-")) return dateStr; // Ya está bien
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return dateStr;
+  const [d, m, y] = parts;
+  return `${y.padStart(4, "0")}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+/**
+ * loadAllClients()
+ * — Si está en cache, lo devuelve.
+ * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Clientes").
+ */
+async function loadAllClients() {
+  if (Array.isArray(__clientsCache)) {
+    return __clientsCache;
   }
-
-  /**
-   * loadAllCitas()
-   * — Si está en cache, lo devuelve.
-   * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Citas"),
-   *   construye __appointmentsCount y guarda en cache.
-   */
-  async function loadAllCitas() {
-    if (Array.isArray(__allCitasCache)) {
-      return __allCitasCache;
-    }
-    try {
-      const url  = GAS_BASE_URL + "?sheet=Citas";
-      const data = await jsonpRequest(url);
-      __allCitasCache     = data;
-      __appointmentsCount = {};
-      data.forEach(cita => {
-        const f = (cita["Fecha"] || "").trim();
-        if (!__appointmentsCount[f]) __appointmentsCount[f] = 0;
-        __appointmentsCount[f]++;
-      });
-      return __allCitasCache;
-    } catch (err) {
-      console.error("Error cargando citas:", err);
-      return [];
-    }
+  try {
+    const url  = GAS_BASE_URL + "?sheet=Clientes";
+    const data = await jsonpRequest(url);
+    __clientsCache = data;
+    return __clientsCache;
+  } catch (err) {
+    console.error("Error cargando clientes:", err);
+    return [];
   }
+}
 
-  /**
-   * getCountByDate(fecha)
-   * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), memorizado en __appointmentsCount.
-   */
-  function getCountByDate(fecha) {
-    return __appointmentsCount[fecha] || 0;
+/**
+ * loadAllCitas()
+ * — Si está en cache, lo devuelve.
+ * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Citas"),
+ *   construye __appointmentsCount y guarda en cache.
+ */
+async function loadAllCitas() {
+  if (Array.isArray(__allCitasCache)) {
+    return __allCitasCache;
   }
+  try {
+    const url  = GAS_BASE_URL + "?sheet=Citas";
+    const data = await jsonpRequest(url);
+    __allCitasCache     = data;
+    __appointmentsCount = {};
+    data.forEach(cita => {
+      const f = normalizeDate((cita["Fecha"] || "").trim());
+      if (!__appointmentsCount[f]) __appointmentsCount[f] = 0;
+      __appointmentsCount[f]++;
+      cita["Fecha"] = f; // 👉 Esto es clave para el filtrado posterior
+    });
+    return __allCitasCache;
+  } catch (err) {
+    console.error("Error cargando citas:", err);
+    return [];
+  }
+}
 
+/**
+ * getCountByDate(fecha)
+ * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
+ */
+function getCountByDate(fecha) {
+  return __appointmentsCount[fecha] || 0;
+}
   // =================================================
   // 3) MODAL OVERLAY + CARGA DINÁMICA DE MÓDULOS (HTML)
   // =================================================
@@ -267,8 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2) Filtrar solo las de la fecha indicada
     const citasDelDia = allCitas.filter(c =>
-      (c["Fecha"] || "").trim() === fecha.trim()
-    );
+  normalizeDate(c["Fecha"] || "") === fecha.trim()
+);
 
     // console.log(`Citas filtradas para ${fecha}:`, citasDelDia);
 
