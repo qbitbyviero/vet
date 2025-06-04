@@ -235,6 +235,7 @@ function getCountByDate(fecha) {
       dayCell.dataset.date = dateStr;
 
       const count = getCountByDate(dateStr);
+      console.log("Dibujando día", dateStr, "con", count, "citas");
       if (count >= 4) {
         dayCell.classList.add("full");    // 4 o más → sin espacio
       } else if (count === 3) {
