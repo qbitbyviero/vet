@@ -890,3 +890,37 @@ td {
     height: 150px;
   }
 }
+/* ===============================
+   HORARIOS DETALLADOS EN DOS COLUMNAS
+   =============================== */
+.slot-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #ccc;
+  background-color: #e1f5fe;
+  border-radius: 4px;
+  margin-bottom: 0.3em;
+  transition: all 0.3s ease;
+}
+
+.slot-time {
+  font-weight: bold;
+  color: #0277bd;
+  width: 30%;
+}
+
+.slot-detail {
+  width: 65%;
+  text-align: right;
+  color: #0d47a1;
+  font-size: 0.9em;
+}
+
+li.occupied {
+  background-color: #ffcdd2 !important;
+  color: #b71c1c !important;
+  cursor: not-allowed !important;
+}
+
