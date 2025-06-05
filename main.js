@@ -328,8 +328,8 @@ function getCountByDate(fecha) {
       }
     });
 
-    // 4) Para cada franja de 30 min entre 10:00 y 18:30
-    for (let h = 10; h < 19; h++) {
+   // 4) Para cada franja de 30 min entre 10:00 y 18:30
+for (let h = 10; h < 19; h++) {
   ["00", "30"].forEach(min => {
     const time = `${String(h).padStart(2, "0")}:${min}`;
     const li = document.createElement("li");
@@ -343,14 +343,10 @@ function getCountByDate(fecha) {
     detailSpan.classList.add("slot-detail");
 
     if (mapaCitas[time]) {
-      // Está ocupado
       const data = mapaCitas[time];
       detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
       li.classList.add("occupied");
-      li.style.cursor = "not-allowed";
-      li.style.opacity = "0.7";
     } else {
-      // Libre → clickable
       detailSpan.textContent = "Disponible";
       li.addEventListener("click", () => selectSlot(fecha, time));
     }
@@ -360,6 +356,7 @@ function getCountByDate(fecha) {
     slotListEl.appendChild(li);
   });
 }
+
     // 5) “URGENCIAS” siempre disponible
     const urg = document.createElement("li");
     urg.textContent = "🚨 URGENCIAS";
