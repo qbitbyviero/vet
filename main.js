@@ -43,11 +43,21 @@ let __appointmentsCount = {};    // Conteo por fecha
  */
 function normalizeDate(dateStr) {
   if (!dateStr) return "";
-  if (dateStr.includes("-")) return dateStr; // Ya está bien
+  // Si ya está en formato YYYY-MM-DD, devuélvelo tal cual
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+  const d = new Date(dateStr);
+  if (!isNaN(d)) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   const parts = dateStr.split("/");
-  if (parts.length !== 3) return dateStr;
-  const [d, m, y] = parts;
-  return `${y.padStart(4, "0")}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  if (parts.length !== 3) return "";
+  const [day, month, year] = parts;
+  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 /**
@@ -87,19 +97,12 @@ async function loadAllCitas() {
     __appointmentsCount = {};
 
     data.forEach(cita => {
-      // Normaliza la fecha
+      // 🗓️ Normaliza la fecha
       let rawFecha = cita["Fecha"];
-      if (Object.prototype.toString.call(rawFecha) === "[object Date]") {
-        const yyyy = rawFecha.getFullYear();
-        const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
-        const dd = String(rawFecha.getDate()).padStart(2, "0");
-        rawFecha = `${yyyy}-${mm}-${dd}`;
-      } else {
-        rawFecha = normalizeDate((rawFecha || "").trim());
-      }
+      rawFecha = normalizeDate(String(rawFecha).trim());
       cita["Fecha"] = rawFecha;
 
-      // Normaliza la hora
+      // 🕒 Normaliza la hora
       let rawHora = cita["Hora"];
       if (rawHora instanceof Date) {
         const hh = String(rawHora.getHours()).padStart(2, "0");
@@ -110,7 +113,7 @@ async function loadAllCitas() {
       }
       cita["Hora"] = rawHora;
 
-      // Registra la fecha en el contador
+      // 📅 Conteo por fecha
       if (!__appointmentsCount[rawFecha]) {
         __appointmentsCount[rawFecha] = 0;
       }
