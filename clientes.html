@@ -1,6 +1,13 @@
-<!-- clientes.html: Módulo de Clientes 🐾 mejorado con búsqueda -->
+<!-- clientes.html: Módulo de Clientes 🐾 mejorado -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
+
+  <!-- Campo de búsqueda -->
+  <div style="margin-bottom: 1em;">
+    <label for="searchPet">Buscar mascota existente:</label>
+    <input type="text" id="searchPet" placeholder="Escribe el nombre o parte del nombre..." />
+  </div>
+
   <form id="form-clientes">
     <!-- Datos del Propietario -->
     <fieldset>
@@ -63,8 +70,6 @@
           </div>
         </div>
       </div>
-      <button type="button" onclick="buscarClienteExistente()">🔍 Buscar Cliente</button>
-      <div id="mensaje-busqueda"></div>
 
       <!-- Diagrama Corporal con hotspots -->
       <div id="cliente-diagrama" class="diagrama-container">
@@ -118,34 +123,56 @@
     cont.querySelectorAll('.hotspot').forEach(h => h.remove());
   }
 
-  async function buscarClienteExistente() {
-    const nombreMascota = document.getElementById("petName").value.trim();
-    if (!nombreMascota) {
-      alert("Por favor escribe el nombre de la mascota para buscar.");
-      return;
+  // =============================
+  // Búsqueda Dinámica de Mascota
+  // =============================
+  const mockClientes = [
+    {
+      propietario: "Ana López",
+      telefono: "5551234567",
+      correo: "ana@email.com",
+      mascota: "Fido",
+      especie: "perro",
+      raza: "Labrador",
+      edad: 3,
+      peso: 25.0,
+      esterilizado: "si"
+    },
+    {
+      propietario: "Carlos Pérez",
+      telefono: "5557654321",
+      correo: "carlos@email.com",
+      mascota: "Pelusa",
+      especie: "gato",
+      raza: "Siames",
+      edad: 2,
+      peso: 4.5,
+      esterilizado: "no"
     }
-    const clientes = await loadAllClients();
-    const cliente = clientes.find(c => c["Nombre de la mascota"].toLowerCase() === nombreMascota.toLowerCase());
+  ];
 
-    if (cliente) {
-      document.getElementById("ownerName").value = cliente["Nombre del propietario"];
-      document.getElementById("ownerPhone").value = cliente["Número de Teléfono"];
-      document.getElementById("ownerEmail").value = cliente["Correo"];
-      document.getElementById("pet-species").value = cliente["Especie"];
-      document.getElementById("breed").value = cliente["Raza"];
-      document.getElementById("age").value = cliente["Edad"];
-      document.getElementById("weight").value = cliente["Peso"];
-
-      if (cliente["Esterilizado"].toLowerCase() === "si" || cliente["Esterilizado"].toLowerCase() === "sí") {
-        document.querySelector('input[name="sterilized"][value="si"]').checked = true;
-      } else {
-        document.querySelector('input[name="sterilized"][value="no"]').checked = true;
-      }
-
+  const inputSearch = document.getElementById("searchPet");
+  inputSearch.addEventListener("keyup", function () {
+    const val = this.value.toLowerCase();
+    const result = mockClientes.find(c => c.mascota.toLowerCase().includes(val));
+    
+    if (result) {
+      document.getElementById("ownerName").value = result.propietario;
+      document.getElementById("ownerPhone").value = result.telefono;
+      document.getElementById("ownerEmail").value = result.correo;
+      document.getElementById("petName").value = result.mascota;
+      document.getElementById("pet-species").value = result.especie;
+      document.getElementById("breed").value = result.raza;
+      document.getElementById("age").value = result.edad;
+      document.getElementById("weight").value = result.peso;
+      document.querySelector(`input[name="sterilized"][value="${result.esterilizado}"]`).checked = true;
       cargarDiagramaCliente();
-      document.getElementById("mensaje-busqueda").innerHTML = `<p style="color:green;">Cliente encontrado.</p>`;
+
+      document.querySelector("#form-clientes button[type='submit']").disabled = true;
+      document.querySelector("#form-clientes button[type='submit']").textContent = "Cliente ya registrado";
     } else {
-      document.getElementById("mensaje-busqueda").innerHTML = `<p style="color:red;">No se encontró cliente con ese nombre de mascota.</p>`;
+      document.querySelector("#form-clientes button[type='submit']").disabled = false;
+      document.querySelector("#form-clientes button[type='submit']").textContent = "Guardar Cliente";
     }
-  }
+  });
 </script>
