@@ -86,25 +86,34 @@ async function loadAllCitas() {
     __allCitasCache     = data;
     __appointmentsCount = {};
 
-   data.forEach(cita => {
+ data.forEach(cita => {
   let rawFecha = cita["Fecha"];
-
-  if (typeof rawFecha === "string" && rawFecha.includes("GMT")) {
-    // 👇 Extraemos solo la parte relevante antes del paréntesis
-    const fechaLimpia = rawFecha.split(" (")[0];
-    const dt = new Date(fechaLimpia);
-    const yyyy = dt.getFullYear();
-    const mm = String(dt.getMonth() + 1).padStart(2, "0");
-    const dd = String(dt.getDate()).padStart(2, "0");
+  if (Object.prototype.toString.call(rawFecha) === "[object Date]") {
+    const yyyy = rawFecha.getFullYear();
+    const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
+    const dd = String(rawFecha.getDate()).padStart(2, "0");
     rawFecha = `${yyyy}-${mm}-${dd}`;
   } else {
     rawFecha = normalizeDate((rawFecha || "").trim());
   }
 
+  // 🕒 Normalizamos la hora
+  let rawHora = cita["Hora"];
+  if (rawHora instanceof Date) {
+    const hh = String(rawHora.getHours()).padStart(2, "0");
+    const mm = String(rawHora.getMinutes()).padStart(2, "0");
+    rawHora = `${hh}:${mm}`;
+  } else {
+    rawHora = String(rawHora).trim().slice(0,5);
+  }
+  cita["Hora"] = rawHora;
+
+  // Conteo de citas por fecha
   if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
   __appointmentsCount[rawFecha]++;
   cita["Fecha"] = rawFecha;
 });
+
     return __allCitasCache;
   } catch (err) {
     console.error("Error cargando citas:", err);
