@@ -1,4 +1,4 @@
-<!-- clientes.html: Módulo de Clientes 🐾 mejorado -->
+<!-- clientes.html: Módulo de Clientes 🐾 mejorado con búsqueda -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
   <form id="form-clientes">
@@ -63,6 +63,8 @@
           </div>
         </div>
       </div>
+      <button type="button" onclick="buscarClienteExistente()">🔍 Buscar Cliente</button>
+      <div id="mensaje-busqueda"></div>
 
       <!-- Diagrama Corporal con hotspots -->
       <div id="cliente-diagrama" class="diagrama-container">
@@ -114,5 +116,36 @@
 
   function clearHotspots() {
     cont.querySelectorAll('.hotspot').forEach(h => h.remove());
+  }
+
+  async function buscarClienteExistente() {
+    const nombreMascota = document.getElementById("petName").value.trim();
+    if (!nombreMascota) {
+      alert("Por favor escribe el nombre de la mascota para buscar.");
+      return;
+    }
+    const clientes = await loadAllClients();
+    const cliente = clientes.find(c => c["Nombre de la mascota"].toLowerCase() === nombreMascota.toLowerCase());
+
+    if (cliente) {
+      document.getElementById("ownerName").value = cliente["Nombre del propietario"];
+      document.getElementById("ownerPhone").value = cliente["Número de Teléfono"];
+      document.getElementById("ownerEmail").value = cliente["Correo"];
+      document.getElementById("pet-species").value = cliente["Especie"];
+      document.getElementById("breed").value = cliente["Raza"];
+      document.getElementById("age").value = cliente["Edad"];
+      document.getElementById("weight").value = cliente["Peso"];
+
+      if (cliente["Esterilizado"].toLowerCase() === "si" || cliente["Esterilizado"].toLowerCase() === "sí") {
+        document.querySelector('input[name="sterilized"][value="si"]').checked = true;
+      } else {
+        document.querySelector('input[name="sterilized"][value="no"]').checked = true;
+      }
+
+      cargarDiagramaCliente();
+      document.getElementById("mensaje-busqueda").innerHTML = `<p style="color:green;">Cliente encontrado.</p>`;
+    } else {
+      document.getElementById("mensaje-busqueda").innerHTML = `<p style="color:red;">No se encontró cliente con ese nombre de mascota.</p>`;
+    }
   }
 </script>
