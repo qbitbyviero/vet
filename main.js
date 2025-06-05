@@ -88,20 +88,23 @@ async function loadAllCitas() {
 
     data.forEach(cita => {
   let rawFecha = cita["Fecha"];
-  
-  if (Object.prototype.toString.call(rawFecha) === "[object Date]") {
-    const yyyy = rawFecha.getFullYear();
-    const mm = String(rawFecha.getMonth() + 1).padStart(2, "0");
-    const dd = String(rawFecha.getDate()).padStart(2, "0");
-    rawFecha = `${yyyy}-${mm}-${dd}`;
+
+  // Convertimos string tipo "Wed Jun 04 2025..." a objeto Date
+  if (typeof rawFecha === "string" && rawFecha.includes("GMT")) {
+    const fechaDate = new Date(rawFecha);
+    if (!isNaN(fechaDate)) {
+      const yyyy = fechaDate.getFullYear();
+      const mm = String(fechaDate.getMonth() + 1).padStart(2, "0");
+      const dd = String(fechaDate.getDate()).padStart(2, "0");
+      rawFecha = `${yyyy}-${mm}-${dd}`;
+    }
   } else {
     rawFecha = normalizeDate((rawFecha || "").trim());
   }
 
-  // 👇 Esta parte estaba mal
   if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
   __appointmentsCount[rawFecha]++;
-  cita["Fecha"] = rawFecha; // Muy importante: normalizamos la fecha en el objeto
+  cita["Fecha"] = rawFecha; // Actualizamos la fecha ya normalizada
 });
     return __allCitasCache;
   } catch (err) {
