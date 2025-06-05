@@ -86,7 +86,8 @@ async function loadAllCitas() {
     __allCitasCache     = data;
     __appointmentsCount = {};
 
- data.forEach(cita => {
+data.forEach(cita => {
+  // Normaliza la fecha
   let rawFecha = cita["Fecha"];
   if (Object.prototype.toString.call(rawFecha) === "[object Date]") {
     const yyyy = rawFecha.getFullYear();
@@ -96,24 +97,25 @@ async function loadAllCitas() {
   } else {
     rawFecha = normalizeDate((rawFecha || "").trim());
   }
+  cita["Fecha"] = rawFecha;
 
-  // 🕒 Normalizamos la hora
+  // Normaliza la hora
   let rawHora = cita["Hora"];
   if (rawHora instanceof Date) {
     const hh = String(rawHora.getHours()).padStart(2, "0");
     const mm = String(rawHora.getMinutes()).padStart(2, "0");
     rawHora = `${hh}:${mm}`;
   } else {
-    rawHora = String(rawHora).trim().slice(0,5);
+    rawHora = String(rawHora).trim().slice(0, 5);
   }
   cita["Hora"] = rawHora;
 
-  // Conteo de citas por fecha
-  if (!__appointmentsCount[rawFecha]) __appointmentsCount[rawFecha] = 0;
+  // Registra la fecha en el contador
+  if (!__appointmentsCount[rawFecha]) {
+    __appointmentsCount[rawFecha] = 0;
+  }
   __appointmentsCount[rawFecha]++;
-  cita["Fecha"] = rawFecha;
 });
-
     return __allCitasCache;
   } catch (err) {
     console.error("Error cargando citas:", err);
