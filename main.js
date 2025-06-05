@@ -300,77 +300,58 @@ function getCountByDate(fecha) {
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
   async function loadSlots(fecha) {
-    slotListEl.innerHTML = "";
+  slotListEl.innerHTML = "";
 
-    // 1) Traer todas las citas (cache o remoto)
-    const allCitas = await loadAllCitas();
+  const allCitas = await loadAllCitas();
+  const citasDelDia = allCitas.filter(c =>
+    normalizeDate(c["Fecha"] || "") === fecha.trim()
+  );
 
-    // ** DEBUG OPCIONAL ** Para ver qué estás recibiendo:
-    // console.log("TODAS las citas leídas de la hoja:", allCitas);
-
-    // 2) Filtrar solo las de la fecha indicada
-    const citasDelDia = allCitas.filter(c =>
-  normalizeDate(c["Fecha"] || "") === fecha.trim()
-);
-
-    // console.log(`Citas filtradas para ${fecha}:`, citasDelDia);
-
-    // 3) Construir un diccionario { "10:00": {...}, "10:30": {...} }
-    const mapaCitas = {};
-    citasDelDia.forEach(cita => {
-      const horaAlmacenada = String(cita["Hora"] || "").trim();
-      if (horaAlmacenada) {
-        mapaCitas[horaAlmacenada] = {
-          mascota:  String(cita["Nombre de la mascota"] || "").trim(),
-          motivo:   String(cita["Motivo"] || "").trim(),
-          clienteId: String(cita["ID cliente"] || "").trim()
-        };
-      }
-    });
-
-   // 4) Para cada franja de 30 min entre 10:00 y 18:30
-for (let h = 10; h < 19; h++) {
-  ["00", "30"].forEach(min => {
-    const time = `${String(h).padStart(2, "0")}:${min}`;
-    const li = document.createElement("li");
-    li.classList.add("slot-line");
-
-    const timeSpan = document.createElement("span");
-    timeSpan.textContent = time;
-    timeSpan.classList.add("slot-time");
-
-    const detailSpan = document.createElement("span");
-    detailSpan.classList.add("slot-detail");
-
-    if (mapaCitas[time]) {
-      const data = mapaCitas[time];
-      detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
-      li.classList.add("occupied");
-    } else {
-      detailSpan.textContent = "Disponible";
-      li.addEventListener("click", () => selectSlot(fecha, time));
+  const mapaCitas = {};
+  citasDelDia.forEach(cita => {
+    const horaAlmacenada = String(cita["Hora"] || "").trim();
+    if (horaAlmacenada) {
+      mapaCitas[horaAlmacenada] = {
+        mascota:  String(cita["Nombre de la mascota"] || "").trim(),
+        motivo:   String(cita["Motivo"] || "").trim(),
+        clienteId: String(cita["ID cliente"] || "").trim()
+      };
     }
-
-    li.appendChild(timeSpan);
-    li.appendChild(detailSpan);
-    slotListEl.appendChild(li);
   });
-}
 
-    // 5) “URGENCIAS” siempre disponible
-    const urg = document.createElement("li");
-    urg.textContent = "🚨 URGENCIAS";
-    urg.addEventListener("click", () => selectSlot(fecha,"URGENCIAS"));
-    slotListEl.appendChild(urg);
+  for (let h = 10; h < 19; h++) {
+    ["00", "30"].forEach(min => {
+      const time = `${String(h).padStart(2, "0")}:${min}`;
+      const li = document.createElement("li");
+      li.classList.add("slot-line");
+
+      const timeSpan = document.createElement("span");
+      timeSpan.textContent = time;
+      timeSpan.classList.add("slot-time");
+
+      const detailSpan = document.createElement("span");
+      detailSpan.classList.add("slot-detail");
+
+      if (mapaCitas[time]) {
+        const data = mapaCitas[time];
+        detailSpan.textContent = `${data.mascota} ⇒ ${data.motivo}`;
+        li.classList.add("ocupado");
+      } else {
+        detailSpan.textContent = "Disponible";
+        li.addEventListener("click", () => selectSlot(fecha, time));
+      }
+
+      li.appendChild(timeSpan);
+      li.appendChild(detailSpan);
+      slotListEl.appendChild(li);
+    });
   }
 
-  // Volver del panel “back” al calendario
-  backToCalendarBtn.addEventListener("click", () => {
-    card.classList.remove("flipped1");
-    __allCitasCache     = null;     // 👉 limpiamos caché de citas
-    __appointmentsCount  = {};
-    renderCalendar();
-  });
+  const urg = document.createElement("li");
+  urg.textContent = "🚨 URGENCIAS";
+  urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
+  slotListEl.appendChild(urg);
+}
 
   /**
    * selectSlot(fecha, hora)
