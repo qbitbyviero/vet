@@ -299,7 +299,7 @@ function getCountByDate(fecha) {
    * — Luego dibuja cada <li> desde 10:00 hasta 18:30. Si coincide con una cita,
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
-  async function loadSlots(fecha) {
+async function loadSlots(fecha) {
   slotListEl.innerHTML = "";
 
   const allCitas = await loadAllCitas();
@@ -307,18 +307,18 @@ function getCountByDate(fecha) {
     normalizeDate(c["Fecha"] || "") === fecha.trim()
   );
 
+  // 🧠 Construye un mapa de hora → datos de cita
   const mapaCitas = {};
   citasDelDia.forEach(cita => {
-    const horaAlmacenada = String(cita["Hora"] || "").trim();
-    if (horaAlmacenada) {
-      mapaCitas[horaAlmacenada] = {
-        mascota:  String(cita["Nombre de la mascota"] || "").trim(),
-        motivo:   String(cita["Motivo"] || "").trim(),
-        clienteId: String(cita["ID cliente"] || "").trim()
-      };
-    }
+    let hora = String(cita["Hora"] || "").trim().slice(0, 5);
+    if (hora.length === 4) hora = "0" + hora; // Arregla formato "9:30" → "09:30"
+    mapaCitas[hora] = {
+      mascota:  String(cita["Nombre de la mascota"] || "").trim(),
+      motivo:   String(cita["Motivo"] || "").trim()
+    };
   });
 
+  // 🕒 Dibuja intervalos de 30 minutos de 10:00 a 18:30
   for (let h = 10; h < 19; h++) {
     ["00", "30"].forEach(min => {
       const time = `${String(h).padStart(2, "0")}:${min}`;
@@ -334,8 +334,9 @@ function getCountByDate(fecha) {
 
       if (mapaCitas[time]) {
         const data = mapaCitas[time];
-        detailSpan.textContent = `${data.mascota} ⇒ ${data.motivo}`;
-        li.classList.add("ocupado");
+        detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
+        li.classList.add("ocupado"); // Clase especial para CSS
+        li.style.cursor = "not-allowed";
       } else {
         detailSpan.textContent = "Disponible";
         li.addEventListener("click", () => selectSlot(fecha, time));
@@ -347,11 +348,14 @@ function getCountByDate(fecha) {
     });
   }
 
+  // 🛑 Agrega siempre la opción URGENCIAS
   const urg = document.createElement("li");
   urg.textContent = "🚨 URGENCIAS";
+  urg.classList.add("urgencia");
   urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
   slotListEl.appendChild(urg);
 }
+
 
   /**
    * selectSlot(fecha, hora)
