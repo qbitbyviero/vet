@@ -138,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const contentDiv = document.createElement("div");
         contentDiv.appendChild(fragment);
         container.appendChild(contentDiv);
-        await populateClientPetFields(container);
         scripts.forEach(oldScript => {
           const newScript = document.createElement("script");
           newScript.type = "text/javascript";
@@ -161,8 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ... (el resto del archivo permanece igual)
-
+  // Exponer funciones globales necesarias
   window.loadAllClients = loadAllClients;
   window.loadAllCitas = loadAllCitas;
   window.__appointmentsCount = __appointmentsCount;
