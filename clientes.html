@@ -92,6 +92,7 @@
     pez: 'svg/pez.svg',
     roedor: 'svg/roedor.svg'
   };
+
   const img = document.getElementById('diagrama-img');
   const cont = document.getElementById('cliente-diagrama');
 
@@ -123,56 +124,44 @@
     cont.querySelectorAll('.hotspot').forEach(h => h.remove());
   }
 
-  // =============================
-  // Búsqueda Dinámica de Mascota
-  // =============================
-  const mockClientes = [
-    {
-      propietario: "Ana López",
-      telefono: "5551234567",
-      correo: "ana@email.com",
-      mascota: "Fido",
-      especie: "perro",
-      raza: "Labrador",
-      edad: 3,
-      peso: 25.0,
-      esterilizado: "si"
-    },
-    {
-      propietario: "Carlos Pérez",
-      telefono: "5557654321",
-      correo: "carlos@email.com",
-      mascota: "Pelusa",
-      especie: "gato",
-      raza: "Siames",
-      edad: 2,
-      peso: 4.5,
-      esterilizado: "no"
+  async function buscarCliente(val) {
+    if (!window.loadAllClients) {
+      alert("No se ha cargado el sistema base (main.js)");
+      return;
     }
-  ];
+    const clientes = await window.loadAllClients();
+    const lowerVal = val.trim().toLowerCase();
+    const result = clientes.find(c =>
+      (c["Nombre de la mascota"] || "").trim().toLowerCase().includes(lowerVal)
+    );
 
-  const inputSearch = document.getElementById("searchPet");
-  inputSearch.addEventListener("keyup", function () {
-    const val = this.value.toLowerCase();
-    const result = mockClientes.find(c => c.mascota.toLowerCase().includes(val));
-    
     if (result) {
-      document.getElementById("ownerName").value = result.propietario;
-      document.getElementById("ownerPhone").value = result.telefono;
-      document.getElementById("ownerEmail").value = result.correo;
-      document.getElementById("petName").value = result.mascota;
-      document.getElementById("pet-species").value = result.especie;
-      document.getElementById("breed").value = result.raza;
-      document.getElementById("age").value = result.edad;
-      document.getElementById("weight").value = result.peso;
-      document.querySelector(`input[name="sterilized"][value="${result.esterilizado}"]`).checked = true;
-      cargarDiagramaCliente();
+      document.getElementById("ownerName").value  = result["Nombre del propietario"] || "";
+      document.getElementById("ownerPhone").value = result["Número de Teléfono"] || "";
+      document.getElementById("ownerEmail").value = result["Correo"] || "";
+      document.getElementById("petName").value    = result["Nombre de la mascota"] || "";
+      document.getElementById("pet-species").value= result["Especie"] || "";
+      document.getElementById("breed").value      = result["Raza"] || "";
+      document.getElementById("age").value        = result["Edad"] || "";
+      document.getElementById("weight").value     = result["Peso"] || "";
 
+      const est = (result["Esterilizado"] || "").toLowerCase();
+      if (est === "sí" || est === "si") {
+        document.querySelector('input[name="sterilized"][value="si"]').checked = true;
+      } else if (est === "no") {
+        document.querySelector('input[name="sterilized"][value="no"]').checked = true;
+      }
+
+      cargarDiagramaCliente();
       document.querySelector("#form-clientes button[type='submit']").disabled = true;
       document.querySelector("#form-clientes button[type='submit']").textContent = "Cliente ya registrado";
     } else {
       document.querySelector("#form-clientes button[type='submit']").disabled = false;
       document.querySelector("#form-clientes button[type='submit']").textContent = "Guardar Cliente";
     }
+  }
+
+  document.getElementById("searchPet").addEventListener("keyup", function () {
+    buscarCliente(this.value);
   });
 </script>
