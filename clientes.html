@@ -103,8 +103,21 @@
     background-color: #eee;
   }
 </style>
-
 <script>
+  // Previene errores si main.js aún no ha cargado completamente
+  if (typeof window.loadAllClients !== "function") {
+    console.warn("main.js aún no expone loadAllClients. Esperando...");
+    setTimeout(() => {
+      // Recarga el módulo suavemente
+      location.reload();
+    }, 200);
+  }
+
+  if (window.__clienteModuloActivo) {
+    console.warn("Este módulo ya estaba activo. Evitando duplicación.");
+    throw new Error("clientes.html ya cargado.");
+  }
+  window.__clienteModuloActivo = true;
   const mapaImagen = {
     perro: 'svg/perro.png',
     gato: 'svg/felino.svg',
