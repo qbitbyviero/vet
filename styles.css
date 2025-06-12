@@ -923,4 +923,22 @@ li.occupied {
   color: #b71c1c !important;
   cursor: not-allowed !important;
 }
-
+.suggestion-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.2em 0 0;
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  position: absolute;
+  background: #fff;
+  width: 100%;
+  z-index: 10;
+}
+.suggestion-list li {
+  padding: 0.4em;
+  cursor: pointer;
+}
+.suggestion-list li:hover {
+  background-color: #eee;
+}
