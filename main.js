@@ -299,7 +299,6 @@ function getCountByDate(fecha) {
    * — Luego dibuja cada <li> desde 10:00 hasta 18:30. Si coincide con una cita,
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
-  async function loadSlots(fecha) {
 async function loadSlots(fecha) {
   slotListEl.innerHTML = "";
 
