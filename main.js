@@ -1,5 +1,5 @@
 // =======================
-// main.js (Versión Final Corregida)
+// main.js (VERSIÓN FINAL DEFINITIVA)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
@@ -77,35 +77,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 4. Funciones de interfaz
-  const card = document.getElementById('card');
-  const daysEl = document.getElementById('days');
-  const monthYearEl = document.getElementById('month-year');
-  const reservationFormDiv = document.getElementById('reservation-form');
-  const slotListEl = document.getElementById('slot-list');
+  const UI = {
+    card: document.getElementById('card'),
+    days: document.getElementById('days'),
+    monthYear: document.getElementById('month-year'),
+    reservationForm: document.getElementById('reservation-form'),
+    slotList: document.getElementById('slot-list'),
+    backButton: document.getElementById('back-to-calendar'),
+    
+    initButtons() {
+      // Estilizar botón Volver igual que los demás
+      this.backButton.className = 'button-86';
+      this.backButton.innerHTML = '← Volver';
+      
+      // Eventos de navegación
+      document.getElementById('prev-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      });
+      
+      document.getElementById('next-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      });
+      
+      this.backButton.addEventListener('click', resetToCalendar);
+    }
+  };
+
+  UI.initButtons();
 
   async function renderCalendar() {
     console.log('Renderizando calendario...');
     try {
       document.getElementById('calendar').style.display = 'block';
-      reservationFormDiv.style.display = 'none';
-      card.classList.remove('flipped1');
+      UI.reservationForm.style.display = 'none';
+      UI.card.classList.remove('flipped1');
 
       await loadAllCitas();
 
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      monthYearEl.textContent = currentDate.toLocaleDateString('es-ES', {
+      UI.monthYear.textContent = currentDate.toLocaleDateString('es-ES', {
         month: 'long',
         year: 'numeric'
       });
 
-      daysEl.innerHTML = '';
+      UI.days.innerHTML = '';
       const firstDay = new Date(year, month, 1).getDay() || 7;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
       // Días vacíos
       for (let i = 1; i < firstDay; i++) {
-        daysEl.appendChild(document.createElement('div'));
+        UI.days.appendChild(document.createElement('div'));
       }
 
       // Días del mes
@@ -127,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
           dayEl.classList.add('today');
         }
 
-        daysEl.appendChild(dayEl);
+        UI.days.appendChild(dayEl);
       }
 
       activateDateClicks();
@@ -147,13 +171,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showTimeSlots(date) {
-    card.classList.add('flipped1');
+    UI.card.classList.add('flipped1');
     setTimeout(() => loadTimeSlots(date), 400);
   }
 
   async function loadTimeSlots(date) {
     try {
-      slotListEl.innerHTML = '';
+      UI.slotList.innerHTML = '';
       const allCitas = await loadAllCitas();
       const citasDelDia = allCitas.filter(c => c.Fecha === date);
 
@@ -191,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           slot.appendChild(timeSpan);
           slot.appendChild(detailSpan);
-          slotListEl.appendChild(slot);
+          UI.slotList.appendChild(slot);
         });
       }
 
@@ -200,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       emergencySlot.textContent = '🚨 URGENCIAS';
       emergencySlot.className = 'urgencia';
       emergencySlot.addEventListener('click', () => showAppointmentForm(date, 'URGENCIAS'));
-      slotListEl.appendChild(emergencySlot);
+      UI.slotList.appendChild(emergencySlot);
 
     } catch (error) {
       console.error('Error cargando horarios:', error);
@@ -214,9 +238,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       document.getElementById('calendar').style.display = 'none';
       renderAppointmentForm(date, time);
-      reservationFormDiv.style.display = 'block';
+      UI.reservationForm.style.display = 'block';
       setTimeout(() => {
-        reservationFormDiv.style.opacity = '1';
+        UI.reservationForm.style.opacity = '1';
       }, 50);
     }, 300);
   }
@@ -252,9 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupFormEvents() {
-    // Botón Volver
-    document.getElementById('back-to-calendar').addEventListener('click', resetToCalendar);
-    
     // Botón Cancelar
     document.getElementById('cancel-form').addEventListener('click', resetToCalendar);
     
@@ -371,18 +392,17 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log('Reseteando a vista de calendario...');
     
     // Ocultar formulario
-    reservationFormDiv.style.opacity = '0';
+    UI.reservationForm.style.opacity = '0';
     setTimeout(() => {
-      reservationFormDiv.style.display = 'none';
+      UI.reservationForm.style.display = 'none';
       
       // Mostrar calendario
       document.getElementById('calendar').style.display = 'block';
       document.getElementById('calendar').style.opacity = '1';
       
-      // Resetear tarjeta
-      if (card.classList.contains('flipped1')) {
-        card.classList.remove('flipped1');
-      }
+      // Resetear tarjeta completamente
+      UI.card.classList.remove('flipped1');
+      UI.card.style.transform = 'rotateY(0deg)';
       
       // Recargar datos
       currentDate = new Date();
@@ -391,17 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCalendar();
     }, 300);
   }
-
-  // 5. Inicialización
-  document.getElementById('prev-month').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-  });
-
-  document.getElementById('next-month').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-  });
 
   // Iniciar
   renderCalendar();
