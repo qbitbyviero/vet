@@ -86,216 +86,148 @@ async function loadAllClients() {
  * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Citas"),
  *   construye __appointmentsCount y guarda en cache.
  */
+/**
+ * Función mejorada para normalizar horas
+ */
+function normalizeTime(timeStr) {
+  if (!timeStr) return '';
+  
+  // Si ya está en formato HH:MM
+  if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+  
+  // Si es un objeto Date
+  if (timeStr instanceof Date) {
+    return `${String(timeStr.getHours()).padStart(2, '0')}:${String(timeStr.getMinutes()).padStart(2, '0')}`;
+  }
+  
+  // Para formato "5:00:00 p.m."
+  if (typeof timeStr === 'string') {
+    const timeParts = timeStr.split(' ');
+    if (timeParts.length === 2) {
+      const [time, period] = timeParts;
+      const [hours, minutes] = time.split(':');
+      
+      let hours24 = parseInt(hours);
+      if (period.toLowerCase() === 'p.m.' && hours24 < 12) {
+        hours24 += 12;
+      }
+      if (period.toLowerCase() === 'a.m.' && hours24 === 12) {
+        hours24 = 0;
+      }
+      
+      return `${String(hours24).padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    }
+  }
+  
+  return '';
+}
+
+/**
+ * Versión mejorada de loadAllCitas
+ */
 async function loadAllCitas() {
   if (Array.isArray(__allCitasCache)) {
     return __allCitasCache;
   }
   
   try {
-    const url = GAS_BASE_URL + "?sheet=Citas&action=getCitas";
+    const url = GAS_BASE_URL + "?sheet=Citas";
     const data = await jsonpRequest(url);
-    console.log('[DEBUG] Datos crudos de citas:', data);
+    console.log('Datos crudos de citas:', data);
     
     __allCitasCache = data.map(cita => {
-      // Normalizar fecha
-      let fecha = cita.Fecha || cita.fecha || '';
-      fecha = normalizeDate(fecha);
-      
-      // Normalizar hora
-      let hora = cita.Hora || cita.hora || '';
-      if (hora instanceof Date) {
-        hora = `${String(hora.getHours()).padStart(2, '0')}:${String(hora.getMinutes()).padStart(2, '0')}`;
-      } else if (typeof hora === 'string') {
-        hora = hora.trim().substring(0, 5);
-        if (/^\d:\d{2}$/.test(hora)) {
-          hora = '0' + hora;
-        }
-      }
-      
       return {
         ...cita,
-        Fecha: fecha,
-        Hora: hora
+        Fecha: normalizeDate(cita.Fecha || cita.fecha || ''),
+        Hora: normalizeTime(cita.Hora || cita.hora || '')
       };
     });
     
     // Actualizar conteo
     __appointmentsCount = {};
     __allCitasCache.forEach(cita => {
-      __appointmentsCount[cita.Fecha] = (__appointmentsCount[cita.Fecha] || 0) + 1;
+      if (cita.Fecha) {
+        __appointmentsCount[cita.Fecha] = (__appointmentsCount[cita.Fecha] || 0) + 1;
+      }
     });
     
     return __allCitasCache;
   } catch (err) {
-    console.error('[ERROR] loadAllCitas:', err);
+    console.error('Error cargando citas:', err);
     return [];
   }
 }
-/**
- * getCountByDate(fecha)
- * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
- */
-function getCountByDate(fecha) {
-  return __appointmentsCount[fecha] || 0;
+async function loadSlots(fecha) {
+  console.log(`Cargando slots para: ${fecha}`);
+  slotListEl.innerHTML = '<div class="loading">Cargando horarios...</div>';
+  
+  try {
+    const allCitas = await loadAllCitas();
+    const citasDelDia = allCitas.filter(cita => cita.Fecha === fecha);
+    console.log('Citas del día:', citasDelDia);
+    
+    // Mapear horas ocupadas
+    const horasOcupadas = {};
+    citasDelDia.forEach(cita => {
+      if (cita.Hora) {
+        horasOcupadas[cita.Hora] = {
+          mascota: cita['Nombre de la mascota'] || 'Sin nombre',
+          motivo: cita.Motivo || 'Sin motivo'
+        };
+      }
+    });
+    
+    // Generar slots de 10:00 a 18:30 cada 30 minutos
+    slotListEl.innerHTML = '';
+    for (let h = 10; h < 19; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hora = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        const li = document.createElement('li');
+        li.className = 'slot-line';
+        
+        if (horasOcupadas[hora]) {
+          // Slot ocupado
+          const cita = horasOcupadas[hora];
+          li.innerHTML = `
+            <span class="hora">${hora}</span>
+            <span class="separador">----></span>
+            <span class="mascota">${cita.mascota}</span>
+            <span class="separador">----></span>
+            <span class="motivo">${cita.motivo}</span>
+          `;
+          li.classList.add('ocupado');
+        } else {
+          // Slot disponible
+          li.innerHTML = `
+            <span class="hora">${hora}</span>
+            <span class="separador">----></span>
+            <span class="disponible">Disponible</span>
+          `;
+          li.classList.add('disponible');
+          li.addEventListener('click', () => selectSlot(fecha, hora));
+        }
+        
+        slotListEl.appendChild(li);
+      }
+    }
+    
+    // Añadir urgencias
+    const urgLi = document.createElement('li');
+    urgLi.innerHTML = '<span class="urgencia">🚨 URGENCIAS</span>';
+    urgLi.classList.add('slot-urgencia');
+    urgLi.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
+    slotListEl.appendChild(urgLi);
+    
+  } catch (error) {
+    console.error('Error en loadSlots:', error);
+    slotListEl.innerHTML = `
+      <div class="error">
+        Error al cargar horarios
+        <button onclick="window.location.reload()">Reintentar</button>
+      </div>
+    `;
+  }
 }
-  // =================================================
-  // 3) MODAL OVERLAY + CARGA DINÁMICA DE MÓDULOS (HTML)
-  // =================================================
-  const overlay = document.getElementById("modal-overlay");
-  function closeModal() {
-    overlay.classList.remove("visible");
-    overlay.innerHTML = "";
-  }
-
-  document.querySelectorAll('a[data-module]').forEach(link => {
-    link.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const file = link.dataset.module.trim();
-
-      overlay.innerHTML = `
-        <div class="modal-overlay-content">
-          <button id="close-modal" aria-label="Cerrar módulo">×</button>
-          <div class="loading-msg">Cargando…</div>
-        </div>`;
-      overlay.classList.add("visible");
-
-      overlay.addEventListener("click", ev => {
-        if (ev.target === overlay) closeModal();
-      });
-      overlay.querySelector("#close-modal").addEventListener("click", closeModal);
-
-      try {
-        const html      = await fetch(file).then(r => r.text());
-        const container = overlay.querySelector(".modal-overlay-content");
-        container.innerHTML = `<button id="close-modal" aria-label="Cerrar módulo">×</button>`;
-        const tpl = document.createElement("template");
-        tpl.innerHTML = html.trim();
-
-        // Extraer y remover <script> antes de inyectar el HTML
-        const scripts  = tpl.content.querySelectorAll("script");
-        const fragment = tpl.content.cloneNode(true);
-        fragment.querySelectorAll("script").forEach(s => s.remove());
-
-        const contentDiv = document.createElement("div");
-        contentDiv.appendChild(fragment);
-        container.appendChild(contentDiv);
-
-        // POBLAR AUTOMÁTICO de TODOS los <select class="pet-select">
-        await populateClientPetFields(container);
-
-        // Reinsertar <script> para que se ejecuten
-        scripts.forEach(oldScript => {
-          const newScript = document.createElement("script");
-          if (oldScript.src) {
-            newScript.src = oldScript.src;
-          } else {
-            newScript.textContent = oldScript.textContent;
-          }
-          container.appendChild(newScript);
-        });
-
-        container.querySelector("#close-modal").addEventListener("click", closeModal);
-      } catch (err) {
-        const container = overlay.querySelector(".modal-overlay-content");
-        container.innerHTML = `
-          <button id="close-modal" aria-label="Cerrar módulo">×</button>
-          <p style="padding:1em;color:#b71c1c;">Error al cargar el módulo.</p>
-        `;
-        container.querySelector("#close-modal").addEventListener("click", closeModal);
-      }
-    });
-  });
-
-  // ===================================
-  // 4) LÓGICA DEL CALENDARIO + ANIMACIONES
-  // ===================================
-  let currentDate          = new Date();
-  const card               = document.getElementById("card");
-  const daysEl             = document.getElementById("days");
-  const monthYearEl        = document.getElementById("month-year");
-  const reservationFormDiv = document.getElementById("reservation-form");
-  const formDate           = document.getElementById("form-date");
-  const formTime           = document.getElementById("form-time");
-  const ownerInfoDiv       = document.getElementById("owner-info");
-  const newChk             = document.getElementById("new-pet");
-  const newPetFields       = document.getElementById("new-pet-fields");
-  const backToCalendarBtn  = document.getElementById("back-to-calendar");
-  const slotListEl         = document.getElementById("slot-list");
-
-  /**
-   * renderCalendar()
-   * — Carga todas las citas UNA sola vez (loadAllCitas),
-   *   arma __appointmentsCount y dibuja cada día con su color.
-   */
-  async function renderCalendar() {
-    document.getElementById("calendar").style.display = "block";
-    reservationFormDiv.style.display = "none";
-
-    // 1) Cargar TODAS las citas en memoria
-    await loadAllCitas();
-
-    const y = currentDate.getFullYear(),
-          m = currentDate.getMonth();
-    monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
-      month: "long",
-      year:  "numeric"
-    });
-
-    daysEl.innerHTML = "";
-    const firstDayIndex = new Date(y, m, 1).getDay() || 7;
-    const totalDays     = new Date(y, m + 1, 0).getDate();
-
-    // Espacios vacíos hasta el primer día
-    for (let i = 1; i < firstDayIndex; i++) {
-      daysEl.appendChild(document.createElement("div"));
-    }
-
-    // Dibujar cada día
-    for (let d = 1; d <= totalDays; d++) {
-      const dayCell = document.createElement("div");
-      const dateStr = `${y}-${String(m + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      dayCell.textContent  = d;
-      dayCell.dataset.date = dateStr;
-
-      const count = getCountByDate(dateStr);
-      console.log("Dibujando día", dateStr, "con", count, "citas");
-      if (count >= 4) {
-        dayCell.classList.add("full");    // 4 o más → sin espacio
-      } else if (count === 3) {
-        dayCell.classList.add("medium");  // 3 → pocas plazas
-      } else if (count > 0) {
-        dayCell.classList.add("low");     // 1-2 → espacios disponibles
-      }
-      if (count > 0) {
-        dayCell.setAttribute("data-count", count);
-      }
-      // Marcar “hoy”
-      if (dateStr === new Date().toISOString().slice(0,10)) {
-        dayCell.classList.add("today");
-      }
-
-      daysEl.appendChild(dayCell);
-    }
-    activateDateClicks();
-  }
-
-  // Habilitar clic en cada día (solo aquellos con data-date)
-  function activateDateClicks() {
-    document.querySelectorAll("#days div[data-date]").forEach(el => {
-      el.addEventListener("click", () => {
-        const selectedDate = el.dataset.date;
-        document.getElementById("slot-date").textContent = selectedDate;
-        flipToSlots(selectedDate);
-      });
-    });
-  }
-
-  // “Voltear” a la parte de horarios
-  function flipToSlots(date) {
-    card.classList.add("flipped1");
-    setTimeout(() => loadSlots(date), 400);
-  }
-
   /**
    * loadSlots(fecha)
    * — Toma todas las citas ya cargadas en memoria (loadAllCitas),
