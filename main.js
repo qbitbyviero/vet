@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ======================================
   // 0) URL DE TU WEB APP (Apps Script)
   // ======================================
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyvuC-GaO0Kqwpn2sDPy090B2M2tICugaBcgzhPkioYaRFZr6YkPxhXeZuOYzvWuFwOHg/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzBpu2EGoH1415ZCRA9f0SGDRRE-hw2Gx_WZeLNnfSTN-8KTCy9HCbHYUWJ1f-AePjvVA/exec";
 
   // ============================
   // 1) JSONP REQUEST (para evitar CORS)
