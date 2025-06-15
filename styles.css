@@ -980,3 +980,19 @@ li.occupied {
   font-style: italic;
   padding: 1em;
 }
+#calendar, #reservation-form, .back {
+  transition: opacity 0.3s ease;
+}
+
+#calendar {
+  display: block;
+}
+
+#reservation-form {
+  display: none;
+  opacity: 1;
+}
+
+.flipped1 {
+  transform: rotateY(180deg);
+}
