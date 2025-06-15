@@ -125,7 +125,9 @@ nav ul {
   transition: 0s;
   transform: translate(0, 5%);
 }
-
+#back-to-calendar {
+  margin-top: 1rem;
+}
 /* ==========================
    MODAL OVERLAY (index.html)
    ========================== */
