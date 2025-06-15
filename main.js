@@ -1,5 +1,5 @@
 // =======================
-// main.js (VERSIÓN COMPLETA Y CORREGIDA)
+// main.js (VERSIÓN DEFINITIVA)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
@@ -35,7 +35,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return '';
   }
 
-  // 3. Función loadAllCitas COMPLETA
+  // 3. Carga de datos
+  async function loadAllClients() {
+    if (__clientsCache) return __clientsCache;
+    try {
+      __clientsCache = await jsonpRequest(`${GAS_BASE_URL}?sheet=Clientes`);
+      return __clientsCache;
+    } catch (err) {
+      console.error('Error cargando clientes:', err);
+      return [];
+    }
+  }
+
   async function loadAllCitas() {
     if (__allCitasCache) return __allCitasCache;
     try {
@@ -90,10 +101,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   UI.init();
 
-  // 5. Función activateDateClicks
+  // 5. Función crítica CORREGIDA
   function activateDateClicks() {
     const daysContainer = document.getElementById('days');
-    daysContainer.querySelectorAll('div[data-date]').forEach(day => {
+    
+    // Solución definitiva para el problema de listeners
+    const newDaysContainer = daysContainer.cloneNode(true);
+    daysContainer.parentNode.replaceChild(newDaysContainer, daysContainer);
+    
+    newDaysContainer.querySelectorAll('div[data-date]').forEach(day => {
       day.addEventListener('click', function() {
         const selectedDate = this.dataset.date;
         console.log('Fecha seleccionada:', selectedDate);
@@ -103,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 6. Función showTimeSlots
+  // 6. Mostrar horarios
   function showTimeSlots(date) {
     console.log('Mostrando horarios para:', date);
     UI.card.classList.add('flipped1');
@@ -113,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 400);
   }
 
-  // 7. Función loadTimeSlots
+  // 7. Cargar horarios
   async function loadTimeSlots(date) {
     try {
       UI.slotList.innerHTML = '';
@@ -168,25 +184,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 8. Función resetToCalendar
+  // 8. Resetear vista CORREGIDO
   function resetToCalendar() {
     console.log('Reseteando vista...');
     
+    // 1. Ocultar formulario
     UI.reservationForm.style.opacity = '0';
     setTimeout(() => {
       UI.reservationForm.style.display = 'none';
+      
+      // 2. Mostrar calendario
       document.getElementById('calendar').style.display = 'block';
+      
+      // 3. Resetear tarjeta completamente
       UI.card.classList.remove('flipped1');
       UI.card.style.transform = 'rotateY(0deg)';
       document.querySelector('.back').style.opacity = '0';
       
+      // 4. Forzar recarga de datos
       __allCitasCache = null;
       __appointmentsCount = {};
+      
+      // 5. Renderizar con nuevo estado
       renderCalendar();
     }, 300);
   }
 
-  // 9. Función renderCalendar
+  // 9. Renderizar calendario
   async function renderCalendar() {
     console.log('Renderizando calendario...');
     try {
