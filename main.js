@@ -300,83 +300,100 @@ function getCountByDate(fecha) {
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
 async function loadSlots(fecha) {
-  slotListEl.innerHTML = ""; // Limpiar horarios anteriores
-
-  // 1. Cargar todas las citas y filtrar por fecha seleccionada
-  const allCitas = await loadAllCitas();
-  const citasDelDia = allCitas.filter(c => {
-    const citaFecha = normalizeDate(String(c["Fecha"] || ""));
-    return citaFecha === fecha;
-  });
-
-  // 2. Crear mapa de horas ocupadas con toda la información de la cita
-  const horasOcupadas = {};
-  citasDelDia.forEach(cita => {
-    let hora = String(cita["Hora"] || "").trim();
+  console.log(`Cargando slots para fecha: ${fecha}`); // Para depuración
+  
+  // Limpiar contenedor
+  slotListEl.innerHTML = '<div class="loading-slots">Cargando horarios...</div>';
+  
+  try {
+    // 1. Cargar todas las citas
+    const allCitas = await loadAllCitas();
+    console.log('Total de citas:', allCitas.length); // Depuración
     
-    // Normalizar formato de hora (9:30 → 09:30)
-    if (hora.length === 4 && hora.includes(':')) {
-      hora = '0' + hora;
-    }
-    hora = hora.slice(0, 5); // Asegurar formato HH:MM
-    
-    if (hora) {
-      horasOcupadas[hora] = {
-        mascota: String(cita["Nombre de la mascota"] || "Sin nombre").trim(),
-        motivo: String(cita["Motivo"] || "Sin motivo especificado").trim(),
-        clienteId: String(cita["ID cliente"] || "").trim()
-      };
-    }
-  });
-
-  // 3. Generar horarios de 10:00 a 18:30 con intervalos de 30 minutos
-  for (let h = 10; h < 19; h++) {
-    ['00', '30'].forEach(min => {
-      const hora = `${String(h).padStart(2, '0')}:${min}`;
-      const li = document.createElement('li');
-      li.classList.add('slot-line');
-      
-      // Crear elemento para mostrar la hora
-      const timeSpan = document.createElement('span');
-      timeSpan.textContent = hora;
-      timeSpan.classList.add('slot-time');
-      
-      // Crear elemento para mostrar detalles
-      const detailSpan = document.createElement('span');
-      detailSpan.classList.add('slot-detail');
-
-      // Verificar si la hora está ocupada
-      if (horasOcupadas[hora]) {
-        const cita = horasOcupadas[hora];
-        detailSpan.textContent = `${cita.mascota} - ${cita.motivo}`;
-        li.classList.add('ocupado');
-        li.style.cursor = 'not-allowed';
-        li.title = `Cita con ${cita.mascota} (${cita.motivo})`;
-      } else {
-        detailSpan.textContent = 'Disponible';
-        li.classList.add('disponible');
-        li.addEventListener('click', () => selectSlot(fecha, hora));
-      }
-
-      li.appendChild(timeSpan);
-      li.appendChild(detailSpan);
-      slotListEl.appendChild(li);
+    // 2. Filtrar citas para esta fecha específica
+    const citasDelDia = allCitas.filter(cita => {
+      const fechaCita = normalizeDate(cita.Fecha);
+      console.log(`Comparando: ${fechaCita} con ${fecha}`); // Depuración
+      return fechaCita === fecha;
     });
-  }
+    
+    console.log('Citas del día:', citasDelDia); // Depuración
 
-  // 4. Agregar siempre la opción de URGENCIAS
-  const urg = document.createElement('li');
-  urg.textContent = '🚨 URGENCIAS';
-  urg.classList.add('urgencia');
-  urg.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
-  slotListEl.appendChild(urg);
+    // 3. Crear mapa de horas ocupadas
+    const horasOcupadas = {};
+    citasDelDia.forEach(cita => {
+      let hora = cita.Hora ? cita.Hora.toString().trim() : '';
+      
+      // Normalizar formato de hora (9:30 → 09:30)
+      if (hora.match(/^\d:\d{2}$/)) {
+        hora = '0' + hora;
+      }
+      
+      // Asegurar formato HH:MM
+      hora = hora.substring(0, 5);
+      
+      if (hora && hora.match(/^\d{2}:\d{2}$/)) {
+        horasOcupadas[hora] = {
+          mascota: cita['Nombre de la mascota'] || 'Sin nombre',
+          motivo: cita.Motivo || 'Sin motivo'
+        };
+      }
+    });
 
-  // 5. Mostrar mensaje si no hay citas este día
-  if (citasDelDia.length === 0) {
-    const emptyMsg = document.createElement('li');
-    emptyMsg.textContent = 'No hay citas programadas para este día';
-    emptyMsg.classList.add('empty-day');
-    slotListEl.appendChild(emptyMsg);
+    console.log('Horas ocupadas:', horasOcupadas); // Depuración
+
+    // 4. Generar el HTML
+    slotListEl.innerHTML = '';
+    
+    // Generar horarios de 10:00 a 18:30 cada 30 minutos
+    for (let hora = 10; hora < 19; hora++) {
+      ['00', '30'].forEach(minuto => {
+        const horaFormateada = `${hora.toString().padStart(2, '0')}:${minuto}`;
+        const li = document.createElement('li');
+        
+        if (horasOcupadas[horaFormateada]) {
+          // Slot ocupado
+          const cita = horasOcupadas[horaFormateada];
+          li.innerHTML = `
+            <span class="hora-ocupada">
+              ${horaFormateada} ----> ${cita.mascota} ----> ${cita.motivo}
+            </span>
+          `;
+          li.classList.add('ocupado');
+          li.style.cursor = 'not-allowed';
+        } else {
+          // Slot disponible
+          li.innerHTML = `
+            <span class="hora-disponible">
+              ${horaFormateada} ----> Disponible
+            </span>
+          `;
+          li.classList.add('disponible');
+          li.addEventListener('click', () => selectSlot(fecha, horaFormateada));
+        }
+        
+        slotListEl.appendChild(li);
+      });
+    }
+
+    // 5. Añadir opción de urgencias
+    const urgLi = document.createElement('li');
+    urgLi.innerHTML = `
+      <span class="hora-urgencia">
+        🚨 URGENCIAS (Haz clic aquí)
+      </span>
+    `;
+    urgLi.classList.add('urgencia');
+    urgLi.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
+    slotListEl.appendChild(urgLi);
+
+  } catch (error) {
+    console.error('Error cargando slots:', error);
+    slotListEl.innerHTML = `
+      <div class="error-slots">
+        Error al cargar horarios. Intenta recargar la página.
+      </div>
+    `;
   }
 }
   /**
