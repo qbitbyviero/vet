@@ -90,43 +90,47 @@ async function loadAllCitas() {
   if (Array.isArray(__allCitasCache)) {
     return __allCitasCache;
   }
+  
   try {
-    const url  = GAS_BASE_URL + "?sheet=Citas";
+    const url = GAS_BASE_URL + "?sheet=Citas&action=getCitas";
     const data = await jsonpRequest(url);
-    __allCitasCache     = data;
-    __appointmentsCount = {};
-
-    data.forEach(cita => {
-      // 🗓️ Normaliza la fecha
-      let rawFecha = cita["Fecha"];
-      rawFecha = normalizeDate(String(rawFecha).trim());
-      cita["Fecha"] = rawFecha;
-
-      // 🕒 Normaliza la hora
-      let rawHora = cita["Hora"];
-      if (rawHora instanceof Date) {
-        const hh = String(rawHora.getHours()).padStart(2, "0");
-        const mm = String(rawHora.getMinutes()).padStart(2, "0");
-        rawHora = `${hh}:${mm}`;
-      } else {
-        rawHora = String(rawHora).trim().slice(0, 5);
+    console.log('[DEBUG] Datos crudos de citas:', data);
+    
+    __allCitasCache = data.map(cita => {
+      // Normalizar fecha
+      let fecha = cita.Fecha || cita.fecha || '';
+      fecha = normalizeDate(fecha);
+      
+      // Normalizar hora
+      let hora = cita.Hora || cita.hora || '';
+      if (hora instanceof Date) {
+        hora = `${String(hora.getHours()).padStart(2, '0')}:${String(hora.getMinutes()).padStart(2, '0')}`;
+      } else if (typeof hora === 'string') {
+        hora = hora.trim().substring(0, 5);
+        if (/^\d:\d{2}$/.test(hora)) {
+          hora = '0' + hora;
+        }
       }
-      cita["Hora"] = rawHora;
-
-      // 📅 Conteo por fecha
-      if (!__appointmentsCount[rawFecha]) {
-        __appointmentsCount[rawFecha] = 0;
-      }
-      __appointmentsCount[rawFecha]++;
+      
+      return {
+        ...cita,
+        Fecha: fecha,
+        Hora: hora
+      };
     });
-
+    
+    // Actualizar conteo
+    __appointmentsCount = {};
+    __allCitasCache.forEach(cita => {
+      __appointmentsCount[cita.Fecha] = (__appointmentsCount[cita.Fecha] || 0) + 1;
+    });
+    
     return __allCitasCache;
   } catch (err) {
-    console.error("Error cargando citas:", err);
+    console.error('[ERROR] loadAllCitas:', err);
     return [];
   }
 }
-
 /**
  * getCountByDate(fecha)
  * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
