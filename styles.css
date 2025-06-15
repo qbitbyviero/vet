@@ -57,7 +57,7 @@ nav ul {
 }
 
 /* =============================
-   BOTONES “BUTTON-86”
+   BOTONES "BUTTON-86"
    ============================= */
 .button-86 {
   all: unset;
@@ -127,7 +127,7 @@ nav ul {
 }
 
 /* ==========================
-   MODAL OVERLAY (index.html)
+   MODAL OVERLAY
    ========================== */
 #modal-overlay {
   position: fixed;
@@ -147,7 +147,6 @@ nav ul {
   display: flex;
 }
 
-/* Contenedor interior para el contenido del módulo cargado */
 .modal-overlay-content {
   position: relative;
   background: transparent;
@@ -158,7 +157,6 @@ nav ul {
   overflow: visible;
 }
 
-/* Botón de cierre “×” */
 #close-modal {
   all: unset;
   position: absolute;
@@ -233,7 +231,6 @@ textarea {
   resize: vertical;
 }
 
-/* Fieldsets y leyendas */
 fieldset {
   border: 1px solid #0277bd;
   border-radius: 4px;
@@ -248,7 +245,7 @@ legend {
 }
 
 /* ============================
-   ESTILOS DEL CALENDARIO (index)
+   ESTILOS DEL CALENDARIO
    ============================ */
 .calendar {
   width: 90vw;
@@ -297,21 +294,50 @@ legend {
   padding: 0.3em 0;
 }
 
-.front .days div {
-  padding: 0.5em 0;
+#days div {
   cursor: pointer;
+  padding: 10px;
+  margin: 2px;
+  text-align: center;
   border-radius: 4px;
-  transition: background 0.2s, border-color 0.2s;
-  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.front .days div:hover {
-  background: #90caf9;
-  border-color: #1565c0;
+#days div:hover {
+  background-color: #e0e0e0;
 }
 
-.front .today {
-  background: #82b1ff;
+#days div[data-count]::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #2196F3;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#days div.full {
+  background-color: #ffcdd2;
+}
+
+#days div.medium {
+  background-color: #ffe0b2;
+}
+
+#days div.low {
+  background-color: #c8e6c9;
+}
+
+#days div.today {
+  border: 2px solid #2196F3;
 }
 
 .back {
@@ -323,6 +349,9 @@ legend {
   border-radius: 6px;
 }
 
+/* ================================
+   ESTILOS PARA HORARIOS CONSOLIDADOS
+   ================================ */
 #slot-list {
   list-style: none;
   max-height: 300px;
@@ -331,25 +360,72 @@ legend {
   margin-bottom: 1em;
 }
 
-#slot-list li {
-  padding: 0.5em;
-  margin: 0.2em 0;
-  background: #e1f5fe;
-  border: 1px solid #0277bd;
+.slot-line {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 5px 0;
   border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
+  font-family: 'Courier New', monospace;
+  animation: fadeIn 0.3s ease-out forwards;
+  transition: all 0.3s ease;
 }
 
-#slot-list li:hover {
-  background: #b3e5fc;
+.slot-line .hora {
+  font-weight: bold;
+  width: 50px;
 }
 
-#slot-list li.ocupado {
-  background: #ffcdd2;
-  color: #b71c1c;
-  border-color: #b71c1c;
+.slot-line .separador {
+  margin: 0 5px;
+  color: #666;
+}
+
+.slot-line .mascota,
+.slot-line .motivo,
+.slot-line .disponible {
+  flex: 1;
+}
+
+.slot-line.ocupado {
+  background-color: #ffebee;
+  border-left: 3px solid #f44336;
   cursor: not-allowed;
+}
+
+.slot-line.disponible {
+  background-color: #e8f5e9;
+  border-left: 3px solid #4caf50;
+  cursor: pointer;
+}
+
+.slot-line.disponible:hover {
+  background-color: #c8e6c9;
+}
+
+.slot-urgencia {
+  background-color: #fff3e0;
+  border-left: 3px solid #ff9800;
+  font-weight: bold;
+  color: #e65100;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .slot-line {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+  
+  .slot-line .hora,
+  .slot-line .separador,
+  .slot-line .mascota,
+  .slot-line .motivo,
+  .slot-line .disponible {
+    width: 100%;
+    margin: 2px 0;
+  }
 }
 
 /* ==========================
@@ -387,22 +463,20 @@ legend {
   margin-top: 1em;
 }
 
-/* Campos para nueva mascota */
 #new-pet-fields {
   margin-top: 1em;
+  display: none;
 }
 
 /* ======================================
    UTILIDADES Y AJUSTES FINALES
    ====================================== */
-/* Indicador de campos obligatorios */
 .required::after {
   content: '*';
   color: #b71c1c;
   margin-left: 0.2em;
 }
 
-/* Animaciones de transición suave */
 input:focus,
 select:focus,
 textarea:focus,
@@ -415,7 +489,6 @@ button:focus {
 /* ============================
    ESTILOS GENERALES ADICIONALES
    ============================ */
-/* Tablas (medicamentos, productos) */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -443,14 +516,12 @@ td {
   color: #0d47a1;
 }
 
-/* Estilos para grupos de radio */
 .radio-group {
   display: flex;
   gap: 1em;
   margin-top: 0.3em;
 }
 
-/* Diagrama con hotspots */
 .diagrama-container {
   position: relative;
   margin-top: 1em;
@@ -476,7 +547,6 @@ td {
   pointer-events: none;
 }
 
-/* Grupos de imágenes y previews */
 .foto-group {
   display: flex;
   gap: 1em;
@@ -495,61 +565,6 @@ td {
   border-radius: 4px;
 }
 
-/* Carrito (tienda) */
-.cart {
-  width: 250px;
-  background: #fff;
-  border: 1px solid #0277bd;
-  border-radius: 6px;
-  padding: 1em;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  cursor: move;
-  position: absolute;
-  top: 1.5em;
-  right: -260px;
-  transition: right 0.3s ease;
-}
-
-.cart.open {
-  right: -1px;
-}
-
-.cart h3 {
-  margin-top: 0;
-  color: #0d47a1;
-}
-
-.cart ul {
-  list-style: none;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 0;
-  margin: 0.5em 0;
-}
-
-.cart li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0.5em 0;
-}
-
-.cart p {
-  margin: 0.3em 0;
-}
-
-.cart-promo {
-  margin: 0.5em 0;
-  font-style: italic;
-  color: #0d47a1;
-}
-
-.cart button {
-  width: 100%;
-  margin-top: 1em;
-}
-
-/* Botón “Eliminar” genérico */
 .btn-remove {
   background: #e53935;
   color: #fff;
@@ -561,50 +576,44 @@ td {
 }
 
 /* ======================
-   ANIMACIONES DE HUELLAS
+   ANIMACIONES CONSOLIDADAS
    ====================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes topAnimation {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(0, 3rem);
-  }
+  from { transform: translate(0, 0); }
+  to { transform: translate(0, 3rem); }
 }
 
 @keyframes bottomAnimation {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(-5rem, 0);
-  }
+  from { transform: translate(0, 0); }
+  to { transform: translate(-5rem, 0); }
 }
-/* ========================================
-   TIENDA: ESTILOS PROFESIONALES AGREGADOS
-   ======================================== */
 
-/* 1) Modal “Tienda” acotado y centrado */
+/* ================================
+   ESTILOS ESPECÍFICOS PARA TIENDA
+   ================================ */
 .modal-tienda {
   background: #e3f2fd;
   padding: 1.5rem;
   border-radius: 8px;
   border: 2px solid #1565c0;
-  max-width: 600px;     /* ancho máximo */
-  width: 90vw;          /* 90% del viewport en móvil */
+  max-width: 600px;
+  width: 90vw;
   margin: 0 auto;
   max-height: 90vh;
-  overflow-y: auto;     /* scroll interno si se desborda */
+  overflow-y: auto;
 }
 
-/* Título centrado y con espacio */
 .modal-tienda h2 {
   margin-bottom: 1rem;
   text-align: center;
   color: #0d47a1;
 }
 
-/* 2) Grid de miniaturas de producto */
 .product-grid {
   display: grid;
   gap: 1rem;
@@ -612,7 +621,6 @@ td {
   margin-bottom: 1.5rem;
 }
 
-/* Cada tarjeta de la miniatura */
 .product-item {
   background: #fff;
   border: 1px solid #0277bd;
@@ -627,22 +635,19 @@ td {
   align-items: center;
 }
 
-/* Efecto hover al pasar sobre la miniatura */
 .product-item:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Imagen pequeña dentro de la tarjeta */
 .product-item img {
   width: 100%;
-  height: 100px;        /* alto fijo para uniformizar */
+  height: 100px;
   object-fit: cover;
   border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
-/* Nombre del producto (miniatura) */
 .product-item h4 {
   margin: 0.25rem 0;
   font-size: 0.95rem;
@@ -650,7 +655,6 @@ td {
   flex: 0 0 auto;
 }
 
-/* 3) Checkout form (separado) */
 .checkout-form {
   border-top: 1px solid #0277bd;
   padding-top: 1.5rem;
@@ -664,23 +668,6 @@ td {
   font-size: 1.1rem;
 }
 
-.checkout-form label {
-  display: block;
-  margin: 0.5rem 0 0.25rem;
-  color: #0d47a1;
-}
-
-.checkout-form input,
-.checkout-form select {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #0277bd;
-  border-radius: 4px;
-  margin-bottom: 0.8rem;
-  box-sizing: border-box;
-}
-
-/* Fila de descuento */
 .discount-row {
   display: flex;
   gap: 0.5rem;
@@ -692,7 +679,6 @@ td {
   flex: 1;
 }
 
-/* 4) Carrito flotante */
 .cart {
   width: 260px;
   background: #ffffff;
@@ -708,7 +694,6 @@ td {
   z-index: 100;
 }
 
-/* Cuando se abre el carrito */
 .cart.open {
   right: 1rem;
 }
@@ -735,7 +720,6 @@ td {
   font-size: 0.9rem;
 }
 
-/* Botón “×” pequeño para quitar unidades */
 .cart li button.small-remove {
   background: #e53935;
   color: #fff;
@@ -762,18 +746,6 @@ td {
   width: 100%;
 }
 
-/* Responsive: carrito en móvil ocupa menos */
-@media (max-width: 600px) {
-  .cart {
-    width: 200px;
-    right: -220px;
-  }
-  .cart.open {
-    right: 0.5rem;
-  }
-}
-
-/* 5) “Ficha de Detalle” (overlay) */
 .product-detail-overlay {
   position: fixed;
   top: 0;
@@ -802,7 +774,6 @@ td {
   text-align: center;
 }
 
-/* Botón de cierre “×” */
 .detail-close {
   all: unset;
   position: absolute;
@@ -851,7 +822,6 @@ td {
   margin-bottom: 1rem;
 }
 
-/* Controles de cantidad en detalle */
 .quantity-control {
   display: flex;
   justify-content: center;
@@ -879,50 +849,24 @@ td {
   text-align: center;
 }
 
-/* Botón “Agregar al carrito” en detalle */
-#add-to-cart-detail {
-  margin-top: 0.5rem;
-}
-
-/* Si quieres un ajuste específico para móviles */
-@media (max-width: 400px) {
+/* ================================
+   RESPONSIVE ADICIONAL
+   ================================ */
+@media (max-width: 600px) {
+  .cart {
+    width: 200px;
+    right: -220px;
+  }
+  
+  .cart.open {
+    right: 0.5rem;
+  }
+  
   .detail-image {
     height: 150px;
   }
 }
-/* ===============================
-   HORARIOS DETALLADOS EN DOS COLUMNAS
-   =============================== */
-.slot-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  border-bottom: 1px solid #ccc;
-  background-color: #e1f5fe;
-  border-radius: 4px;
-  margin-bottom: 0.3em;
-  transition: all 0.3s ease;
-}
 
-.slot-time {
-  font-weight: bold;
-  color: #0277bd;
-  width: 30%;
-}
-
-.slot-detail {
-  width: 65%;
-  text-align: right;
-  color: #0d47a1;
-  font-size: 0.9em;
-}
-
-li.occupied {
-  background-color: #ffcdd2 !important;
-  color: #b71c1c !important;
-  cursor: not-allowed !important;
-}
 .suggestion-list {
   list-style: none;
   padding: 0;
@@ -935,104 +879,17 @@ li.occupied {
   width: 100%;
   z-index: 10;
 }
+
 .suggestion-list li {
   padding: 0.4em;
   cursor: pointer;
 }
+
 .suggestion-list li:hover {
   background-color: #eee;
-}
-/* ================================
-   MEJORAS ESPECÍFICAS PARA HORARIOS 
-   (Se añaden al final de tu archivo)
-   ================================ */
-/* Estilos para horarios */
-.slot-line {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  margin: 5px 0;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-}
-
-.hora {
-  font-weight: bold;
-  width: 50px;
-}
-
-.separador {
-  margin: 0 5px;
-  color: #666;
-}
-
-.slot-line.ocupado {
-  background-color: #ffebee;
-  border-left: 3px solid #f44336;
-}
-
-.slot-line.disponible {
-  background-color: #e8f5e9;
-  border-left: 3px solid #4caf50;
-  cursor: pointer;
-}
-
-.slot-line.disponible:hover {
-  background-color: #c8e6c9;
-}
-
-.slot-urgencia {
-  background-color: #fff3e0;
-  border-left: 3px solid #ff9800;
-  font-weight: bold;
-  color: #e65100;
 }
 
 .loading, .error {
   padding: 15px;
   text-align: center;
-}
-/* ===================================
-   ANIMACIONES PARA MEJORAR EXPERIENCIA
-   =================================== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slot-line {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.slot-line:nth-child(odd) {
-  animation-delay: 0.05s;
-}
-
-.slot-line:nth-child(even) {
-  animation-delay: 0.1s;
-}
-
-/* ===================================
-   RESPONSIVE PARA DISPOSITIVOS PEQUEÑOS
-   =================================== */
-@media (max-width: 600px) {
-  .slot-line {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 8px 10px;
-  }
-  
-  .slot-time, .slot-detail {
-    width: 100%;
-  }
-  
-  .slot-detail {
-    padding-left: 0;
-    margin-top: 5px;
-  }
-  
-  .slot-line.ocupado .slot-detail::before,
-  .slot-line.disponible .slot-detail::before {
-    content: "";
-  }
 }
