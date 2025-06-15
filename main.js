@@ -243,50 +243,37 @@ function updateCalendarStyles() {
         day.title = `${count} citas este día`;
     });
 }
-  // ============================
-  // 2) Funciones de carga de datos
-  // ============================
-
-  async function loadAllClients() {
-    if (Array.isArray(__clientsCache)) return __clientsCache;
-    
-    try {
-        const url = `${GAS_BASE_URL}?sheet=Clientes&nocache=${Date.now()}`;
-        console.log("Cargando clientes desde:", url);
-        
-        const data = await jsonpRequest(url);
-        if (!Array.isArray(data)) {
-            throw new Error("Formato de datos inválido para clientes");
-        }
-        
-        __clientsCache = data;
-        return __clientsCache;
-    } catch (err) {
-        console.error("Error cargando clientes:", err);
-        showGlobalError("Error cargando datos de mascotas. Intenta recargar.");
-        return [];
-    }
-}
+ // ============================
+// 2) Funciones de carga de datos - VERSIÓN CORREGIDA
+// ============================
 
 async function loadAllCitas() {
-    if (Array.isArray(__allCitasCache)) return __allCitasCache;
+    if (Array.isArray(__allCitasCache)) {
+        console.log("Usando caché de citas");
+        return __allCitasCache;
+    }
     
     try {
         const url = `${GAS_BASE_URL}?sheet=Citas&nocache=${Date.now()}`;
         console.log("Cargando citas desde:", url);
         
         const data = await jsonpRequest(url);
-        if (!Array.isArray(data)) {
-            throw new Error("Formato de datos inválido para citas");
+        console.log("Datos recibidos:", data); // <-- Verifica esto en consola
+        
+        if (!data || !Array.isArray(data)) {
+            throw new Error("Formato de datos inválido");
         }
         
+        // Procesamiento especial para tus datos
         __allCitasCache = data.map(cita => ({
             ...cita,
-            Fecha: normalizeDate(cita.Fecha || cita.fecha || ''),
-            Hora: normalizeTime(cita.Hora || cita.hora || '')
+            Fecha: cita.Fecha || '',  // Ya vienen formateadas desde GAS
+            Hora: cita.Hora || '',
+            'Nombre de la mascota': cita['Nombre de la mascota'] || 'Sin nombre',
+            Motivo: cita.Motivo || 'Sin motivo'
         }));
         
-        // Actualizar conteo de citas
+        // Actualizar conteo de citas por fecha
         __appointmentsCount = {};
         __allCitasCache.forEach(cita => {
             if (cita.Fecha) {
@@ -294,25 +281,30 @@ async function loadAllCitas() {
             }
         });
         
+        console.log("Citas procesadas:", __allCitasCache);
         return __allCitasCache;
     } catch (err) {
         console.error("Error cargando citas:", err);
-        showGlobalError("Error cargando citas. Intenta recargar.");
+        showGlobalError("Error al cargar las citas. Recarga la página.");
         return [];
     }
 }
-  // ============================
-  // 3) Funciones del calendario
-  // ============================
 
-  async function renderCalendar() {
+// ============================
+// 3) Funciones del calendario - VERSIÓN CORREGIDA
+// ============================
+
+async function renderCalendar() {
     try {
         console.log("Iniciando renderCalendar...");
-        document.getElementById("calendar").style.display = "block";
-        reservationFormDiv.style.display = "none";
-
-        await loadAllCitas();
-
+        
+        // Resetear caché para forzar carga fresca
+        __allCitasCache = null;
+        __appointmentsCount = {};
+        
+        await loadAllCitas(); // Espera a que se carguen las citas
+        
+        // Resto de tu lógica de renderizado...
         const y = currentDate.getFullYear();
         const m = currentDate.getMonth();
         monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
@@ -336,7 +328,9 @@ async function loadAllCitas() {
             dayCell.textContent = d;
             dayCell.dataset.date = dateStr;
 
-            const count = getCountByDate(dateStr);
+            const count = __appointmentsCount[dateStr] || 0;
+            
+            // Aplicar estilos según conteo
             dayCell.classList.toggle("full", count >= 4);
             dayCell.classList.toggle("medium", count === 3);
             dayCell.classList.toggle("low", count > 0 && count < 3);
@@ -354,107 +348,9 @@ async function loadAllCitas() {
         
     } catch (err) {
         console.error("Error en renderCalendar:", err);
-        showGlobalError("Error al mostrar el calendario. Recarga la página.");
+        showGlobalError("Error al mostrar el calendario");
     }
 }
-  function activateDateClicks() {
-    document.querySelectorAll("#days div[data-date]").forEach(el => {
-      el.addEventListener("click", () => {
-        const selectedDate = el.dataset.date;
-        document.getElementById("slot-date").textContent = selectedDate;
-        flipToSlots(selectedDate);
-      });
-    });
-  }
-
-  function flipToSlots(date) {
-    card.classList.add("flipped1");
-    setTimeout(() => loadSlots(date), 400);
-  }
-
-  async function loadSlots(fecha) {
-    console.log(`Cargando slots para: ${fecha}`);
-    slotListEl.innerHTML = '<div class="loading">Cargando horarios...</div>';
-    
-    try {
-      const allCitas = await loadAllCitas();
-      const citasDelDia = allCitas.filter(cita => cita.Fecha === fecha);
-      
-      const horasOcupadas = {};
-      citasDelDia.forEach(cita => {
-        if (cita.Hora) {
-          horasOcupadas[cita.Hora] = {
-            mascota: cita['Nombre de la mascota'] || 'Sin nombre',
-            motivo: cita.Motivo || 'Sin motivo'
-          };
-        }
-      });
-      
-      slotListEl.innerHTML = '';
-      for (let h = 10; h < 19; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          const hora = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-          const li = document.createElement('li');
-          li.className = 'slot-line';
-          
-          if (horasOcupadas[hora]) {
-            const cita = horasOcupadas[hora];
-            li.innerHTML = `
-              <span class="hora">${hora}</span>
-              <span class="separador">----></span>
-              <span class="mascota">${cita.mascota}</span>
-              <span class="separador">----></span>
-              <span class="motivo">${cita.motivo}</span>
-            `;
-            li.classList.add('ocupado');
-          } else {
-            li.innerHTML = `
-              <span class="hora">${hora}</span>
-              <span class="separador">----></span>
-              <span class="disponible">Disponible</span>
-            `;
-            li.classList.add('disponible');
-            li.addEventListener('click', () => selectSlot(fecha, hora));
-          }
-          
-          slotListEl.appendChild(li);
-        }
-      }
-      
-      const urgLi = document.createElement('li');
-      urgLi.innerHTML = '<span class="urgencia">🚨 URGENCIAS</span>';
-      urgLi.classList.add('slot-urgencia');
-      urgLi.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
-      slotListEl.appendChild(urgLi);
-      
-    } catch (error) {
-      console.error('Error en loadSlots:', error);
-      slotListEl.innerHTML = `
-        <div class="error">
-          Error al cargar horarios
-          <button onclick="window.location.reload()">Reintentar</button>
-        </div>
-      `;
-    }
-  }
-
-  function selectSlot(fecha, hora) {
-    const backPanel = document.querySelector(".back");
-    backPanel.style.transition = "opacity 0.3s ease";
-    backPanel.style.opacity = "0";
-    setTimeout(() => {
-      document.getElementById("calendar").style.display = "none";
-      renderForm(fecha, hora);
-      reservationFormDiv.style.opacity = "0";
-      reservationFormDiv.style.display = "block";
-      setTimeout(() => {
-        reservationFormDiv.style.transition = "opacity 0.4s ease";
-        reservationFormDiv.style.opacity = "1";
-      }, 50);
-      backPanel.style.opacity = "1";
-    }, 300);
-  }
-
   // ============================
   // 4) Funciones del formulario
   // ============================
@@ -784,7 +680,14 @@ async function loadAllCitas() {
     overlay.innerHTML = "";
   }
   function showGlobalError(message) {
-    const errorDiv = document.getElementById("global-error") || document.createElement("div");
+    // Eliminar error previo si existe
+    const existingError = document.getElementById("global-error");
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Crear nuevo elemento de error
+    const errorDiv = document.createElement("div");
     errorDiv.id = "global-error";
     errorDiv.style.cssText = `
         position: fixed;
@@ -793,29 +696,30 @@ async function loadAllCitas() {
         transform: translateX(-50%);
         background: #ffebee;
         color: #b71c1c;
-        padding: 15px;
+        padding: 15px 20px;
         border-radius: 4px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         z-index: 1000;
         max-width: 80%;
         text-align: center;
+        border: 1px solid #ffcdd2;
     `;
+    
     errorDiv.innerHTML = `
-        <p>${message}</p>
+        <p style="margin: 0 0 10px 0; font-weight: bold;">⚠️ Error</p>
+        <p style="margin: 0 0 15px 0;">${message}</p>
         <button onclick="location.reload()" style="
             background: #b71c1c;
             color: white;
             border: none;
-            padding: 5px 15px;
-            margin-top: 8px;
+            padding: 8px 20px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
         ">Reintentar</button>
     `;
     
-    if (!document.getElementById("global-error")) {
-        document.body.appendChild(errorDiv);
-    }
+    document.body.appendChild(errorDiv);
 }
 
   // Iniciar aplicación
