@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ======================================
   // 0) Configuración inicial
   // ======================================
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbxPk2_hwbNHvXJlOME18Dmv6FDaMamKOy7Kfv4wwo5lA8YXNe81TxSWwDCLre6cAwVczg/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
   // Elementos del DOM - TODOS definidos al inicio
   const card = document.getElementById("card");
