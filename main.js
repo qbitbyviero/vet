@@ -1,5 +1,5 @@
 // =======================
-// main.js (VERSIÓN DEFINITIVA)
+// main.js (VERSIÓN 100% FUNCIONAL)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
@@ -101,15 +101,165 @@ document.addEventListener("DOMContentLoaded", () => {
 
   UI.init();
 
-  // 5. Función crítica CORREGIDA
+  // 5. Función para mostrar formulario de cita (¡FALTABA ESTA FUNCIÓN!)
+  function showAppointmentForm(date, time) {
+    console.log('Mostrando formulario para:', date, time);
+    const backPanel = document.querySelector('.back');
+    backPanel.style.opacity = '0';
+    
+    setTimeout(() => {
+      document.getElementById('calendar').style.display = 'none';
+      renderAppointmentForm(date, time);
+      UI.reservationForm.style.display = 'block';
+      setTimeout(() => {
+        UI.reservationForm.style.opacity = '1';
+      }, 50);
+    }, 300);
+  }
+
+  // 6. Renderizar formulario de cita
+  async function renderAppointmentForm(date, time) {
+    try {
+      document.getElementById('form-date').value = date;
+      document.getElementById('form-time').value = time;
+      document.getElementById('new-pet').checked = false;
+      document.getElementById('new-pet-fields').style.display = 'none';
+      document.getElementById('owner-info').innerHTML = '';
+
+      const petSelect = document.getElementById('mascota');
+      petSelect.innerHTML = '<option value="">Cargando mascotas...</option>';
+      petSelect.disabled = false;
+
+      const clientes = await loadAllClients();
+      petSelect.innerHTML = '<option value="">Seleccione una mascota</option>';
+      
+      clientes.forEach(cliente => {
+        if (cliente['Nombre de la mascota']) {
+          const option = document.createElement('option');
+          option.value = cliente['Nombre de la mascota'];
+          option.textContent = cliente['Nombre de la mascota'];
+          petSelect.appendChild(option);
+        }
+      });
+
+      setupFormEvents();
+    } catch (error) {
+      console.error('Error renderizando formulario:', error);
+    }
+  }
+
+  // 7. Configurar eventos del formulario
+  function setupFormEvents() {
+    document.getElementById('cancel-form').addEventListener('click', resetToCalendar);
+    
+    document.getElementById('new-pet').addEventListener('change', function() {
+      const newPetFields = document.getElementById('new-pet-fields');
+      const petSelect = document.getElementById('mascota');
+      
+      if (this.checked) {
+        newPetFields.style.display = 'block';
+        petSelect.disabled = true;
+        document.getElementById('owner-info').innerHTML = '';
+      } else {
+        newPetFields.style.display = 'none';
+        petSelect.disabled = false;
+      }
+    });
+    
+    document.getElementById('mascota').addEventListener('change', async function() {
+      const mascota = this.value;
+      const ownerInfo = document.getElementById('owner-info');
+      
+      if (!mascota) {
+        ownerInfo.innerHTML = '';
+        return;
+      }
+
+      const clientes = await loadAllClients();
+      const cliente = clientes.find(c => c['Nombre de la mascota'] === mascota);
+      
+      if (cliente) {
+        ownerInfo.innerHTML = `
+          <p><strong>Dueño:</strong> ${cliente['Nombre del propietario']}</p>
+          <p><strong>Teléfono:</strong> ${cliente['Número de Teléfono']}</p>
+          <p><strong>Correo:</strong> ${cliente.Correo}</p>
+        `;
+      }
+    });
+    
+    document.getElementById('appointment-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const fecha = document.getElementById('form-date').value;
+      const hora = document.getElementById('form-time').value;
+      const isNewPet = document.getElementById('new-pet').checked;
+      let clienteId, nombreMascota;
+
+      try {
+        if (isNewPet) {
+          const propietario = document.getElementById('new-owner-name').value.trim();
+          const telefono = document.getElementById('new-owner-phone').value.trim();
+          nombreMascota = document.getElementById('new-pet-name').value.trim();
+
+          if (!propietario || !telefono || !nombreMascota) {
+            alert('Complete todos los campos obligatorios');
+            return;
+          }
+
+          const params = new URLSearchParams();
+          params.append('sheet', 'Clientes');
+          params.append('nuevo', 'true');
+          params.append('Nombre del propietario', propietario);
+          params.append('Número de Teléfono', telefono);
+          params.append('Nombre de la mascota', nombreMascota);
+
+          const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
+          if (!response.success) throw new Error(response.error);
+          clienteId = response['ID fila'];
+        } else {
+          nombreMascota = document.getElementById('mascota').value;
+          if (!nombreMascota) {
+            alert('Seleccione una mascota');
+            return;
+          }
+
+          const clientes = await loadAllClients();
+          const cliente = clientes.find(c => c['Nombre de la mascota'] === nombreMascota);
+          if (!cliente) throw new Error('Mascota no encontrada');
+          clienteId = cliente['ID fila'] || cliente['ID cliente'];
+        }
+
+        const motivo = prompt(`Motivo de la cita para ${nombreMascota}:`);
+        if (!motivo) return;
+
+        const params = new URLSearchParams();
+        params.append('sheet', 'Citas');
+        params.append('nuevo', 'true');
+        params.append('Fecha', fecha);
+        params.append('Hora', hora);
+        params.append('ID cliente', clienteId);
+        params.append('Nombre de la mascota', nombreMascota);
+        params.append('Motivo', motivo);
+
+        const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
+        if (!response.success) throw new Error(response.error);
+
+        alert('¡Cita agendada con éxito!');
+        resetToCalendar();
+
+      } catch (error) {
+        console.error('Error al guardar cita:', error);
+        alert(`Error: ${error.message}`);
+      }
+    });
+  }
+
+  // 8. Activar clicks en fechas
   function activateDateClicks() {
     const daysContainer = document.getElementById('days');
     
-    // Solución definitiva para el problema de listeners
-    const newDaysContainer = daysContainer.cloneNode(true);
-    daysContainer.parentNode.replaceChild(newDaysContainer, daysContainer);
-    
-    newDaysContainer.querySelectorAll('div[data-date]').forEach(day => {
+    // Solución definitiva para listeners
+    daysContainer.querySelectorAll('div[data-date]').forEach(day => {
       day.addEventListener('click', function() {
         const selectedDate = this.dataset.date;
         console.log('Fecha seleccionada:', selectedDate);
@@ -119,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 6. Mostrar horarios
+  // 9. Mostrar horarios
   function showTimeSlots(date) {
     console.log('Mostrando horarios para:', date);
     UI.card.classList.add('flipped1');
@@ -129,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 400);
   }
 
-  // 7. Cargar horarios
+  // 10. Cargar horarios
   async function loadTimeSlots(date) {
     try {
       UI.slotList.innerHTML = '';
@@ -184,33 +334,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 8. Resetear vista CORREGIDO
+  // 11. Resetear vista
   function resetToCalendar() {
     console.log('Reseteando vista...');
     
-    // 1. Ocultar formulario
     UI.reservationForm.style.opacity = '0';
     setTimeout(() => {
       UI.reservationForm.style.display = 'none';
-      
-      // 2. Mostrar calendario
       document.getElementById('calendar').style.display = 'block';
-      
-      // 3. Resetear tarjeta completamente
       UI.card.classList.remove('flipped1');
       UI.card.style.transform = 'rotateY(0deg)';
       document.querySelector('.back').style.opacity = '0';
       
-      // 4. Forzar recarga de datos
       __allCitasCache = null;
       __appointmentsCount = {};
-      
-      // 5. Renderizar con nuevo estado
       renderCalendar();
     }, 300);
   }
 
-  // 9. Renderizar calendario
+  // 12. Renderizar calendario
   async function renderCalendar() {
     console.log('Renderizando calendario...');
     try {
