@@ -300,56 +300,62 @@ function getCountByDate(fecha) {
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
 async function loadSlots(fecha) {
-  slotListEl.innerHTML = "";
+  slotListEl.innerHTML = ""; // Limpiar horarios anteriores
 
+  // 1. Cargar todas las citas y filtrar por fecha seleccionada
   const allCitas = await loadAllCitas();
-  const citasDelDia = allCitas.filter(c =>
-    normalizeDate(c["Fecha"] || "") === fecha.trim()
-  );
+  const citasDelDia = allCitas.filter(c => {
+    const citaFecha = normalizeDate(String(c["Fecha"] || ""));
+    return citaFecha === fecha;
+  });
 
-  // 🧠 Construye un mapa de hora → datos de cita
-  const mapaCitas = {};
+  // 2. Crear mapa de horas ocupadas con toda la información de la cita
+  const horasOcupadas = {};
   citasDelDia.forEach(cita => {
-    const horaAlmacenada = String(cita["Hora"] || "").trim();
-    if (horaAlmacenada) {
-      mapaCitas[horaAlmacenada] = {
-        mascota:  String(cita["Nombre de la mascota"] || "").trim(),
-        motivo:   String(cita["Motivo"] || "").trim(),
+    let hora = String(cita["Hora"] || "").trim();
+    
+    // Normalizar formato de hora (9:30 → 09:30)
+    if (hora.length === 4 && hora.includes(':')) {
+      hora = '0' + hora;
+    }
+    hora = hora.slice(0, 5); // Asegurar formato HH:MM
+    
+    if (hora) {
+      horasOcupadas[hora] = {
+        mascota: String(cita["Nombre de la mascota"] || "Sin nombre").trim(),
+        motivo: String(cita["Motivo"] || "Sin motivo especificado").trim(),
         clienteId: String(cita["ID cliente"] || "").trim()
       };
     }
-    let hora = String(cita["Hora"] || "").trim().slice(0, 5);
-    if (hora.length === 4) hora = "0" + hora; // Arregla formato "9:30" → "09:30"
-    mapaCitas[hora] = {
-      mascota:  String(cita["Nombre de la mascota"] || "").trim(),
-      motivo:   String(cita["Motivo"] || "").trim()
-    };
   });
 
-  // 🕒 Dibuja intervalos de 30 minutos de 10:00 a 18:30
+  // 3. Generar horarios de 10:00 a 18:30 con intervalos de 30 minutos
   for (let h = 10; h < 19; h++) {
-    ["00", "30"].forEach(min => {
-      const time = `${String(h).padStart(2, "0")}:${min}`;
-      const li = document.createElement("li");
-      li.classList.add("slot-line");
+    ['00', '30'].forEach(min => {
+      const hora = `${String(h).padStart(2, '0')}:${min}`;
+      const li = document.createElement('li');
+      li.classList.add('slot-line');
+      
+      // Crear elemento para mostrar la hora
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = hora;
+      timeSpan.classList.add('slot-time');
+      
+      // Crear elemento para mostrar detalles
+      const detailSpan = document.createElement('span');
+      detailSpan.classList.add('slot-detail');
 
-      const timeSpan = document.createElement("span");
-      timeSpan.textContent = time;
-      timeSpan.classList.add("slot-time");
-
-      const detailSpan = document.createElement("span");
-      detailSpan.classList.add("slot-detail");
-
-      if (mapaCitas[time]) {
-        const data = mapaCitas[time];
-        detailSpan.textContent = `${data.mascota} ⇒ ${data.motivo}`;
-        li.classList.add("ocupado");
-        detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
-        li.classList.add("ocupado"); // Clase especial para CSS
-        li.style.cursor = "not-allowed";
+      // Verificar si la hora está ocupada
+      if (horasOcupadas[hora]) {
+        const cita = horasOcupadas[hora];
+        detailSpan.textContent = `${cita.mascota} - ${cita.motivo}`;
+        li.classList.add('ocupado');
+        li.style.cursor = 'not-allowed';
+        li.title = `Cita con ${cita.mascota} (${cita.motivo})`;
       } else {
-        detailSpan.textContent = "Disponible";
-        li.addEventListener("click", () => selectSlot(fecha, time));
+        detailSpan.textContent = 'Disponible';
+        li.classList.add('disponible');
+        li.addEventListener('click', () => selectSlot(fecha, hora));
       }
 
       li.appendChild(timeSpan);
@@ -358,15 +364,21 @@ async function loadSlots(fecha) {
     });
   }
 
-  // 🛑 Agrega siempre la opción URGENCIAS
-  const urg = document.createElement("li");
-  urg.textContent = "🚨 URGENCIAS";
-  urg.classList.add("urgencia");
-  urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
+  // 4. Agregar siempre la opción de URGENCIAS
+  const urg = document.createElement('li');
+  urg.textContent = '🚨 URGENCIAS';
+  urg.classList.add('urgencia');
+  urg.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
   slotListEl.appendChild(urg);
+
+  // 5. Mostrar mensaje si no hay citas este día
+  if (citasDelDia.length === 0) {
+    const emptyMsg = document.createElement('li');
+    emptyMsg.textContent = 'No hay citas programadas para este día';
+    emptyMsg.classList.add('empty-day');
+    slotListEl.appendChild(emptyMsg);
+  }
 }
-
-
   /**
    * selectSlot(fecha, hora)
    * — Oculta el calendario y muestra el formulario para “Agendar cita”,
