@@ -942,3 +942,41 @@ li.occupied {
 .suggestion-list li:hover {
   background-color: #eee;
 }
+/* Agrega esto a tu styles.css o en el <style> del index.html */
+.slot-line {
+  padding: 0.5em;
+  margin: 0.2em 0;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.slot-line.ocupado {
+  background: #ffebee; /* Rojo claro */
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
+
+.slot-line.disponible {
+  background: #e8f5e9; /* Verde claro */
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+  cursor: pointer;
+}
+
+.slot-line.disponible:hover {
+  background: #c8e6c9;
+}
+
+.slot-line.urgencia {
+  background: #fff3e0;
+  color: #e65100;
+  font-weight: bold;
+  border-left: 4px solid #e65100;
+}
+
+.empty-day {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 1em;
+}
