@@ -54,54 +54,178 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function normalizeDate(dateStr) {
     if (!dateStr) return "";
+    
+    // Si ya está en formato YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-
-    const d = new Date(dateStr);
-    if (!isNaN(d)) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
-    }
-
-    const parts = dateStr.split("/");
+    
+    // Manejo de objetos Date y timestamps
+    try {
+        const d = new Date(dateStr);
+        if (!isNaN(d)) {
+            return d.toISOString().split('T')[0];
+        }
+    } catch (e) {}
+    
+    // Formatos con separadores (/ o -)
+    const parts = dateStr.split(/[/-]/);
     if (parts.length === 3) {
-      const [day, month, year] = parts;
-      return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        // Detecta formato DD/MM/YYYY o MM/DD/YYYY
+        let day, month, year;
+        if (parts[0].length === 4) { // YYYY-MM-DD
+            [year, month, day] = parts;
+        } else if (parts[2].length === 4) { // DD/MM/YYYY o MM/DD/YYYY
+            if (parseInt(parts[0]) > 12) { // DD/MM/YYYY
+                [day, month, year] = parts;
+            } else { // MM/DD/YYYY
+                [month, day, year] = parts;
+            }
+        }
+        
+        if (day && month && year) {
+            return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        }
     }
+    
     return "";
-  }
-
-  function normalizeTime(timeStr) {
+}
+function normalizeTime(timeStr) {
     if (!timeStr) return '';
     
+    // Si ya está en formato HH:MM
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
     
+    // Si es un objeto Date
     if (timeStr instanceof Date) {
-      return `${String(timeStr.getHours()).padStart(2, '0')}:${String(timeStr.getMinutes()).padStart(2, '0')}`;
+        return `${String(timeStr.getHours()).padStart(2, '0')}:${String(timeStr.getMinutes()).padStart(2, '0')}`;
     }
     
+    // Si está en formato con AM/PM
     if (typeof timeStr === 'string') {
-      const timeParts = timeStr.split(' ');
-      if (timeParts.length === 2) {
-        const [time, period] = timeParts;
-        const [hours, minutes] = time.split(':');
+        timeStr = timeStr.trim().toUpperCase()
+            .replace(/\./g, '') // Elimina puntos (A.M. -> AM)
+            .replace(/\s+/g, ' '); // Normaliza espacios
         
-        let hours24 = parseInt(hours);
-        if (period.toLowerCase() === 'p.m.' && hours24 < 12) {
-          hours24 += 12;
+        // Extrae horas, minutos y periodo
+        const match = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+        if (match) {
+            let hours = parseInt(match[1] || '0');
+            const minutes = parseInt(match[2] || '0');
+            const period = match[3];
+            
+            // Conversión a 24 horas
+            if (period) {
+                if (/PM/i.test(period) && hours < 12) hours += 12;
+                if (/AM/i.test(period) && hours === 12) hours = 0;
+            }
+            
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
-        if (period.toLowerCase() === 'a.m.' && hours24 === 12) {
-          hours24 = 0;
-        }
-        
-        return `${String(hours24).padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-      }
     }
     
     return '';
-  }
+}
 
+async function loadSlots(fecha) {
+    console.log(`Cargando slots para: ${fecha}`);
+    slotListEl.innerHTML = '<div class="loading">Cargando horarios...</div>';
+    
+    try {
+        const allCitas = await loadAllCitas();
+        console.log('Todas las citas:', allCitas);
+        
+        const citasDelDia = allCitas.filter(cita => {
+            const fechaCita = normalizeDate(cita.Fecha);
+            console.log(`Comparando: ${fechaCita} con ${fecha}`);
+            return fechaCita === fecha;
+        });
+        
+        console.log('Citas del día:', citasDelDia);
+
+        // Ordenar citas por hora
+        citasDelDia.sort((a, b) => {
+            const horaA = normalizeTime(a.Hora);
+            const horaB = normalizeTime(b.Hora);
+            return horaA.localeCompare(horaB);
+        });
+
+        slotListEl.innerHTML = '';
+        
+        // Generar todos los slots posibles
+        for (let h = 10; h < 19; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                const hora = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                const li = document.createElement('li');
+                li.className = 'slot-line';
+                
+                // Buscar cita en este horario
+                const cita = citasDelDia.find(c => {
+                    const horaCita = normalizeTime(c.Hora);
+                    return horaCita === hora;
+                });
+                
+                if (cita) {
+                    li.innerHTML = `
+                        <span class="hora">${hora}</span>
+                        <span class="separador">----></span>
+                        <span class="mascota">${cita['Nombre de la mascota'] || 'Sin nombre'}</span>
+                        <span class="separador">----></span>
+                        <span class="motivo">${cita.Motivo || 'Sin motivo'}</span>
+                    `;
+                    li.classList.add('ocupado');
+                } else {
+                    li.innerHTML = `
+                        <span class="hora">${hora}</span>
+                        <span class="separador">----></span>
+                        <span class="disponible">Disponible</span>
+                    `;
+                    li.classList.add('disponible');
+                    li.addEventListener('click', () => selectSlot(fecha, hora));
+                }
+                
+                slotListEl.appendChild(li);
+            }
+        }
+        
+        // Añadir opción de urgencias
+        const urgLi = document.createElement('li');
+        urgLi.innerHTML = '<span class="urgencia">🚨 URGENCIAS</span>';
+        urgLi.classList.add('slot-urgencia');
+        urgLi.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
+        slotListEl.appendChild(urgLi);
+        
+    } catch (error) {
+        console.error('Error en loadSlots:', error);
+        slotListEl.innerHTML = `
+            <div class="error">
+                Error al cargar horarios
+                <button onclick="window.location.reload()">Reintentar</button>
+            </div>
+        `;
+    }
+}
+// ======================================
+// FUNCIÓN AUXILIAR ADICIONAL (AGREGAR AL CÓDIGO)
+// ======================================
+
+function updateCalendarStyles() {
+    document.querySelectorAll("#days div[data-date]").forEach(day => {
+        const date = day.dataset.date;
+        const count = __appointmentsCount[date] || 0;
+        
+        day.classList.remove('full', 'medium', 'low');
+        
+        if (count >= 4) {
+            day.classList.add('full'); // Rojo - día lleno
+        } else if (count === 3) {
+            day.classList.add('medium'); // Naranja - pocos espacios
+        } else if (count > 0) {
+            day.classList.add('low'); // Azul - espacios disponibles
+        }
+        
+        // Actualizar tooltip con conteo
+        day.title = `${count} citas este día`;
+    });
+}
   // ============================
   // 2) Funciones de carga de datos
   // ============================
@@ -200,6 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
       daysEl.appendChild(dayCell);
     }
     activateDateClicks();
+    updateCalendarStyles();
   }
 
   function activateDateClicks() {
