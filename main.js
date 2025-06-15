@@ -1,5 +1,4 @@
-main.js
-// =======================More actions
+// =======================
 // main.js (JavaScript General)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,110 +30,112 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-// ============================
-// 2) CACHE PARA CLIENTES Y CITAS
-// ============================
-let __clientsCache      = null;  // Array de clientes
-let __allCitasCache     = null;  // Array de citas
-let __appointmentsCount = {};    // Conteo por fecha
+  // ============================
+  // 2) CACHE PARA CLIENTES Y CITAS
+  // ============================
+  let __clientsCache      = null;  // Array de clientes
+  let __allCitasCache     = null;  // Array de citas
+  let __appointmentsCount = {};    // Conteo por fecha
 
-/**
- * normalizeDate(dateStr)
- * Convierte fechas tipo dd/mm/yyyy a YYYY-MM-DD
- */
-function normalizeDate(dateStr) {
-  if (!dateStr) return "";
-  // Si ya está en formato YYYY-MM-DD, devuélvelo tal cual
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-
-  const d = new Date(dateStr);
-  if (!isNaN(d)) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+  /**
+   * normalizeDate(dateStr)
+   * Convierte fechas tipo dd/mm/yyyy a YYYY-MM-DD
+   */
+  function normalizeDate(dateStr) {
+    if (!dateStr) return "";
+    
+    // Si es formato ISO (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    
+    // Si es objeto Date
+    if (dateStr instanceof Date) {
+      return dateStr.toISOString().split('T')[0];
+    }
+    
+    // Si es formato dd/mm/yyyy
+    if (typeof dateStr === 'string' && dateStr.includes('/')) {
+      const [d, m, y] = dateStr.split('/');
+      return `${y.padStart(4, '0')}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    
+    return ""; // Formato no reconocido
   }
 
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return "";
-  const [day, month, year] = parts;
-  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-}
-
-/**
- * loadAllClients()
- * — Si está en cache, lo devuelve.
- * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Clientes").
- */
-async function loadAllClients() {
-  if (Array.isArray(__clientsCache)) {
-    return __clientsCache;
+  /**
+   * loadAllClients()
+   * — Si está en cache, lo devuelve.
+   * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Clientes").
+   */
+  async function loadAllClients() {
+    if (Array.isArray(__clientsCache)) {
+      return __clientsCache;
+    }
+    try {
+      const url  = GAS_BASE_URL + "?sheet=Clientes";
+      const data = await jsonpRequest(url);
+      __clientsCache = data;
+      return __clientsCache;
+    } catch (err) {
+      console.error("Error cargando clientes:", err);
+      return [];
+    }
   }
-  try {
-    const url  = GAS_BASE_URL + "?sheet=Clientes";
-    const data = await jsonpRequest(url);
-    __clientsCache = data;
-    return __clientsCache;
-  } catch (err) {
-    console.error("Error cargando clientes:", err);
-    return [];
+
+  /**
+   * loadAllCitas()
+   * — Si está en cache, lo devuelve.
+   * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Citas"),
+   *   construye __appointmentsCount y guarda en cache.
+   */
+  async function loadAllCitas() {
+    if (Array.isArray(__allCitasCache)) {
+      return __allCitasCache;
+    }
+    try {
+      const url  = GAS_BASE_URL + "?sheet=Citas";
+      const data = await jsonpRequest(url);
+      __allCitasCache     = data;
+      __appointmentsCount = {};
+
+      data.forEach(cita => {
+        // 🗓️ Normaliza la fecha
+        let rawFecha = cita["Fecha"];
+        rawFecha = normalizeDate(String(rawFecha).trim());
+        cita["Fecha"] = rawFecha;
+
+        // 🕒 Normaliza la hora
+        let rawHora = cita["Hora"];
+        if (rawHora instanceof Date) {
+          const hh = String(rawHora.getHours()).padStart(2, "0");
+          const mm = String(rawHora.getMinutes()).padStart(2, "0");
+          rawHora = `${hh}:${mm}`;
+        } else {
+          rawHora = String(rawHora).trim().slice(0, 5);
+        }
+        cita["Hora"] = rawHora;
+
+        // 📅 Conteo por fecha
+        if (!__appointmentsCount[rawFecha]) {
+          __appointmentsCount[rawFecha] = 0;
+        }
+        __appointmentsCount[rawFecha]++;
+      });
+
+      return __allCitasCache;
+    } catch (err) {
+      console.error("Error cargando citas:", err);
+      return [];
+    }
   }
-}
 
-/**
- * loadAllCitas()
- * — Si está en cache, lo devuelve.
- * — Si no, hace jsonpRequest(GAS_BASE_URL + "?sheet=Citas"),
- *   construye __appointmentsCount y guarda en cache.
- */
-async function loadAllCitas() {
-  if (Array.isArray(__allCitasCache)) {
-    return __allCitasCache;
+  /**
+   * getCountByDate(fecha)
+   * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
+   */
+  function getCountByDate(fecha) {
+    return __appointmentsCount[fecha] || 0;
   }
-  try {
-    const url  = GAS_BASE_URL + "?sheet=Citas";
-    const data = await jsonpRequest(url);
-    __allCitasCache     = data;
-    __appointmentsCount = {};
 
-    data.forEach(cita => {
-      // 🗓️ Normaliza la fecha
-      let rawFecha = cita["Fecha"];
-      rawFecha = normalizeDate(String(rawFecha).trim());
-      cita["Fecha"] = rawFecha;
-
-      // 🕒 Normaliza la hora
-      let rawHora = cita["Hora"];
-      if (rawHora instanceof Date) {
-        const hh = String(rawHora.getHours()).padStart(2, "0");
-        const mm = String(rawHora.getMinutes()).padStart(2, "0");
-        rawHora = `${hh}:${mm}`;
-      } else {
-        rawHora = String(rawHora).trim().slice(0, 5);
-      }
-      cita["Hora"] = rawHora;
-
-      // 📅 Conteo por fecha
-      if (!__appointmentsCount[rawFecha]) {
-        __appointmentsCount[rawFecha] = 0;
-      }
-      __appointmentsCount[rawFecha]++;
-    });
-
-    return __allCitasCache;
-  } catch (err) {
-    console.error("Error cargando citas:", err);
-    return [];
-  }
-}
-
-/**
- * getCountByDate(fecha)
- * — Devuelve cuántas citas hay para esa fecha (YYYY-MM-DD), usando __appointmentsCount.
- */
-function getCountByDate(fecha) {
-  return __appointmentsCount[fecha] || 0;
-}
   // =================================================
   // 3) MODAL OVERLAY + CARGA DINÁMICA DE MÓDULOS (HTML)
   // =================================================
@@ -219,12 +220,24 @@ function getCountByDate(fecha) {
   const backToCalendarBtn  = document.getElementById("back-to-calendar");
   const slotListEl         = document.getElementById("slot-list");
 
+  // Función para activar los clicks en las fechas (MOVIDA ARRIBA PARA QUE SE DEFINA ANTES)
+  function activateDateClicks() {
+    document.querySelectorAll("#days div[data-date]").forEach(el => {
+      el.addEventListener("click", () => {
+        const selectedDate = el.dataset.date;
+        document.getElementById("slot-date").textContent = selectedDate;
+        flipToSlots(selectedDate);
+      });
+    });
+  }
+
   /**
    * renderCalendar()
    * — Carga todas las citas UNA sola vez (loadAllCitas),
    *   arma __appointmentsCount y dibuja cada día con su color.
    */
   async function renderCalendar() {
+    console.log("Iniciando renderCalendar...");
     document.getElementById("calendar").style.display = "block";
     reservationFormDiv.style.display = "none";
 
@@ -266,28 +279,19 @@ function getCountByDate(fecha) {
       if (count > 0) {
         dayCell.setAttribute("data-count", count);
       }
-      // Marcar “hoy”
+      // Marcar "hoy"
       if (dateStr === new Date().toISOString().slice(0,10)) {
         dayCell.classList.add("today");
       }
 
       daysEl.appendChild(dayCell);
     }
+    
+    // Activar los clicks en las fechas
     activateDateClicks();
   }
 
-  // Habilitar clic en cada día (solo aquellos con data-date)
-  function activateDateClicks() {
-    document.querySelectorAll("#days div[data-date]").forEach(el => {
-      el.addEventListener("click", () => {
-        const selectedDate = el.dataset.date;
-        document.getElementById("slot-date").textContent = selectedDate;
-        flipToSlots(selectedDate);
-      });
-    });
-  }
-
-  // “Voltear” a la parte de horarios
+  // "Voltear" a la parte de horarios
   function flipToSlots(date) {
     card.classList.add("flipped1");
     setTimeout(() => loadSlots(date), 400);
@@ -298,79 +302,70 @@ function getCountByDate(fecha) {
    * — Toma todas las citas ya cargadas en memoria (loadAllCitas),
    *   filtra solo las de `fecha` y construye un mapa hora→datosCita.
    * — Luego dibuja cada <li> desde 10:00 hasta 18:30. Si coincide con una cita,
-   *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
+   *   lo marca "ocupado" (no clickable). El resto, libre y sí clickable.
    */
-async function loadSlots(fecha) {
-  slotListEl.innerHTML = "";
+  async function loadSlots(fecha) {
+    slotListEl.innerHTML = "";
 
-  const allCitas = await loadAllCitas();
-  const citasDelDia = allCitas.filter(c =>
-    normalizeDate(c["Fecha"] || "") === fecha.trim()
-  );
+    const allCitas = await loadAllCitas();
+    const citasDelDia = allCitas.filter(c =>
+      normalizeDate(c["Fecha"] || "") === fecha.trim()
+    );
 
-  // 🧠 Construye un mapa de hora → datos de cita
-  const mapaCitas = {};
-  citasDelDia.forEach(cita => {
-    const horaAlmacenada = String(cita["Hora"] || "").trim();
-    if (horaAlmacenada) {
-      mapaCitas[horaAlmacenada] = {
+    // 🧠 Construye un mapa de hora → datos de cita (versión corregida)
+    const mapaCitas = {};
+    citasDelDia.forEach(cita => {
+      let hora = String(cita["Hora"] || "").trim().slice(0, 5);
+      if (hora.length === 4) hora = "0" + hora;
+      
+      mapaCitas[hora] = {
         mascota:  String(cita["Nombre de la mascota"] || "").trim(),
         motivo:   String(cita["Motivo"] || "").trim(),
         clienteId: String(cita["ID cliente"] || "").trim()
       };
-    }
-    let hora = String(cita["Hora"] || "").trim().slice(0, 5);
-    if (hora.length === 4) hora = "0" + hora; // Arregla formato "9:30" → "09:30"
-    mapaCitas[hora] = {
-      mascota:  String(cita["Nombre de la mascota"] || "").trim(),
-      motivo:   String(cita["Motivo"] || "").trim()
-    };
-  });
-
-  // 🕒 Dibuja intervalos de 30 minutos de 10:00 a 18:30
-  for (let h = 10; h < 19; h++) {
-    ["00", "30"].forEach(min => {
-      const time = `${String(h).padStart(2, "0")}:${min}`;
-      const li = document.createElement("li");
-      li.classList.add("slot-line");
-
-      const timeSpan = document.createElement("span");
-      timeSpan.textContent = time;
-      timeSpan.classList.add("slot-time");
-
-      const detailSpan = document.createElement("span");
-      detailSpan.classList.add("slot-detail");
-
-      if (mapaCitas[time]) {
-        const data = mapaCitas[time];
-        detailSpan.textContent = `${data.mascota} ⇒ ${data.motivo}`;
-        li.classList.add("ocupado");
-        detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
-        li.classList.add("ocupado"); // Clase especial para CSS
-        li.style.cursor = "not-allowed";
-      } else {
-        detailSpan.textContent = "Disponible";
-        li.addEventListener("click", () => selectSlot(fecha, time));
-      }
-
-      li.appendChild(timeSpan);
-      li.appendChild(detailSpan);
-      slotListEl.appendChild(li);
     });
+
+    // 🕒 Dibuja intervalos de 30 minutos de 10:00 a 18:30
+    for (let h = 10; h < 19; h++) {
+      ["00", "30"].forEach(min => {
+        const time = `${String(h).padStart(2, "0")}:${min}`;
+        const li = document.createElement("li");
+        li.classList.add("slot-line");
+
+        const timeSpan = document.createElement("span");
+        timeSpan.textContent = time;
+        timeSpan.classList.add("slot-time");
+
+        const detailSpan = document.createElement("span");
+        detailSpan.classList.add("slot-detail");
+
+        if (mapaCitas[time]) {
+          const data = mapaCitas[time];
+          detailSpan.textContent = `${data.mascota} → ${data.motivo}`;
+          li.classList.add("ocupado"); // Clase especial para CSS
+          li.style.cursor = "not-allowed";
+        } else {
+          detailSpan.textContent = "Disponible";
+          li.addEventListener("click", () => selectSlot(fecha, time));
+        }
+
+        li.appendChild(timeSpan);
+        li.appendChild(detailSpan);
+        slotListEl.appendChild(li);
+      });
+    }
+
+    // 🛑 Agrega siempre la opción URGENCIAS
+    const urg = document.createElement("li");
+    urg.textContent = "🚨 URGENCIAS";
+    urg.classList.add("urgencia");
+    urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
+    slotListEl.appendChild(urg);
   }
-
-  // 🛑 Agrega siempre la opción URGENCIAS
-  const urg = document.createElement("li");
-  urg.textContent = "🚨 URGENCIAS";
-  urg.classList.add("urgencia");
-  urg.addEventListener("click", () => selectSlot(fecha, "URGENCIAS"));
-  slotListEl.appendChild(urg);
-}
-
 
   /**
    * selectSlot(fecha, hora)
-   * — Oculta el calendario y muestra el formulario para “Agendar cita”,
+   * — Oculta el calendario y muestra el formulario para "Agendar cita",
    *   luego llama a renderForm(fecha, hora).
    */
   function selectSlot(fecha, hora) {
@@ -394,8 +389,8 @@ async function loadSlots(fecha) {
    * renderForm(fecha, hora)
    * — Rellena inputs de fecha/hora.
    * — Invoca populateClientPetFields para llenar <select id="mascota" class="pet-select">.
-   * — Añade listener a <select id="mascota"> para mostrar datos del dueño y habilitar “Corregir datos”.
-   * — Controla “Nueva mascota” para mostrar sub-formulario.
+   * — Añade listener a <select id="mascota"> para mostrar datos del dueño y habilitar "Corregir datos".
+   * — Controla "Nueva mascota" para mostrar sub-formulario.
    */
   async function renderForm(fecha, hora) {
     formDate.value = fecha;
@@ -439,7 +434,7 @@ async function loadSlots(fecha) {
       }
     });
 
-    // 3) Ocultar sub-formulario de “nueva mascota” (si quedó marcado)
+    // 3) Ocultar sub-formulario de "nueva mascota" (si quedó marcado)
     newChk.checked = false;
     newPetFields.style.display = "none";
     document.getElementById("new-owner-name").value  = "";
@@ -456,7 +451,7 @@ async function loadSlots(fecha) {
     reservationFormDiv.scrollIntoView({ behavior: "smooth" });
   }
 
-  // Toggle “Nueva mascota”
+  // Toggle "Nueva mascota"
   newChk.addEventListener("change", () => {
     if (newChk.checked) {
       newPetFields.style.display = "block";
@@ -470,7 +465,7 @@ async function loadSlots(fecha) {
     }
   });
 
-  // “Corregir datos cliente” (solo muestra inputs; no modifica hoja en esta versión)
+  // "Corregir datos cliente" (solo muestra inputs; no modifica hoja en esta versión)
   document.getElementById("edit-client-btn").addEventListener("click", async () => {
     const petSeleccionada = document.getElementById("mascota").value;
     if (!petSeleccionada) return;
@@ -485,7 +480,7 @@ async function loadSlots(fecha) {
     document.getElementById("edit-client-fields").style.display = "block";
   });
 
-  // “Guardar cambios cliente” (solo alerta; no modifica hoja en esta versión)
+  // "Guardar cambios cliente" (solo alerta; no modifica hoja en esta versión)
   document.getElementById("save-client-changes").addEventListener("click", () => {
     const petSeleccionada = document.getElementById("mascota").value;
     const age    = document.getElementById("edit-age").value;
@@ -499,7 +494,7 @@ async function loadSlots(fecha) {
       "Edad: " + age + " años\n" +
       "Peso: " + weight + " kg\n" +
       "Correo: " + email + "\n\n" +
-      "(Para que esto realmente modifique la hoja, implementa un endpoint “updateCliente” en Apps Script)."
+      "(Para que esto realmente modifique la hoja, implementa un endpoint "updateCliente" en Apps Script)."
     );
     document.getElementById("edit-client-fields").style.display = "none";
   });
@@ -511,8 +506,8 @@ async function loadSlots(fecha) {
   });
 
   /**
-   * Al enviar el formulario “Guardar cita”:
-   * — Si es “Nueva mascota”, primero crea el cliente nuevo (JSONP GET con `nuevo=true`).
+   * Al enviar el formulario "Guardar cita":
+   * — Si es "Nueva mascota", primero crea el cliente nuevo (JSONP GET con `nuevo=true`).
    * — Luego, crea la cita (JSONP GET con `nuevo=true`).
    * — Tras guardarla, vacía el cache de citas y vuelve a renderCalendar().
    */
@@ -539,7 +534,7 @@ async function loadSlots(fecha) {
       const observaciones = document.getElementById("new-pet-notes").value.trim();
 
       if (!propietario || !telefono || !correo || !nombreMascota) {
-        alert("Por favor completa todos los campos de “Datos del propietario” y “Nombre de la mascota”.");
+        alert("Por favor completa todos los campos de "Datos del propietario" y "Nombre de la mascota".");
         return;
       }
 
@@ -587,7 +582,7 @@ async function loadSlots(fecha) {
       // Mascota existente
       nombreMascota = document.getElementById("mascota").value;
       if (!nombreMascota) {
-        alert("Seleccione primero una mascota existente o marque “Nueva mascota”.");
+        alert("Seleccione primero una mascota existente o marque "Nueva mascota".");
         return;
       }
       const clientes = await loadAllClients();
@@ -628,8 +623,10 @@ async function loadSlots(fecha) {
       }
       alert("¡Cita guardada con éxito!");
       // —👉 LIMPIAR la caché para forzar recarga
-      __allCitasCache     = null;
+      __clientsCache = null;  // Limpiar también cache de clientes
+      __allCitasCache = null;
       __appointmentsCount = {};
+      await loadAllCitas();   // Forzar recarga inmediata
       reservationFormDiv.style.display = "none";
       renderCalendar();
     } catch (err) {
@@ -646,9 +643,6 @@ async function loadSlots(fecha) {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
   });
-
-  // Render inicial
-  renderCalendar();
 
   // =========================================
   // 5) populateClientPetFields(container)
@@ -673,6 +667,11 @@ async function loadSlots(fecha) {
       });
     });
   }
-window.loadAllCitas = loadAllCitas;
-window.__appointmentsCount = __appointmentsCount;
+
+  // Render inicial
+  renderCalendar();
+
+  // Exportar para depuración
+  window.loadAllCitas = loadAllCitas;
+  window.__appointmentsCount = __appointmentsCount;
 });
