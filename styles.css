@@ -942,41 +942,164 @@ li.occupied {
 .suggestion-list li:hover {
   background-color: #eee;
 }
-/* Agrega esto a tu styles.css o en el <style> del index.html */
+/* ================================
+   MEJORAS ESPECÍFICAS PARA HORARIOS 
+   (Se añaden al final de tu archivo)
+   ================================ */
+
+/* Contenedor de la lista de horarios */
+#slot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #0277bd;
+}
+
+/* Estilo base para cada línea de horario */
 .slot-line {
-  padding: 0.5em;
-  margin: 0.2em 0;
-  border-radius: 4px;
-  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s ease;
 }
 
+/* Estilo para el texto de la hora */
+.slot-time {
+  font-weight: bold;
+  width: 15%;
+  color: #1565c0;
+}
+
+/* Estilo para los detalles de la cita */
+.slot-detail {
+  width: 80%;
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* Horario OCUPADO (estilo mejorado) */
 .slot-line.ocupado {
-  background: #ffebee; /* Rojo claro */
+  background-color: #ffebee;
   color: #c62828;
-  border-left: 4px solid #c62828;
+  cursor: not-allowed;
 }
 
+.slot-line.ocupado .slot-time {
+  color: #c62828;
+}
+
+.slot-line.ocupado .slot-detail::before {
+  content: "----> ";
+  color: #9e9e9e;
+}
+
+/* Horario DISPONIBLE */
 .slot-line.disponible {
-  background: #e8f5e9; /* Verde claro */
-  color: #2e7d32;
-  border-left: 4px solid #2e7d32;
+  background-color: #e8f5e9;
   cursor: pointer;
 }
 
 .slot-line.disponible:hover {
-  background: #c8e6c9;
+  background-color: #c8e6c9;
 }
 
+.slot-line.disponible .slot-detail::before {
+  content: "----> ";
+  color: #9e9e9e;
+  font-style: italic;
+}
+
+/* Estilo para URGENCIAS */
 .slot-line.urgencia {
-  background: #fff3e0;
+  background-color: #fff3e0;
   color: #e65100;
   font-weight: bold;
-  border-left: 4px solid #e65100;
 }
 
-.empty-day {
+.slot-line.urgencia .slot-time {
+  color: #e65100;
+}
+
+/* Mensaje cuando no hay citas */
+.empty-day-message {
+  padding: 20px;
   text-align: center;
-  color: #666;
+  color: #757575;
   font-style: italic;
-  padding: 1em;
+}
+
+/* Efecto de carga */
+.loading-slots {
+  padding: 20px;
+  text-align: center;
+  color: #1565c0;
+}
+
+/* Mejoras para el botón Volver */
+#back-to-calendar {
+  margin-top: 15px;
+  width: 100%;
+  padding: 10px;
+  background: #1565c0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#back-to-calendar:hover {
+  background: #0d47a1;
+}
+
+/* ===================================
+   ANIMACIONES PARA MEJORAR EXPERIENCIA
+   =================================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slot-line {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.slot-line:nth-child(odd) {
+  animation-delay: 0.05s;
+}
+
+.slot-line:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+/* ===================================
+   RESPONSIVE PARA DISPOSITIVOS PEQUEÑOS
+   =================================== */
+@media (max-width: 600px) {
+  .slot-line {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+  
+  .slot-time, .slot-detail {
+    width: 100%;
+  }
+  
+  .slot-detail {
+    padding-left: 0;
+    margin-top: 5px;
+  }
+  
+  .slot-line.ocupado .slot-detail::before,
+  .slot-line.disponible .slot-detail::before {
+    content: "";
+  }
 }
