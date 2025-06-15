@@ -946,33 +946,33 @@ li.occupied {
    MEJORAS ESPECÍFICAS PARA HORARIOS 
    (Se añaden al final de tu archivo)
    ================================ */
-
-/* Estilos para slots */
+/* Estilos para horarios */
 .slot-line {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  margin: 4px 0;
+  margin: 5px 0;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
+  transition: all 0.2s;
 }
 
-.slot-time {
+.hora {
   font-weight: bold;
   width: 50px;
+  color: #1565c0;
 }
 
-.slot-separator {
+.separador {
   margin: 0 5px;
-  color: #666;
+  color: #757575;
 }
 
-.slot-pet {
+.mascota {
   font-weight: bold;
-  color: #0d47a1;
 }
 
-.slot-reason {
+.motivo {
   font-style: italic;
 }
 
@@ -980,6 +980,9 @@ li.occupied {
 .slot-line.ocupado {
   background-color: #ffebee;
   border-left: 3px solid #f44336;
+}
+
+.slot-line.ocupado .hora {
   color: #c62828;
 }
 
@@ -995,12 +998,9 @@ li.occupied {
 }
 
 /* Urgencias */
-.slot-line.urgencia {
+.slot-urgencia {
   background-color: #fff3e0;
   border-left: 3px solid #ff9800;
-}
-
-.urgent-slot {
   font-weight: bold;
   color: #e65100;
 }
@@ -1009,6 +1009,7 @@ li.occupied {
 .loading, .error {
   padding: 15px;
   text-align: center;
+  color: #0d47a1;
 }
 
 .error button {
