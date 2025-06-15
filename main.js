@@ -300,98 +300,112 @@ function getCountByDate(fecha) {
    *   lo marca “ocupado” (no clickable). El resto, libre y sí clickable.
    */
 async function loadSlots(fecha) {
-  console.log(`Cargando slots para fecha: ${fecha}`); // Para depuración
-  
-  // Limpiar contenedor
-  slotListEl.innerHTML = '<div class="loading-slots">Cargando horarios...</div>';
-  
+  console.log(`[DEBUG] Cargando slots para: ${fecha}`);
+  slotListEl.innerHTML = '<div class="loading">Cargando horarios...</div>';
+
   try {
-    // 1. Cargar todas las citas
+    // 1. Cargar y normalizar citas
     const allCitas = await loadAllCitas();
-    console.log('Total de citas:', allCitas.length); // Depuración
+    console.log('[DEBUG] Total citas:', allCitas);
     
-    // 2. Filtrar citas para esta fecha específica
+    // 2. Filtrar y normalizar para esta fecha
     const citasDelDia = allCitas.filter(cita => {
-      const fechaCita = normalizeDate(cita.Fecha);
-      console.log(`Comparando: ${fechaCita} con ${fecha}`); // Depuración
+      // Normalizar fecha de la cita
+      const fechaCita = normalizeDate(cita.Fecha || cita.fecha || '');
+      console.log(`[DEBUG] Comparando: ${fechaCita} con ${fecha}`);
       return fechaCita === fecha;
     });
     
-    console.log('Citas del día:', citasDelDia); // Depuración
+    console.log('[DEBUG] Citas del día:', citasDelDia);
 
-    // 3. Crear mapa de horas ocupadas
+    // 3. Mapear horas ocupadas
     const horasOcupadas = {};
     citasDelDia.forEach(cita => {
-      let hora = cita.Hora ? cita.Hora.toString().trim() : '';
+      let hora = cita.Hora || cita.hora || '';
       
-      // Normalizar formato de hora (9:30 → 09:30)
-      if (hora.match(/^\d:\d{2}$/)) {
-        hora = '0' + hora;
+      // Normalizar formato de hora
+      if (typeof hora === 'string') {
+        hora = hora.trim();
+        
+        // Convertir "9:30" -> "09:30"
+        if (/^\d:\d{2}$/.test(hora)) {
+          hora = '0' + hora;
+        }
+        
+        // Asegurar formato HH:MM
+        hora = hora.substring(0, 5);
+      } else if (hora instanceof Date) {
+        // Si es objeto Date, convertirlo a HH:MM
+        hora = `${String(hora.getHours()).padStart(2, '0')}:${String(hora.getMinutes()).padStart(2, '0')}`;
       }
       
-      // Asegurar formato HH:MM
-      hora = hora.substring(0, 5);
-      
-      if (hora && hora.match(/^\d{2}:\d{2}$/)) {
+      if (/^\d{2}:\d{2}$/.test(hora)) {
         horasOcupadas[hora] = {
-          mascota: cita['Nombre de la mascota'] || 'Sin nombre',
-          motivo: cita.Motivo || 'Sin motivo'
+          mascota: cita['Nombre de la mascota'] || cita.mascota || 'Sin nombre',
+          motivo: cita.Motivo || cita.motivo || 'Sin motivo'
         };
       }
     });
 
-    console.log('Horas ocupadas:', horasOcupadas); // Depuración
+    console.log('[DEBUG] Horas ocupadas:', horasOcupadas);
 
-    // 4. Generar el HTML
+    // 4. Generar slots
     slotListEl.innerHTML = '';
     
-    // Generar horarios de 10:00 a 18:30 cada 30 minutos
-    for (let hora = 10; hora < 19; hora++) {
-      ['00', '30'].forEach(minuto => {
-        const horaFormateada = `${hora.toString().padStart(2, '0')}:${minuto}`;
-        const li = document.createElement('li');
-        
-        if (horasOcupadas[horaFormateada]) {
-          // Slot ocupado
-          const cita = horasOcupadas[horaFormateada];
-          li.innerHTML = `
-            <span class="hora-ocupada">
-              ${horaFormateada} ----> ${cita.mascota} ----> ${cita.motivo}
-            </span>
-          `;
-          li.classList.add('ocupado');
-          li.style.cursor = 'not-allowed';
-        } else {
-          // Slot disponible
-          li.innerHTML = `
-            <span class="hora-disponible">
-              ${horaFormateada} ----> Disponible
-            </span>
-          `;
-          li.classList.add('disponible');
-          li.addEventListener('click', () => selectSlot(fecha, horaFormateada));
-        }
-        
-        slotListEl.appendChild(li);
-      });
+    // Crear horarios de 10:00 a 18:30 cada 30 minutos
+    const slots = [];
+    for (let h = 10; h < 19; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const horaFormateada = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        slots.push(horaFormateada);
+      }
     }
+
+    // Mostrar cada slot
+    slots.forEach(hora => {
+      const li = document.createElement('li');
+      li.className = 'slot-line';
+      
+      if (horasOcupadas[hora]) {
+        // Slot ocupado
+        const cita = horasOcupadas[hora];
+        li.innerHTML = `
+          <span class="slot-time">${hora}</span>
+          <span class="slot-separator">----></span>
+          <span class="slot-pet">${cita.mascota}</span>
+          <span class="slot-separator">----></span>
+          <span class="slot-reason">${cita.motivo}</span>
+        `;
+        li.classList.add('ocupado');
+      } else {
+        // Slot disponible
+        li.innerHTML = `
+          <span class="slot-time">${hora}</span>
+          <span class="slot-separator">----></span>
+          <span class="slot-available">Disponible</span>
+        `;
+        li.classList.add('disponible');
+        li.addEventListener('click', () => selectSlot(fecha, hora));
+      }
+      
+      slotListEl.appendChild(li);
+    });
 
     // 5. Añadir opción de urgencias
     const urgLi = document.createElement('li');
     urgLi.innerHTML = `
-      <span class="hora-urgencia">
-        🚨 URGENCIAS (Haz clic aquí)
-      </span>
+      <span class="urgent-slot">🚨 URGENCIAS (Haz clic aquí)</span>
     `;
     urgLi.classList.add('urgencia');
     urgLi.addEventListener('click', () => selectSlot(fecha, 'URGENCIAS'));
     slotListEl.appendChild(urgLi);
 
   } catch (error) {
-    console.error('Error cargando slots:', error);
+    console.error('[ERROR] loadSlots:', error);
     slotListEl.innerHTML = `
-      <div class="error-slots">
-        Error al cargar horarios. Intenta recargar la página.
+      <div class="error">
+        Error al cargar horarios. Recarga la página.
+        <button onclick="location.reload()">Reintentar</button>
       </div>
     `;
   }
