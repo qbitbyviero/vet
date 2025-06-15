@@ -1,5 +1,5 @@
 // =======================
-// main.js (VERSIÓN FINAL CON CORRECCIÓN DE BUGS)
+// main.js (VERSIÓN COMPLETA Y CORREGIDA)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
@@ -9,9 +9,63 @@ document.addEventListener("DOMContentLoaded", () => {
   let __appointmentsCount = {};
   let currentDate = new Date();
 
-  // [Las funciones jsonpRequest, normalizeDate, loadAllClients y loadAllCitas permanecen IGUALES...]
+  // 2. Funciones básicas
+  function jsonpRequest(url) {
+    return new Promise((resolve, reject) => {
+      const callbackName = `jsonp_${Date.now()}`;
+      window[callbackName] = data => {
+        delete window[callbackName];
+        resolve(data);
+      };
+      const script = document.createElement('script');
+      script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
+      script.onerror = () => reject(new Error('Error JSONP'));
+      document.body.appendChild(script);
+    });
+  }
 
-  // 2. Variables de interfaz
+  function normalizeDate(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr instanceof Date) return dateStr.toISOString().split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    if (dateStr.includes('/')) {
+      const [d, m, y] = dateStr.split('/');
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    return '';
+  }
+
+  // 3. Función loadAllCitas COMPLETA
+  async function loadAllCitas() {
+    if (__allCitasCache) return __allCitasCache;
+    try {
+      const data = await jsonpRequest(`${GAS_BASE_URL}?sheet=Citas`);
+      __allCitasCache = data;
+      __appointmentsCount = {};
+
+      data.forEach(cita => {
+        const fecha = normalizeDate(cita.Fecha);
+        cita.Fecha = fecha;
+
+        let hora = cita.Hora;
+        if (hora instanceof Date) {
+          hora = `${String(hora.getHours()).padStart(2, '0')}:${String(hora.getMinutes()).padStart(2, '0')}`;
+        } else {
+          hora = String(hora).trim().slice(0, 5);
+        }
+        cita.Hora = hora;
+
+        __appointmentsCount[fecha] = (__appointmentsCount[fecha] || 0) + 1;
+      });
+
+      return __allCitasCache;
+    } catch (err) {
+      console.error('Error cargando citas:', err);
+      return [];
+    }
+  }
+
+  // 4. Variables de interfaz
   const UI = {
     card: document.getElementById('card'),
     days: document.getElementById('days'),
@@ -36,15 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   UI.init();
 
-  // 3. Función CRÍTICA CORREGIDA (activateDateClicks)
+  // 5. Función activateDateClicks
   function activateDateClicks() {
     const daysContainer = document.getElementById('days');
-    // Limpiar eventos anteriores
-    daysContainer.querySelectorAll('div[data-date]').forEach(day => {
-      day.replaceWith(day.cloneNode(true));
-    });
-    
-    // Agregar nuevos eventos
     daysContainer.querySelectorAll('div[data-date]').forEach(day => {
       day.addEventListener('click', function() {
         const selectedDate = this.dataset.date;
@@ -55,54 +103,96 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. Función showTimeSlots CORREGIDA
+  // 6. Función showTimeSlots
   function showTimeSlots(date) {
     console.log('Mostrando horarios para:', date);
     UI.card.classList.add('flipped1');
     setTimeout(() => {
       loadTimeSlots(date);
-      // Asegurar que el panel de horarios sea visible
       document.querySelector('.back').style.opacity = '1';
     }, 400);
   }
 
-  // [Las funciones loadTimeSlots, renderAppointmentForm y setupFormEvents permanecen IGUALES...]
+  // 7. Función loadTimeSlots
+  async function loadTimeSlots(date) {
+    try {
+      UI.slotList.innerHTML = '';
+      const allCitas = await loadAllCitas();
+      const citasDelDia = allCitas.filter(c => c.Fecha === date);
 
-  // 5. Función resetToCalendar CORREGIDA
+      const citasPorHora = {};
+      citasDelDia.forEach(cita => {
+        let hora = String(cita.Hora).trim().slice(0, 5);
+        if (hora.length === 4) hora = `0${hora}`;
+        citasPorHora[hora] = {
+          mascota: cita['Nombre de la mascota'] || '',
+          motivo: cita.Motivo || ''
+        };
+      });
+
+      for (let hour = 10; hour < 19; hour++) {
+        ['00', '30'].forEach(min => {
+          const time = `${String(hour).padStart(2, '0')}:${min}`;
+          const slot = document.createElement('li');
+          slot.className = 'slot-line';
+
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'slot-time';
+          timeSpan.textContent = time;
+
+          const detailSpan = document.createElement('span');
+          detailSpan.className = 'slot-detail';
+
+          if (citasPorHora[time]) {
+            detailSpan.textContent = `${citasPorHora[time].mascota} → ${citasPorHora[time].motivo}`;
+            slot.classList.add('ocupado');
+          } else {
+            detailSpan.textContent = 'Disponible';
+            slot.addEventListener('click', () => showAppointmentForm(date, time));
+          }
+
+          slot.appendChild(timeSpan);
+          slot.appendChild(detailSpan);
+          UI.slotList.appendChild(slot);
+        });
+      }
+
+      const emergencySlot = document.createElement('li');
+      emergencySlot.textContent = '🚨 URGENCIAS';
+      emergencySlot.className = 'urgencia';
+      emergencySlot.addEventListener('click', () => showAppointmentForm(date, 'URGENCIAS'));
+      UI.slotList.appendChild(emergencySlot);
+
+    } catch (error) {
+      console.error('Error cargando horarios:', error);
+    }
+  }
+
+  // 8. Función resetToCalendar
   function resetToCalendar() {
     console.log('Reseteando vista...');
     
-    // 1. Ocultar formulario
     UI.reservationForm.style.opacity = '0';
     setTimeout(() => {
       UI.reservationForm.style.display = 'none';
-      
-      // 2. Mostrar calendario principal
       document.getElementById('calendar').style.display = 'block';
-      
-      // 3. Resetear animación de la tarjeta
       UI.card.classList.remove('flipped1');
       UI.card.style.transform = 'rotateY(0deg)';
       document.querySelector('.back').style.opacity = '0';
       
-      // 4. Forzar recarga limpia
       __allCitasCache = null;
       __appointmentsCount = {};
-      
-      // 5. Renderizar con nuevo estado
-      renderCalendar(true); // <- El parámetro true indica que es un reset
+      renderCalendar();
     }, 300);
   }
 
-  // 6. Función renderCalendar MODIFICADA
-  async function renderCalendar(isReset = false) {
-    console.log('Renderizando calendario...', isReset ? '(reset)' : '');
+  // 9. Función renderCalendar
+  async function renderCalendar() {
+    console.log('Renderizando calendario...');
     try {
-      // Solo resetear displays si es un reset completo
-      if (isReset) {
-        document.getElementById('calendar').style.display = 'block';
-        UI.reservationForm.style.display = 'none';
-      }
+      document.getElementById('calendar').style.display = 'block';
+      UI.reservationForm.style.display = 'none';
+      UI.card.classList.remove('flipped1');
 
       await loadAllCitas();
 
@@ -117,12 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const firstDay = new Date(year, month, 1).getDay() || 7;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      // Días vacíos
       for (let i = 1; i < firstDay; i++) {
         UI.days.appendChild(document.createElement('div'));
       }
 
-      // Días del mes
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayEl = document.createElement('div');
@@ -142,15 +230,12 @@ document.addEventListener("DOMContentLoaded", () => {
         UI.days.appendChild(dayEl);
       }
 
-      // Activar clicks SOLO si es un reset
-      if (isReset) {
-        activateDateClicks();
-      }
+      activateDateClicks();
     } catch (error) {
       console.error('Error renderizando calendario:', error);
     }
   }
 
   // Iniciar
-  renderCalendar(true);
+  renderCalendar();
 });
