@@ -367,21 +367,59 @@ document.addEventListener("DOMContentLoaded", () => {
             params.append("Nombre de la mascota", nombreMascota);
             params.append("Motivo", motivo);
 
-            const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
-            if (!response.success) throw new Error(response.error);
+             const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
+        if (!response.success) throw new Error(response.error);
+        
+        alert("¡Cita agendada con éxito!");
+        
+        // Limpiar caché
+        __allCitasCache = null;
+        __appointmentsCount = {};
+        
+        // Ocultar formulario con animación
+        reservationFormDiv.style.opacity = "0";
+        setTimeout(() => {
+            reservationFormDiv.style.display = "none";
             
-            alert("¡Cita agendada con éxito!");
-            
-            // Limpiar caché y recargar
-            __allCitasCache = null;
-            __appointmentsCount = {};
-            document.getElementById("reservation-form").style.display = "none";
-            renderCalendar();
-        } catch (error) {
-            alert("Error al agendar la cita: " + error.message);
-        }
-    });
-  }
+            // Mostrar calendario con animación
+            document.getElementById("calendar").style.display = "block";
+            document.getElementById("calendar").style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById("calendar").style.opacity = "1";
+                
+                // Voltear la tarjeta si estaba en modo horarios
+                if (card.classList.contains("flipped1")) {
+                    card.classList.remove("flipped1");
+                }
+                
+                // Recargar el calendario
+                renderCalendar();
+            }, 50);
+        }, 300);
+        
+    } catch (error) {
+        alert("Error al agendar la cita: " + error.message);
+    }
+});
+
+// Y añade esta función auxiliar para resetear la vista
+function resetCalendarView() {
+    // Ocultar formulario
+    reservationFormDiv.style.display = "none";
+    
+    // Mostrar calendario principal
+    document.getElementById("calendar").style.display = "block";
+    
+    // Voltear la tarjeta si estaba en modo horarios
+    if (card.classList.contains("flipped1")) {
+        card.classList.remove("flipped1");
+    }
+    
+    // Recargar datos
+    __allCitasCache = null;
+    __appointmentsCount = {};
+    renderCalendar();
+}
 
   // ===================================
   // 4) INICIALIZACIÓN
