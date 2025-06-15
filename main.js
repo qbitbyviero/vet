@@ -232,6 +232,157 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
   }
 
+  async function renderForm(fecha, hora) {
+    // Mostrar el formulario
+    document.getElementById("reservation-form").style.display = "block";
+    document.getElementById("form-date").value = fecha;
+    document.getElementById("form-time").value = hora;
+
+    // Configurar el formulario para nueva cita
+    const mascotaSelect = document.getElementById("mascota");
+    mascotaSelect.innerHTML = '<option value="">Cargando mascotas...</option>';
+    
+    // Cargar clientes y poblar el select
+    const clientes = await loadAllClients();
+    mascotaSelect.innerHTML = '<option value="">Seleccione una mascota</option>';
+    
+    clientes.forEach(cliente => {
+        if (cliente["Nombre de la mascota"]) {
+            const option = document.createElement("option");
+            option.value = cliente["Nombre de la mascota"];
+            option.textContent = cliente["Nombre de la mascota"];
+            mascotaSelect.appendChild(option);
+        }
+    });
+
+    // Manejar cambio de selección
+    mascotaSelect.addEventListener("change", async function() {
+        const mascotaSeleccionada = this.value;
+        const ownerInfo = document.getElementById("owner-info");
+        
+        if (!mascotaSeleccionada) {
+            ownerInfo.innerHTML = "";
+            return;
+        }
+
+        const cliente = clientes.find(c => c["Nombre de la mascota"] === mascotaSeleccionada);
+        if (cliente) {
+            ownerInfo.innerHTML = `
+                <p><strong>Dueño:</strong> ${cliente["Nombre del propietario"]}</p>
+                <p><strong>Teléfono:</strong> ${cliente["Número de Teléfono"]}</p>
+                <p><strong>Correo:</strong> ${cliente["Correo"]}</p>
+            `;
+        }
+    });
+
+    // Manejar nueva mascota
+    document.getElementById("new-pet").addEventListener("change", function() {
+        const newPetFields = document.getElementById("new-pet-fields");
+        if (this.checked) {
+            newPetFields.style.display = "block";
+            mascotaSelect.disabled = true;
+        } else {
+            newPetFields.style.display = "none";
+            mascotaSelect.disabled = false;
+        }
+    });
+
+    // Configurar el botón de cancelar
+    document.getElementById("cancel-form").addEventListener("click", function() {
+        document.getElementById("reservation-form").style.display = "none";
+        renderCalendar();
+    });
+
+    // Configurar el envío del formulario
+    document.getElementById("appointment-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const fecha = document.getElementById("form-date").value;
+        const hora = document.getElementById("form-time").value;
+        const isNewPet = document.getElementById("new-pet").checked;
+        let clienteId, nombreMascota;
+
+        if (isNewPet) {
+            // Proceso para nueva mascota
+            const propietario = document.getElementById("new-owner-name").value.trim();
+            const telefono = document.getElementById("new-owner-phone").value.trim();
+            const correo = document.getElementById("new-owner-email").value.trim();
+            nombreMascota = document.getElementById("new-pet-name").value.trim();
+
+            if (!propietario || !telefono || !nombreMascota) {
+                alert("Por favor complete todos los campos obligatorios");
+                return;
+            }
+
+            // Crear nuevo cliente
+            try {
+                const params = new URLSearchParams();
+                params.append("sheet", "Clientes");
+                params.append("nuevo", "true");
+                params.append("Nombre del propietario", propietario);
+                params.append("Número de Teléfono", telefono);
+                params.append("Correo", correo);
+                params.append("Nombre de la mascota", nombreMascota);
+                // Agrega aquí los demás campos necesarios
+
+                const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
+                if (!response.success) throw new Error(response.error);
+                
+                clienteId = response["ID fila"];
+            } catch (error) {
+                alert("Error al registrar el cliente: " + error.message);
+                return;
+            }
+        } else {
+            // Proceso para mascota existente
+            nombreMascota = mascotaSelect.value;
+            if (!nombreMascota) {
+                alert("Seleccione una mascota");
+                return;
+            }
+
+            const cliente = clientes.find(c => c["Nombre de la mascota"] === nombreMascota);
+            if (!cliente) {
+                alert("No se encontró la mascota seleccionada");
+                return;
+            }
+            clienteId = cliente["ID fila"] || cliente["ID cliente"];
+        }
+
+        // Pedir motivo de la cita
+        const motivo = prompt("Ingrese el motivo de la cita:");
+        if (!motivo || !motivo.trim()) {
+            alert("Debe especificar un motivo para la cita");
+            return;
+        }
+
+        // Crear la cita
+        try {
+            const params = new URLSearchParams();
+            params.append("sheet", "Citas");
+            params.append("nuevo", "true");
+            params.append("Fecha", fecha);
+            params.append("Hora", hora);
+            params.append("ID cliente", clienteId);
+            params.append("Nombre de la mascota", nombreMascota);
+            params.append("Motivo", motivo);
+
+            const response = await jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`);
+            if (!response.success) throw new Error(response.error);
+            
+            alert("¡Cita agendada con éxito!");
+            
+            // Limpiar caché y recargar
+            __allCitasCache = null;
+            __appointmentsCount = {};
+            document.getElementById("reservation-form").style.display = "none";
+            renderCalendar();
+        } catch (error) {
+            alert("Error al agendar la cita: " + error.message);
+        }
+    });
+  }
+
   // ===================================
   // 4) INICIALIZACIÓN
   // ===================================
