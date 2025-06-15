@@ -1,5 +1,5 @@
 // =======================
-// main.js (VERSIÓN FINAL DEFINITIVA)
+// main.js (VERSIÓN FINAL CORREGIDA)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
@@ -76,60 +76,61 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 4. Funciones de interfaz
-  const UI = {
-    card: document.getElementById('card'),
-    days: document.getElementById('days'),
-    monthYear: document.getElementById('month-year'),
-    reservationForm: document.getElementById('reservation-form'),
-    slotList: document.getElementById('slot-list'),
-    backButton: document.getElementById('back-to-calendar'),
+  // 4. Variables de interfaz
+  const card = document.getElementById('card');
+  const daysEl = document.getElementById('days');
+  const monthYearEl = document.getElementById('month-year');
+  const reservationFormDiv = document.getElementById('reservation-form');
+  const slotListEl = document.getElementById('slot-list');
+  const backButton = document.getElementById('back-to-calendar');
+
+  // 5. Configuración inicial de UI
+  function initUI() {
+    // Estilizar botón Volver igual que los demás
+    backButton.className = 'button-86';
+    backButton.innerHTML = '← Volver';
     
-    initButtons() {
-      // Estilizar botón Volver igual que los demás
-      this.backButton.className = 'button-86';
-      this.backButton.innerHTML = '← Volver';
-      
-      // Eventos de navegación
-      document.getElementById('prev-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
-      });
-      
-      document.getElementById('next-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
-      });
-      
-      this.backButton.addEventListener('click', resetToCalendar);
-    }
-  };
+    // Evento del botón Volver
+    backButton.addEventListener('click', resetToCalendar);
+    
+    // Eventos de navegación de meses
+    document.getElementById('prev-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+    });
+    
+    document.getElementById('next-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+    });
+  }
 
-  UI.initButtons();
+  initUI();
 
+  // 6. Funciones principales de interfaz
   async function renderCalendar() {
     console.log('Renderizando calendario...');
     try {
       document.getElementById('calendar').style.display = 'block';
-      UI.reservationForm.style.display = 'none';
-      UI.card.classList.remove('flipped1');
+      reservationFormDiv.style.display = 'none';
+      card.classList.remove('flipped1');
 
       await loadAllCitas();
 
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      UI.monthYear.textContent = currentDate.toLocaleDateString('es-ES', {
+      monthYearEl.textContent = currentDate.toLocaleDateString('es-ES', {
         month: 'long',
         year: 'numeric'
       });
 
-      UI.days.innerHTML = '';
+      daysEl.innerHTML = '';
       const firstDay = new Date(year, month, 1).getDay() || 7;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
       // Días vacíos
       for (let i = 1; i < firstDay; i++) {
-        UI.days.appendChild(document.createElement('div'));
+        daysEl.appendChild(document.createElement('div'));
       }
 
       // Días del mes
@@ -151,33 +152,46 @@ document.addEventListener("DOMContentLoaded", () => {
           dayEl.classList.add('today');
         }
 
-        UI.days.appendChild(dayEl);
+        daysEl.appendChild(dayEl);
       }
 
+      // ¡CORRECCIÓN CLAVE AQUÍ! - Activar eventos después de crear los días
       activateDateClicks();
     } catch (error) {
       console.error('Error renderizando calendario:', error);
     }
   }
 
+  // 7. Función CORREGIDA para activar clicks en fechas
   function activateDateClicks() {
-    document.querySelectorAll('#days div[data-date]').forEach(day => {
-      day.addEventListener('click', () => {
-        const date = day.dataset.date;
-        document.getElementById('slot-date').textContent = date;
-        showTimeSlots(date);
-      });
+    console.log('Activando clicks en fechas...');
+    const dateElements = document.querySelectorAll('#days div[data-date]');
+    
+    dateElements.forEach(day => {
+      // Primero removemos cualquier event listener previo
+      day.removeEventListener('click', handleDateClick);
+      
+      // Luego agregamos el nuevo
+      day.addEventListener('click', handleDateClick);
     });
+    
+    function handleDateClick() {
+      const selectedDate = this.dataset.date;
+      console.log('Fecha seleccionada:', selectedDate);
+      document.getElementById('slot-date').textContent = selectedDate;
+      showTimeSlots(selectedDate);
+    }
   }
 
   function showTimeSlots(date) {
-    UI.card.classList.add('flipped1');
+    console.log('Mostrando horarios para:', date);
+    card.classList.add('flipped1');
     setTimeout(() => loadTimeSlots(date), 400);
   }
 
   async function loadTimeSlots(date) {
     try {
-      UI.slotList.innerHTML = '';
+      slotListEl.innerHTML = '';
       const allCitas = await loadAllCitas();
       const citasDelDia = allCitas.filter(c => c.Fecha === date);
 
@@ -215,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           slot.appendChild(timeSpan);
           slot.appendChild(detailSpan);
-          UI.slotList.appendChild(slot);
+          slotListEl.appendChild(slot);
         });
       }
 
@@ -224,13 +238,14 @@ document.addEventListener("DOMContentLoaded", () => {
       emergencySlot.textContent = '🚨 URGENCIAS';
       emergencySlot.className = 'urgencia';
       emergencySlot.addEventListener('click', () => showAppointmentForm(date, 'URGENCIAS'));
-      UI.slotList.appendChild(emergencySlot);
+      slotListEl.appendChild(emergencySlot);
 
     } catch (error) {
       console.error('Error cargando horarios:', error);
     }
   }
 
+  // 8. Resto de funciones (sin cambios)
   function showAppointmentForm(date, time) {
     const backPanel = document.querySelector('.back');
     backPanel.style.opacity = '0';
@@ -238,9 +253,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       document.getElementById('calendar').style.display = 'none';
       renderAppointmentForm(date, time);
-      UI.reservationForm.style.display = 'block';
+      reservationFormDiv.style.display = 'block';
       setTimeout(() => {
-        UI.reservationForm.style.opacity = '1';
+        reservationFormDiv.style.opacity = '1';
       }, 50);
     }, 300);
   }
@@ -276,10 +291,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupFormEvents() {
-    // Botón Cancelar
     document.getElementById('cancel-form').addEventListener('click', resetToCalendar);
     
-    // Checkbox nueva mascota
     document.getElementById('new-pet').addEventListener('change', function() {
       const newPetFields = document.getElementById('new-pet-fields');
       const petSelect = document.getElementById('mascota');
@@ -294,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     
-    // Cambio de mascota
     document.getElementById('mascota').addEventListener('change', async function() {
       const mascota = this.value;
       const ownerInfo = document.getElementById('owner-info');
@@ -316,7 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     
-    // Envío del formulario
     document.getElementById('appointment-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -327,7 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         if (isNewPet) {
-          // Registrar nuevo cliente
           const propietario = document.getElementById('new-owner-name').value.trim();
           const telefono = document.getElementById('new-owner-phone').value.trim();
           nombreMascota = document.getElementById('new-pet-name').value.trim();
@@ -348,7 +358,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!response.success) throw new Error(response.error);
           clienteId = response['ID fila'];
         } else {
-          // Mascota existente
           nombreMascota = document.getElementById('mascota').value;
           if (!nombreMascota) {
             alert('Seleccione una mascota');
@@ -361,11 +370,9 @@ document.addEventListener("DOMContentLoaded", () => {
           clienteId = cliente['ID fila'] || cliente['ID cliente'];
         }
 
-        // Pedir motivo
         const motivo = prompt(`Motivo de la cita para ${nombreMascota}:`);
         if (!motivo) return;
 
-        // Registrar cita
         const params = new URLSearchParams();
         params.append('sheet', 'Citas');
         params.append('nuevo', 'true');
@@ -391,20 +398,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetToCalendar() {
     console.log('Reseteando a vista de calendario...');
     
-    // Ocultar formulario
-    UI.reservationForm.style.opacity = '0';
+    reservationFormDiv.style.opacity = '0';
     setTimeout(() => {
-      UI.reservationForm.style.display = 'none';
-      
-      // Mostrar calendario
+      reservationFormDiv.style.display = 'none';
       document.getElementById('calendar').style.display = 'block';
       document.getElementById('calendar').style.opacity = '1';
+      card.classList.remove('flipped1');
+      card.style.transform = 'rotateY(0deg)';
       
-      // Resetear tarjeta completamente
-      UI.card.classList.remove('flipped1');
-      UI.card.style.transform = 'rotateY(0deg)';
-      
-      // Recargar datos
       currentDate = new Date();
       __allCitasCache = null;
       __appointmentsCount = {};
