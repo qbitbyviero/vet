@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ======================================
   // 0) Configuración inicial
   // ======================================
-  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzBpu2EGoH1415ZCRA9f0SGDRRE-hw2Gx_WZeLNnfSTN-8KTCy9HCbHYUWJ1f-AePjvVA/exec";
+  const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbxPk2_hwbNHvXJlOME18Dmv6FDaMamKOy7Kfv4wwo5lA8YXNe81TxSWwDCLre6cAwVczg/exec";
 
   // Elementos del DOM - TODOS definidos al inicio
   const card = document.getElementById("card");
@@ -34,24 +34,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function jsonpRequest(urlSansCallback) {
     return new Promise((resolve, reject) => {
-      const callbackName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-      window[callbackName] = function(data) {
-        resolve(data);
-        delete window[callbackName];
-        script.remove();
-      };
-      const separator = urlSansCallback.includes("?") ? "&" : "?";
-      const script = document.createElement("script");
-      script.src = urlSansCallback + separator + "callback=" + callbackName;
-      script.onerror = () => {
-        reject(new Error("JSONP request falló para " + script.src));
-        delete window[callbackName];
-        script.remove();
-      };
-      document.body.appendChild(script);
-    });
-  }
+        const callbackName = 'cb_' + Date.now();
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error('Tiempo de espera agotado'));
+        }, 10000);
 
+        function cleanup() {
+            clearTimeout(timeout);
+            delete window[callbackName];
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+        }
+
+        window[callbackName] = function(data) {
+            cleanup();
+            if (data && data.error) {
+                reject(new Error(data.error));
+            } else {
+                resolve(data);
+            }
+        };
+
+        const script = document.createElement('script');
+        script.src = urlSansCallback + (urlSansCallback.includes('?') ? '&' : '?') + 
+                   'callback=' + callbackName;
+        
+        script.onerror = () => {
+            cleanup();
+            reject(new Error('Error de red al cargar los datos'));
+        };
+
+        document.body.appendChild(script);
+    });
+}
   function normalizeDate(dateStr) {
     if (!dateStr) return "";
     
@@ -234,99 +251,112 @@ function updateCalendarStyles() {
     if (Array.isArray(__clientsCache)) return __clientsCache;
     
     try {
-      const url = GAS_BASE_URL + "?sheet=Clientes";
-      const data = await jsonpRequest(url);
-      __clientsCache = data;
-      return __clientsCache;
+        const url = `${GAS_BASE_URL}?sheet=Clientes&nocache=${Date.now()}`;
+        console.log("Cargando clientes desde:", url);
+        
+        const data = await jsonpRequest(url);
+        if (!Array.isArray(data)) {
+            throw new Error("Formato de datos inválido para clientes");
+        }
+        
+        __clientsCache = data;
+        return __clientsCache;
     } catch (err) {
-      console.error("Error cargando clientes:", err);
-      return [];
+        console.error("Error cargando clientes:", err);
+        showGlobalError("Error cargando datos de mascotas. Intenta recargar.");
+        return [];
     }
-  }
+}
 
-  async function loadAllCitas() {
+async function loadAllCitas() {
     if (Array.isArray(__allCitasCache)) return __allCitasCache;
     
     try {
-      const url = GAS_BASE_URL + "?sheet=Citas";
-      const data = await jsonpRequest(url);
-      
-      __allCitasCache = data.map(cita => ({
-        ...cita,
-        Fecha: normalizeDate(cita.Fecha || cita.fecha || ''),
-        Hora: normalizeTime(cita.Hora || cita.hora || '')
-      }));
-      
-      __appointmentsCount = {};
-      __allCitasCache.forEach(cita => {
-        if (cita.Fecha) {
-          __appointmentsCount[cita.Fecha] = (__appointmentsCount[cita.Fecha] || 0) + 1;
+        const url = `${GAS_BASE_URL}?sheet=Citas&nocache=${Date.now()}`;
+        console.log("Cargando citas desde:", url);
+        
+        const data = await jsonpRequest(url);
+        if (!Array.isArray(data)) {
+            throw new Error("Formato de datos inválido para citas");
         }
-      });
-      
-      return __allCitasCache;
+        
+        __allCitasCache = data.map(cita => ({
+            ...cita,
+            Fecha: normalizeDate(cita.Fecha || cita.fecha || ''),
+            Hora: normalizeTime(cita.Hora || cita.hora || '')
+        }));
+        
+        // Actualizar conteo de citas
+        __appointmentsCount = {};
+        __allCitasCache.forEach(cita => {
+            if (cita.Fecha) {
+                __appointmentsCount[cita.Fecha] = (__appointmentsCount[cita.Fecha] || 0) + 1;
+            }
+        });
+        
+        return __allCitasCache;
     } catch (err) {
-      console.error("Error cargando citas:", err);
-      return [];
+        console.error("Error cargando citas:", err);
+        showGlobalError("Error cargando citas. Intenta recargar.");
+        return [];
     }
-  }
-
-  function getCountByDate(fecha) {
-    return __appointmentsCount[fecha] || 0;
-  }
-
+}
   // ============================
   // 3) Funciones del calendario
   // ============================
 
   async function renderCalendar() {
-    document.getElementById("calendar").style.display = "block";
-    reservationFormDiv.style.display = "none";
+    try {
+        console.log("Iniciando renderCalendar...");
+        document.getElementById("calendar").style.display = "block";
+        reservationFormDiv.style.display = "none";
 
-    await loadAllCitas();
+        await loadAllCitas();
 
-    const y = currentDate.getFullYear();
-    const m = currentDate.getMonth();
-    monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
-      month: "long",
-      year: "numeric"
-    });
+        const y = currentDate.getFullYear();
+        const m = currentDate.getMonth();
+        monthYearEl.textContent = currentDate.toLocaleString("es-ES", {
+            month: "long",
+            year: "numeric"
+        });
 
-    daysEl.innerHTML = "";
-    const firstDayIndex = new Date(y, m, 1).getDay() || 7;
-    const totalDays = new Date(y, m + 1, 0).getDate();
+        daysEl.innerHTML = "";
+        const firstDayIndex = new Date(y, m, 1).getDay() || 7;
+        const totalDays = new Date(y, m + 1, 0).getDate();
 
-    for (let i = 1; i < firstDayIndex; i++) {
-      daysEl.appendChild(document.createElement("div"));
+        // Días vacíos al inicio
+        for (let i = 1; i < firstDayIndex; i++) {
+            daysEl.appendChild(document.createElement("div"));
+        }
+
+        // Días del mes
+        for (let d = 1; d <= totalDays; d++) {
+            const dayCell = document.createElement("div");
+            const dateStr = `${y}-${String(m + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+            dayCell.textContent = d;
+            dayCell.dataset.date = dateStr;
+
+            const count = getCountByDate(dateStr);
+            dayCell.classList.toggle("full", count >= 4);
+            dayCell.classList.toggle("medium", count === 3);
+            dayCell.classList.toggle("low", count > 0 && count < 3);
+            dayCell.classList.toggle("today", dateStr === new Date().toISOString().slice(0,10));
+            
+            if (count > 0) {
+                dayCell.setAttribute("data-count", count);
+            }
+
+            daysEl.appendChild(dayCell);
+        }
+        
+        activateDateClicks();
+        updateCalendarStyles();
+        
+    } catch (err) {
+        console.error("Error en renderCalendar:", err);
+        showGlobalError("Error al mostrar el calendario. Recarga la página.");
     }
-
-    for (let d = 1; d <= totalDays; d++) {
-      const dayCell = document.createElement("div");
-      const dateStr = `${y}-${String(m + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      dayCell.textContent = d;
-      dayCell.dataset.date = dateStr;
-
-      const count = getCountByDate(dateStr);
-      if (count >= 4) {
-        dayCell.classList.add("full");
-      } else if (count === 3) {
-        dayCell.classList.add("medium");
-      } else if (count > 0) {
-        dayCell.classList.add("low");
-      }
-      if (count > 0) {
-        dayCell.setAttribute("data-count", count);
-      }
-      if (dateStr === new Date().toISOString().slice(0,10)) {
-        dayCell.classList.add("today");
-      }
-
-      daysEl.appendChild(dayCell);
-    }
-    activateDateClicks();
-    updateCalendarStyles();
-  }
-
+}
   function activateDateClicks() {
     document.querySelectorAll("#days div[data-date]").forEach(el => {
       el.addEventListener("click", () => {
@@ -753,6 +783,40 @@ function updateCalendarStyles() {
     overlay.classList.remove("visible");
     overlay.innerHTML = "";
   }
+  function showGlobalError(message) {
+    const errorDiv = document.getElementById("global-error") || document.createElement("div");
+    errorDiv.id = "global-error";
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ffebee;
+        color: #b71c1c;
+        padding: 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 1000;
+        max-width: 80%;
+        text-align: center;
+    `;
+    errorDiv.innerHTML = `
+        <p>${message}</p>
+        <button onclick="location.reload()" style="
+            background: #b71c1c;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin-top: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        ">Reintentar</button>
+    `;
+    
+    if (!document.getElementById("global-error")) {
+        document.body.appendChild(errorDiv);
+    }
+}
 
   // Iniciar aplicación
   renderCalendar();
