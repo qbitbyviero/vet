@@ -256,19 +256,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 8. Activar clicks en fechas
   function activateDateClicks() {
-    const daysContainer = document.getElementById('days');
-    
-    // Solución definitiva para listeners
-    daysContainer.querySelectorAll('div[data-date]').forEach(day => {
-      day.addEventListener('click', function() {
-        const selectedDate = this.dataset.date;
-        console.log('Fecha seleccionada:', selectedDate);
-        document.getElementById('slot-date').textContent = selectedDate;
-        showTimeSlots(selectedDate);
-      });
-    });
-  }
+  console.log('✅ Activando clics en días');
+  const daysContainer = document.getElementById('days');
 
+  daysContainer.querySelectorAll('div[data-date]').forEach(day => {
+    day.onclick = null; // limpiamos posibles duplicados
+    day.addEventListener('click', function () {
+      const selectedDate = this.dataset.date;
+      console.log('🟢 Día clicado:', selectedDate);
+      document.getElementById('slot-date').textContent = selectedDate;
+      showTimeSlots(selectedDate);
+    });
+  });
+}
   // 9. Mostrar horarios
   function showTimeSlots(date) {
     console.log('Mostrando horarios para:', date);
