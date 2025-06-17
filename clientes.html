@@ -1,123 +1,132 @@
-<!-- clientes.html: Módulo de Clientes 🐾 completo -->
-<div class="modal-clientes">
-  <h2>Registro de Cliente 🐾</h2>
+<!-- clientes.html: Módulo de Clientes 🐾 completo (modal optimizado) -->
+<div class="modal-clientes-overlay" onclick="cerrarModalClientes(event)">
+  <div class="modal-clientes" onclick="event.stopPropagation()">
+    <button class="cerrar-modal" onclick="cerrarModalClientes()">✖</button>
+    <h2>Registro de Cliente 🐾</h2>
 
-  <!-- Campo de búsqueda -->
-  <div style="margin-bottom: 1em; position: relative;">
-    <label for="searchPet">Buscar mascota existente:</label>
-    <input type="text" id="searchPet" placeholder="Escribe el nombre o parte del nombre..." autocomplete="off" />
-    <ul id="suggestions" class="suggestion-list"></ul>
-  </div>
+    <!-- Campo de búsqueda tipo dropdown -->
+    <div style="margin-bottom: 1em;">
+      <label for="searchPet">Selecciona mascota registrada:</label>
+      <select id="searchPet" onchange="seleccionarClienteDesdeLista()">
+        <option value="">-- Buscar mascota existente --</option>
+      </select>
+    </div>
 
-  <form id="form-clientes">
-    <!-- Datos del Propietario -->
-    <fieldset>
-      <legend>Datos del Propietario</legend>
-      <div class="grid-two-cols">
-        <div class="form-group">
-          <label for="ownerName">Nombre Completo:</label>
-          <input type="text" id="ownerName" name="ownerName" required />
-        </div>
-        <div class="form-group">
-          <label for="ownerPhone">Teléfono:</label>
-          <input type="tel" id="ownerPhone" name="ownerPhone" required />
-        </div>
-        <div class="form-group">
-          <label for="ownerEmail">Correo Electrónico:</label>
-          <input type="email" id="ownerEmail" name="ownerEmail" required />
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Datos de la Mascota -->
-    <fieldset>
-      <legend>Datos de la Mascota</legend>
-      <div class="grid-two-cols">
-        <div class="form-group">
-          <label for="petName">Nombre Mascota:</label>
-          <input type="text" id="petName" name="petName" required />
-        </div>
-        <div class="form-group">
-          <label for="pet-species">Especie:</label>
-          <select id="pet-species" name="species" required onchange="cargarDiagramaCliente()">
-            <option value="">-- Selecciona --</option>
-            <option value="perro">Perro</option>
-            <option value="gato">Felino</option>
-            <option value="ave">Ave</option>
-            <option value="tortuga">Tortuga</option>
-            <option value="serpiente">Serpiente</option>
-            <option value="lagarto">Lagarto</option>
-            <option value="pez">Pez</option>
-            <option value="roedor">Roedor</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="breed">Raza:</label>
-          <input type="text" id="breed" name="breed" />
-        </div>
-        <div class="form-group">
-          <label for="age">Edad (años):</label>
-          <input type="number" id="age" name="age" min="0" step="1" />
-        </div>
-        <div class="form-group">
-          <label for="weight">Peso (kg):</label>
-          <input type="number" id="weight" name="weight" min="0" step="0.1" />
-        </div>
-        <div class="form-group">
-          <label>¿Está esterilizado?</label>
-          <div class="radio-group">
-            <label><input type="radio" name="sterilized" value="si" /> Sí</label>
-            <label><input type="radio" name="sterilized" value="no" /> No</label>
+    <form id="form-clientes">
+      <!-- Datos del Propietario -->
+      <fieldset>
+        <legend>Datos del Propietario</legend>
+        <div class="grid-two-cols">
+          <div class="form-group">
+            <label for="ownerName">Nombre Completo:</label>
+            <input type="text" id="ownerName" name="ownerName" required />
+          </div>
+          <div class="form-group">
+            <label for="ownerPhone">Teléfono:</label>
+            <input type="tel" id="ownerPhone" name="ownerPhone" required />
+          </div>
+          <div class="form-group">
+            <label for="ownerEmail">Correo Electrónico:</label>
+            <input type="email" id="ownerEmail" name="ownerEmail" required />
           </div>
         </div>
-      </div>
+      </fieldset>
 
-      <!-- Diagrama Corporal con hotspots -->
-      <div id="cliente-diagrama" class="diagrama-container">
-        <img id="diagrama-img" src="" alt="Diagrama mascota" />
-      </div>
-    </fieldset>
+      <!-- Datos de la Mascota -->
+      <fieldset>
+        <legend>Datos de la Mascota</legend>
+        <div class="grid-two-cols">
+          <div class="form-group">
+            <label for="petName">Nombre Mascota:</label>
+            <input type="text" id="petName" name="petName" required />
+          </div>
+          <div class="form-group">
+            <label for="pet-species">Especie:</label>
+            <select id="pet-species" name="species" required onchange="cargarDiagramaCliente()">
+              <option value="">-- Selecciona --</option>
+              <option value="perro">Perro</option>
+              <option value="gato">Felino</option>
+              <option value="ave">Ave</option>
+              <option value="tortuga">Tortuga</option>
+              <option value="serpiente">Serpiente</option>
+              <option value="lagarto">Lagarto</option>
+              <option value="pez">Pez</option>
+              <option value="roedor">Roedor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="breed">Raza:</label>
+            <input type="text" id="breed" name="breed" />
+          </div>
+          <div class="form-group">
+            <label for="age">Edad (años):</label>
+            <input type="number" id="age" name="age" min="0" step="1" />
+          </div>
+          <div class="form-group">
+            <label for="weight">Peso (kg):</label>
+            <input type="number" id="weight" name="weight" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>¿Está esterilizado?</label>
+            <div class="radio-group">
+              <label><input type="radio" name="sterilized" value="si" /> Sí</label>
+              <label><input type="radio" name="sterilized" value="no" /> No</label>
+            </div>
+          </div>
+        </div>
 
-    <button type="submit" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
-  </form>
+        <!-- Diagrama Corporal con hotspots -->
+        <div id="cliente-diagrama" class="diagrama-container">
+          <img id="diagrama-img" src="" alt="Diagrama mascota" />
+        </div>
+      </fieldset>
+
+      <button type="submit" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
+    </form>
+  </div>
 </div>
 
 <style>
-  .suggestion-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border: 1px solid #ccc;
-    max-height: 150px;
-    overflow-y: auto;
-    position: absolute;
-    background: #fff;
-    width: 100%;
-    z-index: 10;
+  .modal-clientes-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
   }
-  .suggestion-list li {
-    padding: 0.4em;
+  .modal-clientes {
+    background: white;
+    padding: 1em;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    position: relative;
+    overflow-y: auto;
+    max-height: 95vh;
+  }
+  .cerrar-modal {
+    position: absolute;
+    top: 0.4em;
+    right: 0.6em;
+    border: none;
+    background: none;
+    font-size: 1.5em;
     cursor: pointer;
   }
-  .suggestion-list li:hover {
-    background-color: #eee;
-  }
 </style>
+
 <script>
-  // Previene errores si main.js aún no ha cargado completamente
-  if (typeof window.loadAllClients !== "function") {
-    console.warn("main.js aún no expone loadAllClients. Esperando...");
-    setTimeout(() => {
-      // Recarga el módulo suavemente
-      location.reload();
-    }, 200);
+  function cerrarModalClientes(e) {
+    if (!e || e.target.classList.contains('modal-clientes-overlay')) {
+      document.querySelector('.modal-clientes-overlay')?.remove();
+    }
   }
 
-  if (window.__clienteModuloActivo) {
-    console.warn("Este módulo ya estaba activo. Evitando duplicación.");
-    throw new Error("clientes.html ya cargado.");
-  }
-  window.__clienteModuloActivo = true;
   const mapaImagen = {
     perro: 'svg/perro.png',
     gato: 'svg/felino.svg',
@@ -162,33 +171,12 @@
 
   let mascotasGlobal = [];
 
-  async function buscarCliente(val) {
-    const suggestions = document.getElementById("suggestions");
-    suggestions.innerHTML = "";
-
-    const query = val.trim().toLowerCase();
-    if (query.length < 2) return;
-
-    if (mascotasGlobal.length === 0) {
-      mascotasGlobal = await window.loadAllClients();
-    }
-
-    const resultados = mascotasGlobal.filter(c =>
-      (c["Nombre de la mascota"] || "").toLowerCase().includes(query)
-    );
-
-    if (resultados.length === 0) return;
-
-    resultados.slice(0, 10).forEach(cliente => {
-      const li = document.createElement("li");
-      li.textContent = cliente["Nombre de la mascota"];
-      li.addEventListener("click", () => {
-        llenarFormularioCliente(cliente);
-        suggestions.innerHTML = "";
-        document.getElementById("searchPet").value = cliente["Nombre de la mascota"];
-      });
-      suggestions.appendChild(li);
-    });
+  async function seleccionarClienteDesdeLista() {
+    const valor = document.getElementById("searchPet").value;
+    if (!valor) return;
+    if (mascotasGlobal.length === 0) mascotasGlobal = await window.loadAllClients();
+    const cliente = mascotasGlobal.find(c => c["Nombre de la mascota"] === valor);
+    if (cliente) llenarFormularioCliente(cliente);
   }
 
   function llenarFormularioCliente(result) {
@@ -214,101 +202,16 @@
     btn.textContent = "Cliente ya registrado";
   }
 
-  document.getElementById("searchPet").addEventListener("keyup", function () {
-    buscarCliente(this.value);
-  });
-
-  document.getElementById("form-clientes").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const btn = document.getElementById("btnGuardarCliente");
-    btn.disabled = true;
-    btn.textContent = "Guardando...";
-
-    const mascota = document.getElementById("petName").value.trim();
-    const clientes = await window.loadAllClients();
-    const yaExiste = clientes.find(c => (c["Nombre de la mascota"] || "").trim().toLowerCase() === mascota.toLowerCase());
-
-    if (yaExiste) {
-      alert("La mascota ya está registrada. No se harán cambios.");
-      btn.disabled = false;
-      btn.textContent = "Cliente ya registrado";
-      return;
-    }
-
-    const propietario  = document.getElementById("ownerName").value.trim();
-    const telefono     = document.getElementById("ownerPhone").value.trim();
-    const correo       = document.getElementById("ownerEmail").value.trim();
-    const especie      = document.getElementById("pet-species").value.trim();
-    const raza         = document.getElementById("breed").value.trim();
-    const edad         = document.getElementById("age").value.trim();
-    const peso         = document.getElementById("weight").value.trim();
-    const esterilizado = document.querySelector('input[name="sterilized"]:checked')
-                          ? document.querySelector('input[name="sterilized"]:checked').value
-                          : "";
-    const observaciones = "";
-
-    if (!mascota || !propietario || !telefono || !correo) {
-      alert("Faltan datos obligatorios.");
-      btn.disabled = false;
-      btn.textContent = "Guardar Cliente";
-      return;
-    }
-
-    const params = {
-      sheet: "Clientes",
-      nuevo: "true",
-      "Nombre de la mascota": mascota,
-      "Nombre del propietario": propietario,
-      "Número de Teléfono": telefono,
-      "Correo": correo,
-      "Especie": especie,
-      "Raza": raza,
-      "Edad": edad,
-      "Peso": peso,
-      "Esterilizado": esterilizado,
-      "Observaciones": observaciones
-    };
-
-    const qs = Object.keys(params).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join("&");
-    const url = `${window.GAS_BASE_URL}?${qs}`;
-
-    try {
-      const res = await new Promise((resolve, reject) => {
-        const cbName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-        window[cbName] = data => {
-          resolve(data);
-          delete window[cbName];
-          script.remove();
-        };
-        const script = document.createElement("script");
-        script.src = `${url}&callback=${cbName}`;
-        script.onerror = () => {
-          reject(new Error("Error al guardar en hoja de cálculo."));
-          script.remove();
-          delete window[cbName];
-        };
-        document.body.appendChild(script);
+  document.addEventListener("DOMContentLoaded", async () => {
+    if (typeof window.loadAllClients === "function") {
+      mascotasGlobal = await window.loadAllClients();
+      const select = document.getElementById("searchPet");
+      mascotasGlobal.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c["Nombre de la mascota"];
+        opt.textContent = c["Nombre de la mascota"];
+        select.appendChild(opt);
       });
-
-      if (res.success) {
-        alert("¡Cliente registrado exitosamente!");
-        document.getElementById("form-clientes").reset();
-        clearHotspots();
-        mascotasGlobal = [];
-        window.__clientsCache = null;
-        btn.disabled = false;
-        btn.textContent = "Guardar Cliente";
-      } else {
-        alert("Error al guardar cliente: " + (res.error || "desconocido"));
-        btn.disabled = false;
-        btn.textContent = "Guardar Cliente";
-      }
-
-    } catch (err) {
-      alert("Error al guardar cliente: " + err.message);
-      btn.disabled = false;
-      btn.textContent = "Guardar Cliente";
     }
   });
 </script>
