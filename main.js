@@ -414,3 +414,21 @@ function showTimeSlots(date) {
   // Iniciar
   renderCalendar();
 });
+//12 modales
+document.querySelectorAll('a[data-module]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const file = link.getAttribute('data-module');
+    const modalContainer = document.getElementById('modal-container');
+    const iframe = document.getElementById('modal-frame');
+    iframe.src = file;
+    modalContainer.style.display = 'flex';
+  });
+});
+
+document.getElementById('modal-close').addEventListener('click', () => {
+  const modalContainer = document.getElementById('modal-container');
+  const iframe = document.getElementById('modal-frame');
+  iframe.src = '';
+  modalContainer.style.display = 'none';
+});
