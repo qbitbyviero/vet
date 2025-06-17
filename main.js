@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   UI.init();
+  UI.card.classList.add('show-front');
 
   // 5. Función para mostrar formulario de cita (¡FALTABA ESTA FUNCIÓN!)
   function showAppointmentForm(date, time) {
@@ -273,18 +274,13 @@ document.addEventListener("DOMContentLoaded", () => {
  function showTimeSlots(date) {
   console.log('Mostrando horarios para:', date);
 
-  // ⚡ Forzamos el efecto de animación
-  UI.card.classList.remove('flipped1');
-  void UI.card.offsetWidth; // truco para reiniciar animación
-  UI.card.classList.add('flipped1');
+  UI.card.classList.remove('show-front');
+  UI.card.classList.add('show-back');
 
   setTimeout(() => {
     loadTimeSlots(date);
-    document.querySelector('.back').style.opacity = '1';
-  }, 400);
+  }, 100);
 }
-
-
   // 10. Cargar horarios
   async function loadTimeSlots(date) {
     try {
@@ -342,21 +338,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 11. Resetear vista
   function resetToCalendar() {
-    console.log('Reseteando vista...');
-    
-    UI.reservationForm.style.opacity = '0';
-    setTimeout(() => {
-      UI.reservationForm.style.display = 'none';
-      document.getElementById('calendar').style.display = 'block';
-      UI.card.classList.remove('flipped1');
-      UI.card.style.transform = 'rotateY(0deg)';
-      document.querySelector('.back').style.opacity = '0';
-      
-      __allCitasCache = null;
-      __appointmentsCount = {};
-      renderCalendar();
-    }, 300);
-  }
+  console.log('Reseteando vista...');
+
+  UI.reservationForm.style.opacity = '0';
+
+  setTimeout(() => {
+    UI.reservationForm.style.display = 'none';
+    document.getElementById('calendar').style.display = 'block';
+
+    UI.card.classList.remove('show-back');
+    UI.card.classList.add('show-front');
+
+    __allCitasCache = null;
+    __appointmentsCount = {};
+    renderCalendar();
+  }, 300);
+}
 
   // 12. Renderizar calendario
   async function renderCalendar() {
