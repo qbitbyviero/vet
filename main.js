@@ -270,14 +270,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 }
   // 9. Mostrar horarios
-  function showTimeSlots(date) {
-    console.log('Mostrando horarios para:', date);
-    UI.card.classList.add('flipped1');
-    setTimeout(() => {
-      loadTimeSlots(date);
-      document.querySelector('.back').style.opacity = '1';
-    }, 400);
-  }
+ function showTimeSlots(date) {
+  console.log('Mostrando horarios para:', date);
+
+  // ⚡ Forzamos el efecto de animación
+  UI.card.classList.remove('flipped1');
+  void UI.card.offsetWidth; // truco para reiniciar animación
+  UI.card.classList.add('flipped1');
+
+  setTimeout(() => {
+    loadTimeSlots(date);
+    document.querySelector('.back').style.opacity = '1';
+  }, 400);
+}
+
 
   // 10. Cargar horarios
   async function loadTimeSlots(date) {
