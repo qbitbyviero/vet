@@ -88,6 +88,46 @@
     #btn-config:hover {
       background: #0288d1;
     }
+    #modal-container {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+#modal-content {
+  background: #fff;
+  border-radius: 10px;
+  width: 90%;
+  height: 90%;
+  padding: 1em;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+#modal-content iframe {
+  flex-grow: 1;
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+}
+
+#modal-close {
+  align-self: flex-end;
+  background: #ef5350;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 0.5em;
+}
   </style>
 </head>
 <body>
@@ -221,5 +261,11 @@
   <button id="btn-config" title="Configuración">⚙️</button>
 
   <script src="main.js"></script>
+  <div id="modal-container">
+  <div id="modal-content">
+    <button id="modal-close">✖️ Cerrar</button>
+    <iframe id="modal-frame" src="" frameborder="0"></iframe>
+  </div>
+</div>
 </body>
 </html>
