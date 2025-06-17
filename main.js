@@ -354,54 +354,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 12. Renderizar calendario
   async function renderCalendar() {
-    console.log('Renderizando calendario...');
-    try {
-      document.getElementById('calendar').style.display = 'block';
-      UI.reservationForm.style.display = 'none';
-      UI.card.classList.remove('flipped1');
+  console.log('Renderizando calendario...');
+  try {
+    document.getElementById('calendar').style.display = 'block';
+    UI.reservationForm.style.display = 'none';
+    UI.card.classList.remove('flipped1');
 
-      await loadAllCitas();
+    await loadAllCitas();
 
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      UI.monthYear.textContent = currentDate.toLocaleDateString('es-ES', {
-        month: 'long',
-        year: 'numeric'
-      });
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    UI.monthYear.textContent = currentDate.toLocaleDateString('es-ES', {
+      month: 'long',
+      year: 'numeric'
+    });
 
-      UI.days.innerHTML = '';
-      const firstDay = new Date(year, month, 1).getDay() || 7;
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+    UI.days.innerHTML = '';
+    const firstDay = new Date(year, month, 1).getDay() || 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      for (let i = 1; i < firstDay; i++) {
-        UI.days.appendChild(document.createElement('div'));
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayEl = document.createElement('div');
-        dayEl.textContent = day;
-        dayEl.dataset.date = dateStr;
-
-        const count = __appointmentsCount[dateStr] || 0;
-        if (count > 0) {
-          dayEl.setAttribute('data-count', count);
-          dayEl.classList.add(count >= 4 ? 'full' : count === 3 ? 'medium' : 'low');
-        }
-
-        if (dateStr === new Date().toISOString().slice(0, 10)) {
-          dayEl.classList.add('today');
-        }
-
-        UI.days.appendChild(dayEl);
-      }
-
-      activateDateClicks();
-    } catch (error) {
-      console.error('Error renderizando calendario:', error);
+    for (let i = 1; i < firstDay; i++) {
+      UI.days.appendChild(document.createElement('div'));
     }
-  }
 
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dayEl = document.createElement('div');
+      dayEl.textContent = day;
+      dayEl.dataset.date = dateStr;
+
+      const count = __appointmentsCount[dateStr] || 0;
+      if (count > 0) {
+        dayEl.setAttribute('data-count', count);
+        dayEl.classList.add(count >= 4 ? 'full' : count === 3 ? 'medium' : 'low');
+      }
+
+      if (dateStr === new Date().toISOString().slice(0, 10)) {
+        dayEl.classList.add('today');
+      }
+
+      UI.days.appendChild(dayEl);
+    }
+
+    // 🔥 AQUI AGREGA ESTO JUSTO AL FINAL
+    setTimeout(() => {
+      activateDateClicks();
+    }, 100);
+
+  } catch (error) {
+    console.error('Error renderizando calendario:', error);
+  }
+}
   // Iniciar
   renderCalendar();
 });
