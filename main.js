@@ -101,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   UI.init();
   UI.card.classList.add('show-front');
-
   // 5. Función para mostrar formulario de cita (¡FALTABA ESTA FUNCIÓN!)
   function showAppointmentForm(date, time) {
     console.log('Mostrando formulario para:', date, time);
