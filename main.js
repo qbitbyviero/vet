@@ -416,19 +416,26 @@ function showTimeSlots(date) {
 });
 //12 modales
 document.querySelectorAll('a[data-module]').forEach(link => {
-  link.addEventListener('click', e => {
+  link.addEventListener('click', async e => {
     e.preventDefault();
     const file = link.getAttribute('data-module');
     const modalContainer = document.getElementById('modal-container');
-    const iframe = document.getElementById('modal-frame');
-    iframe.src = file;
-    modalContainer.style.display = 'flex';
+    const modalHTML = document.getElementById('modal-html');
+
+    try {
+      const response = await fetch(file);
+      if (!response.ok) throw new Error("Error al cargar el módulo");
+      const html = await response.text();
+      modalHTML.innerHTML = html;
+      modalContainer.style.display = 'flex';
+    } catch (err) {
+      modalHTML.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      modalContainer.style.display = 'flex';
+    }
   });
 });
 
 document.getElementById('modal-close').addEventListener('click', () => {
-  const modalContainer = document.getElementById('modal-container');
-  const iframe = document.getElementById('modal-frame');
-  iframe.src = '';
-  modalContainer.style.display = 'none';
+  document.getElementById('modal-container').style.display = 'none';
+  document.getElementById('modal-html').innerHTML = '';
 });
