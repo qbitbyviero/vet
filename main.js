@@ -281,9 +281,11 @@ function showTimeSlots(date) {
     UI.card.classList.add('show-back');
     UI.slotList.innerHTML = ''; // Limpieza visual
     UI.reservationForm.style.display = 'none';
+    document.querySelector('.back').style.opacity = '1';
     loadTimeSlots(date);
-  }, 50); // ese pequeño delay es mágico
+  }, 50);
 }
+
   // 10. Cargar horarios
   async function loadTimeSlots(date) {
     try {
@@ -401,9 +403,7 @@ function showTimeSlots(date) {
 
       UI.days.appendChild(dayEl);
     }
-
-    // 🔥 AQUI AGREGA ESTO JUSTO AL FINAL
-    setTimeout(() => {
+        setTimeout(() => {
       activateDateClicks();
     }, 100);
 
