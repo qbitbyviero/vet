@@ -439,3 +439,125 @@ document.getElementById('modal-close').addEventListener('click', () => {
   document.getElementById('modal-container').style.display = 'none';
   document.getElementById('modal-html').innerHTML = '';
 });
+//modal Clientes scripts unicos
+  function cerrarModalClientes(e) {
+    if (!e || e.target.classList.contains('modal-clientes-overlay')) {
+      document.querySelector('.modal-clientes-overlay')?.remove();
+    }
+  }
+
+  const mapaImagen = {
+    perro: 'svg/perro.png',
+    gato: 'svg/felino.svg',
+    ave: 'svg/ave.png',
+    tortuga: 'svg/tortuga.svg',
+    serpiente: 'svg/serpiente.svg',
+    lagarto: 'svg/lagarto.png',
+    pez: 'svg/pez.svg',
+    roedor: 'svg/roedor.svg'
+  };
+
+  const img = document.getElementById('diagrama-img');
+  const cont = document.getElementById('cliente-diagrama');
+
+  function cargarDiagramaCliente() {
+    const especie = document.getElementById('pet-species').value;
+    const src = mapaImagen[especie] || '';
+    img.src = src;
+    clearHotspots();
+    if (src) {
+      img.onload = () => { cont.style.minHeight = img.offsetHeight + 'px'; };
+      cont.addEventListener('click', addHotspot);
+    } else {
+      cont.removeEventListener('click', addHotspot);
+    }
+  }
+
+  function addHotspot(e) {
+    const rect = cont.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const dot = document.createElement('div');
+    dot.className = 'hotspot';
+    dot.style.left = (x - 10) + 'px';
+    dot.style.top = (y - 10) + 'px';
+    cont.appendChild(dot);
+  }
+
+  function clearHotspots() {
+    cont.querySelectorAll('.hotspot').forEach(h => h.remove());
+  }
+
+  let mascotasGlobal = [];
+
+  async function seleccionarClienteDesdeLista() {
+    const valor = document.getElementById("searchPet").value;
+    if (!valor) return;
+    if (mascotasGlobal.length === 0) mascotasGlobal = await window.loadAllClients();
+    const cliente = mascotasGlobal.find(c => c["Nombre de la mascota"] === valor);
+    if (cliente) llenarFormularioCliente(cliente);
+  }
+
+  function llenarFormularioCliente(result) {
+    document.getElementById("ownerName").value  = result["Nombre del propietario"] || "";
+    document.getElementById("ownerPhone").value = result["Número de Teléfono"] || "";
+    document.getElementById("ownerEmail").value = result["Correo"] || "";
+    document.getElementById("petName").value    = result["Nombre de la mascota"] || "";
+    document.getElementById("pet-species").value= result["Especie"] || "";
+    document.getElementById("breed").value      = result["Raza"] || "";
+    document.getElementById("age").value        = result["Edad"] || "";
+    document.getElementById("weight").value     = result["Peso"] || "";
+
+    const est = (result["Esterilizado"] || "").toLowerCase();
+    if (est === "sí" || est === "si") {
+      document.querySelector('input[name="sterilized"][value="si"]').checked = true;
+    } else if (est === "no") {
+      document.querySelector('input[name="sterilized"][value="no"]').checked = true;
+    }
+
+    cargarDiagramaCliente();
+    const btn = document.getElementById("btnGuardarCliente");
+    btn.disabled = true;
+    btn.textContent = "Cliente ya registrado";
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    if (typeof window.loadAllClients === "function") {
+      mascotasGlobal = await window.loadAllClients();
+      const select = document.getElementById("searchPet");
+      mascotasGlobal.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c["Nombre de la mascota"];
+        opt.textContent = c["Nombre de la mascota"];
+        select.appendChild(opt);
+      });
+    }
+  });
+function abrirModalClientes() {
+  fetch("clientes.html")
+    .then(res => res.text())
+    .then(html => {
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      document.body.appendChild(temp);
+    });
+}
+// Función universal para abrir cualquier módulo como modal
+document.addEventListener("click", async function (e) {
+  const link = e.target.closest("a[data-module]");
+  if (!link) return;
+
+  e.preventDefault();
+  const archivo = link.getAttribute("data-module");
+
+  try {
+    const res = await fetch(archivo);
+    const html = await res.text();
+
+    const contenedor = document.createElement("div");
+    contenedor.innerHTML = html;
+    document.body.appendChild(contenedor);
+  } catch (err) {
+    console.error("❌ Error al cargar el módulo:", archivo, err);
+  }
+});
