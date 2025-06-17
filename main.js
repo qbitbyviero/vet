@@ -270,15 +270,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 }
   // 9. Mostrar horarios
- function showTimeSlots(date) {
-  console.log('Mostrando horarios para:', date);
+function showTimeSlots(date) {
+  console.log('🟢 Día clicado:', date);
 
-  UI.card.classList.remove('show-front');
-  UI.card.classList.add('show-back');
+  // 🔄 Reinicia visibilidad para forzar redibujo
+  UI.card.classList.remove('show-front', 'show-back');
 
+  // 🔁 Reaplica visibilidad con delay
   setTimeout(() => {
+    UI.card.classList.add('show-back');
+    UI.slotList.innerHTML = ''; // Limpieza visual
+    UI.reservationForm.style.display = 'none';
     loadTimeSlots(date);
-  }, 100);
+  }, 50); // ese pequeño delay es mágico
 }
   // 10. Cargar horarios
   async function loadTimeSlots(date) {
