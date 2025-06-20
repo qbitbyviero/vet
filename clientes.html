@@ -127,6 +127,22 @@
 </style>
 
 <script>
+ // Al cargar el modal:
+  document.addEventListener("DOMContentLoaded", async () => {
+    await cargarMascotasEnModal("searchPet", "Buscar mascota existente");
+    
+    // Evento para autocompletar formulario al seleccionar mascota
+    document.getElementById("searchPet").addEventListener("change", async function() {
+      if (!this.value) return;
+      
+      const clientes = await loadAllClients();
+      const cliente = clientes.find(c => 
+        c['ID fila'] == this.value || c['ID cliente'] == this.value
+      );
+      
+      if (cliente) llenarFormularioCliente(cliente); // Usa tu función existente
+    });
+  });
   // Al cambiar especie, carga imagen correspondiente
   document.addEventListener('change', e => {
     if (e.target.id === 'pet-species') {
