@@ -561,3 +561,40 @@ document.addEventListener("click", async function (e) {
     console.error("❌ Error al cargar el módulo:", archivo, err);
   }
 });
+// =======================
+// FUNCIÓN REUTILIZABLE PARA MODALES
+// =======================
+async function cargarMascotasEnModal(selectId, placeholder = "Selecciona mascota") {
+  try {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.innerHTML = `<option value="">${placeholder}...</option>`;
+    
+    const clientes = await loadAllClients(); // Usa tu función existente
+    const mascotasUnicas = [];
+    
+    // Evita duplicados y filtra mascotas con nombre
+    clientes.forEach(cliente => {
+      if (cliente['Nombre de la mascota'] && !mascotasUnicas.some(m => m.nombre === cliente['Nombre de la mascota'])) {
+        mascotasUnicas.push({
+          nombre: cliente['Nombre de la mascota'],
+          propietario: cliente['Nombre del propietario'],
+          id: cliente['ID fila'] || cliente['ID cliente']
+        });
+      }
+    });
+
+    // Llena el select
+    mascotasUnicas.forEach(m => {
+      const option = document.createElement('option');
+      option.value = m.id;
+      option.textContent = `${m.nombre} (${m.propietario})`;
+      select.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error("Error cargando mascotas para modal:", error);
+    select.innerHTML = `<option value="">Error al cargar</option>`;
+  }
+}
