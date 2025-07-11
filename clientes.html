@@ -1,4 +1,4 @@
-<!-- clientes.html completamente corregido y funcional -->
+<!-- clientes.html FINAL, listo para sustituir -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
@@ -70,8 +70,8 @@
         <div class="form-group">
           <label>¿Está esterilizado?</label>
           <div class="radio-group">
-            <label><input type="radio" name="sterilized" value="si" /> Sí</label>
-            <label><input type="radio" name="sterilized" value="no" /> No</label>
+            <label for="sterilized-si"><input type="radio" id="sterilized-si" name="sterilized" value="si" /> Sí</label>
+            <label for="sterilized-no"><input type="radio" id="sterilized-no" name="sterilized" value="no" /> No</label>
           </div>
         </div>
       </div>
@@ -117,94 +117,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-  const especiesRazas = {
-    perro: ['Criollo', 'Bulldog', 'Chihuahua', 'Pastor Alemán', 'Labrador', 'Pug', 'Golden Retriever', 'Beagle', 'Pitbull', 'Otro'],
-    gato: ['Criollo', 'Persa', 'Siamés', 'Maine Coon', 'Bengala', 'Azul Ruso', 'Sphynx', 'Británico', 'Scottish Fold', 'Otro'],
-    ave: ['Canario', 'Periquito', 'Cotorra', 'Loro', 'Agapornis', 'Guacamayo', 'Calopsita', 'Otro'],
-    tortuga: ['Orejas Rojas', 'Caja', 'Leopardo', 'Sulcata', 'Rusa', 'De Tierra', 'De Agua', 'Otro'],
-    serpiente: ['Pitón Bola', 'Boa', 'Maíz', 'Rey', 'De Leche', 'Otro'],
-    lagarto: ['Iguana', 'Gecko', 'Dragón Barbudo', 'Otro'],
-    pez: ['Betta', 'Goldfish', 'Guppy', 'Platy', 'Otro'],
-    roedor: ['Hámster', 'Cuy', 'Ratón', 'Rata', 'Conejo', 'Otro']
-  };
-
-  const clientes = await window.loadAllClients();
-  const searchPet = document.getElementById("searchPet");
-  const especieSelect = document.getElementById("pet-species");
-  const razaSelect = document.getElementById("breed");
-  const razaInput = document.getElementById("breed-other");
-
-  clientes.forEach(cliente => {
-    if (cliente["Nombre de la mascota"]) {
-      const opt = document.createElement("option");
-      opt.value = cliente["ID fila"] || cliente["ID cliente"] || cliente["Nombre de la mascota"];
-      opt.textContent = `${cliente["Nombre de la mascota"]} (${cliente["Nombre del propietario"]})`;
-      searchPet.appendChild(opt);
-    }
-  });
-
-  searchPet.addEventListener("change", () => {
-    const selected = clientes.find(c => c["ID fila"] == searchPet.value || c["ID cliente"] == searchPet.value);
-    if (!selected) return;
-
-    document.getElementById("ownerName").value = selected["Nombre del propietario"] || "";
-    document.getElementById("ownerPhone").value = selected["Número de Teléfono"] || "";
-    document.getElementById("ownerEmail").value = selected["Correo"] || "";
-    document.getElementById("petName").value = selected["Nombre de la mascota"] || "";
-    especieSelect.value = selected["Especie"] || "";
-    document.getElementById("age").value = selected["Edad"] || "";
-    document.getElementById("weight").value = selected["Peso"] || "";
-    document.getElementById("observations").value = selected["Observaciones"] || "";
-
-    const est = (selected["Esterilizado"] || "").toLowerCase();
-    document.querySelector(`input[name="sterilized"][value="${(est === 'sí' || est === 'si') ? 'si' : 'no'}"]`).checked = true;
-
-    actualizarRazas(selected["Especie"] || "");
-    razaSelect.value = selected["Raza"] || "";
-    cargarDiagramaCliente();
-  });
-
-  especieSelect.addEventListener("change", function() {
-    actualizarRazas(this.value);
-    cargarDiagramaCliente();
-  });
-
-  function actualizarRazas(especie) {
-    razaSelect.innerHTML = '<option value="">-- Selecciona --</option>';
-    if (!especie || !especiesRazas[especie]) return;
-    especiesRazas[especie].forEach(r => {
-      const opt = document.createElement("option");
-      opt.value = r;
-      opt.textContent = r;
-      razaSelect.appendChild(opt);
-    });
-  }
-
-  razaSelect.addEventListener("change", () => {
-    if (razaSelect.value === "Otro") {
-      razaInput.style.display = "block";
-    } else {
-      razaInput.style.display = "none";
-    }
-  });
-
-  function cargarDiagramaCliente() {
-    const especie = especieSelect.value;
-    const mapaImagen = {
-      perro: 'svg/perro.png',
-      gato: 'svg/felino.svg',
-      ave: 'svg/ave.png',
-      tortuga: 'svg/tortuga.svg',
-      serpiente: 'svg/serpiente.svg',
-      lagarto: 'svg/lagarto.png',
-      pez: 'svg/pez.svg',
-      roedor: 'svg/roedor.svg'
-    };
-    document.getElementById("diagrama-img").src = mapaImagen[especie] || 'svg/placeholder.png';
-  }
-});
-document.addEventListener("DOMContentLoaded", () => {
-  busquedaClientes({
+  await busquedaClientes({
     selectId: "searchPet",
     formId: "form-clientes",
     especieId: "pet-species",
@@ -218,6 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
       "Peso": "weight",
       "Observaciones": "observations"
     }
+  });
+
+  document.getElementById('pet-species').addEventListener('change', () => {
+    if (typeof cargarDiagramaCliente === 'function') cargarDiagramaCliente();
   });
 });
 </script>
