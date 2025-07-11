@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return [];
     }
   }
-
+window.loadAllClients = loadAllClients;
   async function loadAllCitas() {
     if (__allCitasCache) return __allCitasCache;
     try {
