@@ -1,106 +1,90 @@
-<!-- clientes.html CORREGIDO Y FUNCIONAL -->
+<!-- clientes.html corregido y funcional -->
+<div class="modal-clientes">
+  <button class="button-close-modal">Cerrar</button>
+  <h2>Registro de Cliente 🐾</h2>
 
-<div class="modal-clientes-overlay" id="modal-clientes-overlay">
-  <div class="modal-clientes" onclick="event.stopPropagation()">
-    <button class="button-close-modal" id="btnCerrarModalClientes">Cerrar</button>
-    <h2>Registro de Cliente 🐾</h2>
-
-    <!-- Campo de búsqueda tipo dropdown -->
-    <div style="margin-bottom: 1em;">
-      <label for="searchPet">Selecciona mascota registrada:</label>
-      <select id="searchPet">
-        <option value="">-- Buscar mascota existente --</option>
-      </select>
-    </div>
-
-    <form id="form-clientes">
-      <!-- Datos del Propietario -->
-      <fieldset>
-        <legend>Datos del Propietario</legend>
-        <div class="grid-two-cols">
-          <div class="form-group">
-            <label for="ownerName">Nombre Completo:</label>
-            <input type="text" id="ownerName" name="ownerName" required />
-          </div>
-          <div class="form-group">
-            <label for="ownerPhone">Teléfono:</label>
-            <input type="tel" id="ownerPhone" name="ownerPhone" required />
-          </div>
-          <div class="form-group">
-            <label for="ownerEmail">Correo Electrónico:</label>
-            <input type="email" id="ownerEmail" name="ownerEmail" required />
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- Datos de la Mascota -->
-      <fieldset>
-        <legend>Datos de la Mascota</legend>
-        <div class="grid-two-cols">
-          <div class="form-group">
-            <label for="petName">Nombre Mascota:</label>
-            <input type="text" id="petName" name="petName" required />
-          </div>
-          <div class="form-group">
-            <label for="pet-species">Especie:</label>
-            <select id="pet-species" name="species" required>
-              <option value="">-- Selecciona --</option>
-              <option value="perro">Perro</option>
-              <option value="gato">Felino</option>
-              <option value="ave">Ave</option>
-              <option value="tortuga">Tortuga</option>
-              <option value="serpiente">Serpiente</option>
-              <option value="lagarto">Lagarto</option>
-              <option value="pez">Pez</option>
-              <option value="roedor">Roedor</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="breed">Raza:</label>
-            <input type="text" id="breed" name="breed" />
-          </div>
-          <div class="form-group">
-            <label for="age">Edad (años):</label>
-            <input type="number" id="age" name="age" min="0" step="1" />
-          </div>
-          <div class="form-group">
-            <label for="weight">Peso (kg):</label>
-            <input type="number" id="weight" name="weight" min="0" step="0.1" />
-          </div>
-          <div class="form-group">
-            <label>¿Está esterilizado?</label>
-            <div class="radio-group">
-              <label><input type="radio" name="sterilized" value="si" /> Sí</label>
-              <label><input type="radio" name="sterilized" value="no" /> No</label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Diagrama Corporal con hotspots -->
-        <div id="cliente-diagrama" class="diagrama-container">
-          <img id="diagrama-img" src="img/placeholder.png" alt="Diagrama mascota" />
-        </div>
-      </fieldset>
-
-      <button type="submit" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
-    </form>
+  <!-- Campo de búsqueda tipo dropdown -->
+  <div style="margin-bottom: 1em;">
+    <label for="searchPet">Selecciona mascota registrada:</label>
+    <select id="searchPet">
+      <option value="">-- Buscar mascota existente --</option>
+    </select>
   </div>
+
+  <form id="form-clientes">
+    <!-- Datos del Propietario -->
+    <fieldset>
+      <legend>Datos del Propietario</legend>
+      <div class="grid-two-cols">
+        <div class="form-group">
+          <label for="ownerName">Nombre Completo:</label>
+          <input type="text" id="ownerName" name="ownerName" required />
+        </div>
+        <div class="form-group">
+          <label for="ownerPhone">Teléfono:</label>
+          <input type="tel" id="ownerPhone" name="ownerPhone" required />
+        </div>
+        <div class="form-group">
+          <label for="ownerEmail">Correo Electrónico:</label>
+          <input type="email" id="ownerEmail" name="ownerEmail" required />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Datos de la Mascota -->
+    <fieldset>
+      <legend>Datos de la Mascota</legend>
+      <div class="grid-two-cols">
+        <div class="form-group">
+          <label for="petName">Nombre Mascota:</label>
+          <input type="text" id="petName" name="petName" required />
+        </div>
+        <div class="form-group">
+          <label for="pet-species">Especie:</label>
+          <select id="pet-species" name="species" required>
+            <option value="">-- Selecciona --</option>
+            <option value="perro">Perro</option>
+            <option value="gato">Felino</option>
+            <option value="ave">Ave</option>
+            <option value="tortuga">Tortuga</option>
+            <option value="serpiente">Serpiente</option>
+            <option value="lagarto">Lagarto</option>
+            <option value="pez">Pez</option>
+            <option value="roedor">Roedor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="breed">Raza:</label>
+          <input type="text" id="breed" name="breed" />
+        </div>
+        <div class="form-group">
+          <label for="age">Edad (años):</label>
+          <input type="number" id="age" name="age" min="0" step="1" />
+        </div>
+        <div class="form-group">
+          <label for="weight">Peso (kg):</label>
+          <input type="number" id="weight" name="weight" min="0" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>¿Está esterilizado?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="sterilized" value="si" /> Sí</label>
+            <label><input type="radio" name="sterilized" value="no" /> No</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagrama Corporal con hotspots -->
+      <div id="cliente-diagrama" class="diagrama-container">
+        <img id="diagrama-img" src="img/placeholder.png" alt="Diagrama mascota" />
+      </div>
+    </fieldset>
+
+    <button type="submit" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
+  </form>
 </div>
 
 <style>
-.modal-clientes-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-
 .modal-clientes {
   background: white;
   padding: 1em;
@@ -111,7 +95,6 @@
   overflow-y: auto;
   max-height: 95vh;
 }
-
 .button-close-modal {
   position: absolute;
   top: 0.5em;
@@ -126,11 +109,9 @@
   z-index: 10;
   transition: background 0.3s ease;
 }
-
 .button-close-modal:hover {
   background: #c62828;
 }
-
 .diagrama-container img {
   max-width: 100%;
   margin-top: 1em;
@@ -146,23 +127,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("searchPet").addEventListener("change", async function() {
     if (!this.value) return;
     const clientes = await loadAllClients();
-    const cliente = clientes.find(c => c["ID fila"] == this.value || c["ID cliente"] == this.value);
+    const cliente = clientes.find(c => c['ID fila'] == this.value || c['ID cliente'] == this.value);
     if (cliente) llenarFormularioCliente(cliente);
   });
 
-  document.getElementById("pet-species").addEventListener("change", e => {
+  document.getElementById('pet-species').addEventListener('change', e => {
     const especie = e.target.value;
-    const diagrama = document.getElementById("diagrama-img");
+    const diagrama = document.getElementById('diagrama-img');
     if (diagrama && especie) {
       diagrama.src = `img/${especie}.png`;
       diagrama.alt = `Diagrama de ${especie}`;
     }
   });
-
-  document.getElementById("btnCerrarModalClientes").addEventListener("click", cerrarModalClientes);
 });
-
-function cerrarModalClientes() {
-  document.getElementById("modal-clientes-overlay").remove();
-}
 </script>
