@@ -1,7 +1,8 @@
-<!-- clientes.html corregido y funcional -->
-<div class="modal-clientes-overlay" onclick="cerrarModalClientes(event)">
+<!-- clientes.html CORREGIDO Y FUNCIONAL -->
+
+<div class="modal-clientes-overlay" id="modal-clientes-overlay">
   <div class="modal-clientes" onclick="event.stopPropagation()">
-    <button class="button-close-modal" onclick="cerrarModalClientes()">Cerrar</button>
+    <button class="button-close-modal" id="btnCerrarModalClientes">Cerrar</button>
     <h2>Registro de Cliente 🐾</h2>
 
     <!-- Campo de búsqueda tipo dropdown -->
@@ -87,44 +88,31 @@
 </div>
 
 <style>
-  .modal-clientes-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  .modal-clientes {
-    background: white;
-    padding: 1em;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 900px;
-    position: relative;
-    overflow-y: auto;
-    max-height: 95vh;
-  }
-  .cerrar-modal {
-    position: absolute;
-    top: 0.4em;
-    right: 0.6em;
-    border: none;
-    background: none;
-    font-size: 1.5em;
-    cursor: pointer;
-  }
-  .diagrama-container img {
-    max-width: 100%;
-    margin-top: 1em;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-  .button-close-modal {
+.modal-clientes-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-clientes {
+  background: white;
+  padding: 1em;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  position: relative;
+  overflow-y: auto;
+  max-height: 95vh;
+}
+
+.button-close-modal {
   position: absolute;
   top: 0.5em;
   right: 0.5em;
@@ -143,41 +131,38 @@
   background: #c62828;
 }
 
+.diagrama-container img {
+  max-width: 100%;
+  margin-top: 1em;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
 </style>
 
 <script>
- // Al cargar el modal:
-  document.addEventListener("DOMContentLoaded", async () => {
-    await cargarMascotasEnModal("searchPet", "Buscar mascota existente");
-    
-    // Evento para autocompletar formulario al seleccionar mascota
-    document.getElementById("searchPet").addEventListener("change", async function() {
-      if (!this.value) return;
-      
-      const clientes = await loadAllClients();
-      const cliente = clientes.find(c => 
-        c['ID fila'] == this.value || c['ID cliente'] == this.value
-      );
-      
-      if (cliente) llenarFormularioCliente(cliente); // Usa tu función existente
-    });
+document.addEventListener("DOMContentLoaded", async () => {
+  await cargarMascotasEnModal("searchPet", "Buscar mascota existente");
+
+  document.getElementById("searchPet").addEventListener("change", async function() {
+    if (!this.value) return;
+    const clientes = await loadAllClients();
+    const cliente = clientes.find(c => c["ID fila"] == this.value || c["ID cliente"] == this.value);
+    if (cliente) llenarFormularioCliente(cliente);
   });
-  // Al cambiar especie, carga imagen correspondiente
-  document.addEventListener('change', e => {
-    if (e.target.id === 'pet-species') {
-      const especie = e.target.value;
-      const diagrama = document.getElementById('diagrama-img');
-      if (diagrama && especie) {
-        diagrama.src = `img/${especie}.png`;
-        diagrama.alt = `Diagrama de ${especie}`;
-      }
+
+  document.getElementById("pet-species").addEventListener("change", e => {
+    const especie = e.target.value;
+    const diagrama = document.getElementById("diagrama-img");
+    if (diagrama && especie) {
+      diagrama.src = `img/${especie}.png`;
+      diagrama.alt = `Diagrama de ${especie}`;
     }
   });
 
- function cerrarModalClientes(event) {
-  if (!event || event.target.classList.contains('modal-clientes-overlay')) {
-    document.querySelector('.modal-clientes-overlay').remove();
-  }
-}
+  document.getElementById("btnCerrarModalClientes").addEventListener("click", cerrarModalClientes);
+});
 
+function cerrarModalClientes() {
+  document.getElementById("modal-clientes-overlay").remove();
+}
 </script>
