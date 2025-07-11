@@ -1,4 +1,5 @@
-<!-- clientes.html FINAL, listo para sustituir -->
+<!-- clientes.html corregido y funcional -->
+
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
@@ -70,8 +71,12 @@
         <div class="form-group">
           <label>¿Está esterilizado?</label>
           <div class="radio-group">
-            <label for="sterilized-si"><input type="radio" id="sterilized-si" name="sterilized" value="si" /> Sí</label>
-            <label for="sterilized-no"><input type="radio" id="sterilized-no" name="sterilized" value="no" /> No</label>
+            <label for="sterilized-si">
+              <input type="radio" id="sterilized-si" name="sterilized" value="si" /> Sí
+            </label>
+            <label for="sterilized-no">
+              <input type="radio" id="sterilized-no" name="sterilized" value="no" /> No
+            </label>
           </div>
         </div>
       </div>
@@ -133,8 +138,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  document.getElementById('pet-species').addEventListener('change', () => {
-    if (typeof cargarDiagramaCliente === 'function') cargarDiagramaCliente();
+  // Manejamos mostrar/ocultar input de otra raza
+  const razaSelect = document.getElementById("breed");
+  const razaOther = document.getElementById("breed-other");
+  razaSelect.addEventListener("change", () => {
+    if (razaSelect.value === "Otro") {
+      razaOther.style.display = "block";
+    } else {
+      razaOther.style.display = "none";
+    }
+  });
+
+  // Cargar diagrama según especie seleccionada
+  document.getElementById("pet-species").addEventListener("change", () => {
+    const especie = document.getElementById("pet-species").value;
+    const mapaImagen = {
+      perro: 'svg/perro.png',
+      gato: 'svg/felino.svg',
+      ave: 'svg/ave.png',
+      tortuga: 'svg/tortuga.svg',
+      serpiente: 'svg/serpiente.svg',
+      lagarto: 'svg/lagarto.png',
+      pez: 'svg/pez.svg',
+      roedor: 'svg/roedor.svg'
+    };
+    document.getElementById("diagrama-img").src = mapaImagen[especie] || 'svg/placeholder.png';
   });
 });
 </script>
