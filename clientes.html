@@ -16,15 +16,15 @@
       <legend>Datos del Propietario</legend>
       <div class="grid-two-cols">
         <div class="form-group">
-          <label for="ownerName">Nombre Completo:</label>
+          <label for="ownerName">Nombre del propietario:</label>
           <input type="text" id="ownerName" name="ownerName" required />
         </div>
         <div class="form-group">
-          <label for="ownerPhone">Teléfono:</label>
+          <label for="ownerPhone">Número de Teléfono:</label>
           <input type="tel" id="ownerPhone" name="ownerPhone" required />
         </div>
         <div class="form-group">
-          <label for="ownerEmail">Correo Electrónico:</label>
+          <label for="ownerEmail">Correo:</label>
           <input type="email" id="ownerEmail" name="ownerEmail" required />
         </div>
       </div>
@@ -35,34 +35,37 @@
       <legend>Datos de la Mascota</legend>
       <div class="grid-two-cols">
         <div class="form-group">
-          <label for="petName">Nombre Mascota:</label>
+          <label for="petName">Nombre de la mascota:</label>
           <input type="text" id="petName" name="petName" required />
         </div>
         <div class="form-group">
           <label for="pet-species">Especie:</label>
           <select id="pet-species" name="species" required>
             <option value="">-- Selecciona --</option>
-            <option value="perro">Perro</option>
-            <option value="gato">Felino</option>
+            <option value="canino">Canino</option>
+            <option value="felino">Felino</option>
             <option value="ave">Ave</option>
-            <option value="tortuga">Tortuga</option>
-            <option value="serpiente">Serpiente</option>
-            <option value="lagarto">Lagarto</option>
+            <option value="reptil">Reptil</option>
             <option value="pez">Pez</option>
             <option value="roedor">Roedor</option>
+            <option value="anfibio">Anfibio</option>
+            <option value="otro">Otro</option>
           </select>
         </div>
         <div class="form-group">
           <label for="breed">Raza:</label>
-          <input type="text" id="breed" name="breed" />
+          <select id="breed" name="breed" required>
+            <option value="">-- Selecciona especie primero --</option>
+          </select>
+          <input type="text" id="breed-other" placeholder="Especificar otra raza" style="display:none; margin-top:5px;" />
         </div>
         <div class="form-group">
-          <label for="age">Edad (años):</label>
-          <input type="number" id="age" name="age" min="0" step="1" />
+          <label for="age">Edad (años.decimales):</label>
+          <input type="number" id="age" name="age" step="0.1" min="0" />
         </div>
         <div class="form-group">
-          <label for="weight">Peso (kg):</label>
-          <input type="number" id="weight" name="weight" min="0" step="0.1" />
+          <label for="weight">Peso (kg.decimales):</label>
+          <input type="number" id="weight" name="weight" step="0.01" min="0" />
         </div>
         <div class="form-group">
           <label>¿Está esterilizado?</label>
@@ -71,6 +74,12 @@
             <label><input type="radio" name="sterilized" value="no" /> No</label>
           </div>
         </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-group">
+        <label for="observations">Observaciones:</label>
+        <textarea id="observations" name="observations" rows="2"></textarea>
       </div>
 
       <!-- Diagrama Corporal con hotspots -->
@@ -107,6 +116,16 @@
 </style>
 
 <script>
+const especiesRazas = {
+  canino: ["Criollo", "Bulldog", "Chihuahua", "Labrador", "Pastor Alemán", "Poodle", "Beagle", "Golden Retriever", "Dóberman", "Otro"],
+  felino: ["Criollo", "Siames", "Persa", "Maine Coon", "Bengala", "Esfinge", "Ragdoll", "British Shorthair", "Angora", "Otro"],
+  ave: ["Criollo", "Periquito", "Canario", "Cotorra", "Loro", "Agapornis", "Cockatiel", "Guacamaya", "Pinzón", "Otro"],
+  reptil: ["Criollo", "Iguana", "Gecko", "Camaleón", "Serpiente de maíz", "Tortuga de tierra", "Tortuga de agua", "Boa", "Anolis", "Otro"],
+  pez: ["Criollo", "Goldfish", "Betta", "Guppy", "Molly", "Platy", "Tetra", "Disco", "Cíclido", "Otro"],
+  roedor: ["Criollo", "Hámster", "Ratón", "Rata", "Cobaya", "Chinchilla", "Degú", "Ardilla", "Jerbo", "Otro"],
+  anfibio: ["Criollo", "Rana Pacman", "Axolote", "Salamandra", "Rana arborícola", "Tritón", "Sapo", "Rana toro", "Rana venenosa", "Otro"]
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarMascotasEnModal("searchPet", "Buscar mascota existente");
 
@@ -117,13 +136,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (cliente) llenarFormularioCliente(cliente);
   });
 
-  document.getElementById('pet-species').addEventListener('change', e => {
-    const especie = e.target.value;
-    const diagrama = document.getElementById('diagrama-img');
-    if (diagrama && especie) {
-      diagrama.src = `img/${especie}.png`;
-      diagrama.alt = `Diagrama de ${especie}`;
+  document.getElementById('pet-species').addEventListener('change', function () {
+    const especie = this.value;
+    const razaSelect = document.getElementById('breed');
+    const razaOther = document.getElementById('breed-other');
+    razaSelect.innerHTML = "";
+
+    if (especiesRazas[especie]) {
+      especiesRazas[especie].forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r;
+        opt.textContent = r;
+        razaSelect.appendChild(opt);
+      });
+    } else {
+      razaSelect.innerHTML = `<option value="">-- Selecciona especie primero --</option>`;
     }
+
+    razaSelect.addEventListener('change', () => {
+      if (razaSelect.value === "Otro") {
+        razaOther.style.display = "block";
+      } else {
+        razaOther.style.display = "none";
+      }
+    });
   });
+
+  document.getElementById('pet-species').dispatchEvent(new Event('change'));
 });
 </script>
