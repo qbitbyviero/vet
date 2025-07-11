@@ -615,11 +615,22 @@ document.querySelectorAll('a[data-module]').forEach(link => {
         }
       });
 
-      // Insertar contenido cargado y botón en el modal
+      // Insertar contenido cargado en el modal
       modalContent.innerHTML = html;
-      modalContent.appendChild(closeButton);
 
-      // Insertar modal en el overlay
+      // 🩶 Cargar clientes.js dinámicamente si es clientes.html
+      if (archivo.includes("clientes.html")) {
+        console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
+        try {
+          await import('./clientes.js');
+          console.log("✅ clientes.js cargado correctamente en modal clientes.");
+        } catch (error) {
+          console.error("❌ Error cargando clientes.js dinámicamente:", error);
+        }
+      }
+
+      // Insertar botón de cierre y modal en el overlay
+      modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
 
       // Insertar overlay en el body
