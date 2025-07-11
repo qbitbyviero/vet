@@ -42,14 +42,14 @@
           <label for="pet-species">Especie:</label>
           <select id="pet-species" name="species" required>
             <option value="">-- Selecciona --</option>
-            <option value="canino">Canino</option>
-            <option value="felino">Felino</option>
+            <option value="perro">Perro</option>
+            <option value="gato">Gato</option>
             <option value="ave">Ave</option>
-            <option value="reptil">Reptil</option>
+            <option value="tortuga">Tortuga</option>
+            <option value="serpiente">Serpiente</option>
+            <option value="lagarto">Lagarto</option>
             <option value="pez">Pez</option>
             <option value="roedor">Roedor</option>
-            <option value="anfibio">Anfibio</option>
-            <option value="otro">Otro</option>
           </select>
         </div>
         <div class="form-group">
@@ -57,7 +57,6 @@
           <select id="breed" name="breed" required>
             <option value="">-- Selecciona especie primero --</option>
           </select>
-          <input type="text" id="breed-other" placeholder="Especificar otra raza" style="display:none; margin-top:5px;" />
         </div>
         <div class="form-group">
           <label for="age">Edad (años.decimales):</label>
@@ -116,7 +115,7 @@
 </style>
 
 <script>
-// ✅ IMPLEMENTACIÓN DIRECTA DE busquedaClientes EN ESTE MODAL
+// ✅ IMPLEMENTACIÓN FUNCIONAL DE busquedaClientes CON RAZAS
 document.addEventListener("DOMContentLoaded", async () => {
   await busquedaClientes({
     selectId: "searchPet",
