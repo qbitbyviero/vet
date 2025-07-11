@@ -116,52 +116,23 @@
 </style>
 
 <script>
-const especiesRazas = {
-  canino: ["Criollo", "Bulldog", "Chihuahua", "Labrador", "Pastor Alemán", "Poodle", "Beagle", "Golden Retriever", "Dóberman", "Otro"],
-  felino: ["Criollo", "Siames", "Persa", "Maine Coon", "Bengala", "Esfinge", "Ragdoll", "British Shorthair", "Angora", "Otro"],
-  ave: ["Criollo", "Periquito", "Canario", "Cotorra", "Loro", "Agapornis", "Cockatiel", "Guacamaya", "Pinzón", "Otro"],
-  reptil: ["Criollo", "Iguana", "Gecko", "Camaleón", "Serpiente de maíz", "Tortuga de tierra", "Tortuga de agua", "Boa", "Anolis", "Otro"],
-  pez: ["Criollo", "Goldfish", "Betta", "Guppy", "Molly", "Platy", "Tetra", "Disco", "Cíclido", "Otro"],
-  roedor: ["Criollo", "Hámster", "Ratón", "Rata", "Cobaya", "Chinchilla", "Degú", "Ardilla", "Jerbo", "Otro"],
-  anfibio: ["Criollo", "Rana Pacman", "Axolote", "Salamandra", "Rana arborícola", "Tritón", "Sapo", "Rana toro", "Rana venenosa", "Otro"]
-};
-
+// ✅ IMPLEMENTACIÓN DIRECTA DE busquedaClientes EN ESTE MODAL
 document.addEventListener("DOMContentLoaded", async () => {
-  await cargarMascotasEnModal("searchPet", "Buscar mascota existente");
-
-  document.getElementById("searchPet").addEventListener("change", async function() {
-    if (!this.value) return;
-    const clientes = await loadAllClients();
-    const cliente = clientes.find(c => c['ID fila'] == this.value || c['ID cliente'] == this.value);
-    if (cliente) llenarFormularioCliente(cliente);
-  });
-
-  document.getElementById('pet-species').addEventListener('change', function () {
-    const especie = this.value;
-    const razaSelect = document.getElementById('breed');
-    const razaOther = document.getElementById('breed-other');
-    razaSelect.innerHTML = "";
-
-    if (especiesRazas[especie]) {
-      especiesRazas[especie].forEach(r => {
-        const opt = document.createElement('option');
-        opt.value = r;
-        opt.textContent = r;
-        razaSelect.appendChild(opt);
-      });
-    } else {
-      razaSelect.innerHTML = `<option value="">-- Selecciona especie primero --</option>`;
+  await busquedaClientes({
+    selectId: "searchPet",
+    formId: "form-clientes",
+    especieId: "pet-species",
+    razaId: "breed",
+    esterilizadoName: "sterilized",
+    campos: {
+      "Nombre del propietario": "ownerName",
+      "Número de Teléfono": "ownerPhone",
+      "Correo": "ownerEmail",
+      "Nombre de la mascota": "petName",
+      "Edad": "age",
+      "Peso": "weight",
+      "Observaciones": "observations"
     }
-
-    razaSelect.addEventListener('change', () => {
-      if (razaSelect.value === "Otro") {
-        razaOther.style.display = "block";
-      } else {
-        razaOther.style.display = "none";
-      }
-    });
   });
-
-  document.getElementById('pet-species').dispatchEvent(new Event('change'));
 });
 </script>
