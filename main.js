@@ -622,18 +622,25 @@ modalContent.innerHTML = html;
 // 🩶 Cargar clientes.js dinámicamente si es clientes.html
 if (archivo.includes("clientes.html")) {
     console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
-    try {
-        // ✅ Esperar parseo completo del DOM
-        await new Promise(requestAnimationFrame);
 
-        await import('./clientes.js');
-        console.log("✅ clientes.js cargado correctamente en modal clientes.");
+    try {
+        // ✅ Crear el script dinámico
+        const script = document.createElement('script');
+        script.src = './clientes.js';
+        script.type = 'module'; // si clientes.js usa módulos
+        script.onload = () => {
+            console.log("✅ clientes.js cargado correctamente en modal clientes.");
+        };
+        script.onerror = (err) => {
+            console.error("❌ Error cargando clientes.js dinámicamente:", err);
+        };
+
+        // ✅ Insertar el script después de agregar el contenido
+        modalContent.appendChild(script);
     } catch (error) {
-        console.error("❌ Error cargando clientes.js dinámicamente:", error);
+        console.error(`❌ Error insertando script clientes.js dinámico:`, error);
     }
 }
-
-
       // Insertar botón de cierre y modal en el overlay
       modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
