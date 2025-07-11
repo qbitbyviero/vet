@@ -686,11 +686,19 @@ async function busquedaClientes(config) {
         const el = document.getElementById(id);
         if (el) el.value = cliente[key] || '';
       }
-      especieSelect.value = cliente["Especie"] || '';
-      actualizarRazas(cliente["Especie"] || '');
-      razaSelect.value = cliente["Raza"] || '';
-      document.querySelector(`input[name="${config.esterilizadoName}"][value="${(cliente["Esterilizado"] || "").toLowerCase()}"]`)?.checked = true;
-      habilitarCampos(false);
+    especieSelect.value = cliente["Especie"] || '';
+actualizarRazas(cliente["Especie"] || '');
+razaSelect.value = cliente["Raza"] || '';
+
+const esterilizadoValor = (cliente["Esterilizado"] || "").toLowerCase();
+if (esterilizadoValor === "si" || esterilizadoValor === "sí") {
+  document.querySelector('input[name="sterilized"][value="si"]').checked = true;
+} else if (esterilizadoValor === "no") {
+  document.querySelector('input[name="sterilized"][value="no"]').checked = true;
+}
+
+habilitarCampos(false);
+
     }
   });
 
@@ -707,19 +715,22 @@ async function busquedaClientes(config) {
       opt.textContent = r;
       razaSelect.appendChild(opt);
     });
-    razaSelect.addEventListener("change", () => {
-      if (razaSelect.value === 'Otro') {
-        if (!document.getElementById('otraRazaInput')) {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.id = "otraRazaInput";
-          input.placeholder = "Especificar otra raza";
-          razaSelect.parentElement.appendChild(input);
-        }
-      } else {
-        document.getElementById('otraRazaInput')?.remove();
-      }
-    });
+    razaSelect.removeEventListener("change", handleRazaChange);
+razaSelect.addEventListener("change", handleRazaChange);
+
+function handleRazaChange() {
+  if (razaSelect.value === 'Otro') {
+    if (!document.getElementById('otraRazaInput')) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = "otraRazaInput";
+      input.placeholder = "Especificar otra raza";
+      razaSelect.parentElement.appendChild(input);
+    }
+  } else {
+    document.getElementById('otraRazaInput')?.remove();
+  }
+}
   }
 
   function habilitarCampos(enable) {
