@@ -1,5 +1,5 @@
 // ==============================
-// clientes.js actualizado para guardar cliente nuevo o actualizar existente
+// clientes.js FINAL, funcional y depurado
 // ==============================
 
 console.log("🚦 clientes.js cargado correctamente.");
@@ -18,9 +18,9 @@ console.log("🚦 clientes.js cargado correctamente.");
   const razaOther = document.getElementById("breed-other");
   const diagramaImg = document.getElementById("diagrama-img");
   const searchPet = document.getElementById("searchPet");
-  const btnGuardar = document.querySelector(".button-86");
+  const form = document.getElementById("form-clientes");
 
-  console.log("📌 Elementos encontrados:", { especieSelect, razaSelect, razaOther, diagramaImg, searchPet, btnGuardar });
+  console.log("📌 Elementos encontrados:", { especieSelect, razaSelect, razaOther, diagramaImg, searchPet, form });
 
   const especiesRazas = {
     perro: ["Criollo", "Bulldog", "Chihuahua", "Pastor Alemán", "Labrador", "Pug", "Otro"],
@@ -52,7 +52,7 @@ console.log("🚦 clientes.js cargado correctamente.");
     console.log("✅ Clientes recibidos:", clientes);
 
     searchPet.innerHTML = `<option value="">-- Buscar mascota existente --</option>`;
-    clientes.forEach((c, idx) => {
+    clientes.forEach((c) => {
       if (c["Nombre de la mascota"]) {
         const opt = document.createElement("option");
         opt.value = c["Nombre de la mascota"];
@@ -108,7 +108,7 @@ console.log("🚦 clientes.js cargado correctamente.");
     razaOther.style.display = razaSelect.value === "Otro" ? "block" : "none";
   });
 
-  btnGuardar.addEventListener("click", async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     console.log("💾 Guardando cliente...");
 
@@ -125,20 +125,27 @@ console.log("🚦 clientes.js cargado correctamente.");
       "Observaciones": document.getElementById("observations").value.trim()
     };
 
-    const isNew = !searchPet.value; // si no hay mascota seleccionada es nuevo
+    if (!data["Nombre del propietario"] || !data["Número de Teléfono"] || !data["Correo"] || !data["Nombre de la mascota"] || !data["Especie"] || !data["Raza"]) {
+      alert("Por favor llena todos los campos obligatorios antes de guardar.");
+      return;
+    }
+
+    const clienteExistente = searchPet.value.trim();
     const params = new URLSearchParams();
     params.append("sheet", "Clientes");
 
-    if (isNew) {
-      params.append("nuevo", "true");
-    } else {
-      const cliente = clientes.find(c => c["Nombre de la mascota"] === searchPet.value);
+    if (clienteExistente) {
+      const cliente = clientes.find(c => c["Nombre de la mascota"] === clienteExistente);
       if (!cliente) {
         alert("⚠️ Cliente no encontrado, intente de nuevo.");
         return;
       }
-      params.append("update", "true");
-      params.append("id", cliente["ID fila"] || cliente["ID cliente"]);
+      params.append("actualizar", "true");
+      params.append("Nombre de la mascota clave", clienteExistente);
+      console.log("🔄 Actualizando cliente existente:", clienteExistente);
+    } else {
+      params.append("nuevo", "true");
+      console.log("➕ Creando nuevo cliente:", data["Nombre de la mascota"]);
     }
 
     Object.entries(data).forEach(([key, val]) => params.append(key, val));
@@ -147,14 +154,18 @@ console.log("🚦 clientes.js cargado correctamente.");
       const url = `${GAS_BASE_URL}?${params.toString()}`;
       console.log("📡 Enviando datos a GAS:", url);
 
-      await jsonpRequest(url);
+      const result = await jsonpRequest(url);
+      console.log("✅ Respuesta del GAS:", result);
 
-      alert(`✅ Cliente ${isNew ? "guardado" : "actualizado"} exitosamente.`);
-      await cargarClientes();
-
+      if (result.success) {
+        alert(`✅ Cliente ${clienteExistente ? "actualizado" : "guardado"} correctamente.`);
+        await cargarClientes();
+      } else {
+        alert("❌ Error al guardar cliente: " + (result.error || "Sin detalle"));
+      }
     } catch (error) {
-      console.error("❌ Error al guardar cliente:", error);
-      alert("Error al guardar cliente, revisa la consola.");
+      console.error("❌ Error en el guardado de cliente:", error);
+      alert("Error al guardar cliente: " + error.message);
     }
   });
 
@@ -194,6 +205,5 @@ console.log("🚦 clientes.js cargado correctamente.");
     });
   }
 
-  // Inicializar clientes al abrir
   await cargarClientes();
 })();
