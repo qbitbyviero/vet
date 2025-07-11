@@ -1,9 +1,8 @@
-<!-- clientes.html corregido y funcional -->
-
+<!-- clientes.html FUNCIONAL Y LIMPIO -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
-  <!-- Campo de búsqueda tipo dropdown -->
+  <!-- Dropdown búsqueda de mascota existente -->
   <div style="margin-bottom: 1em;">
     <label for="searchPet">Selecciona mascota registrada:</label>
     <select id="searchPet">
@@ -18,15 +17,15 @@
       <div class="grid-two-cols">
         <div class="form-group">
           <label for="ownerName">Nombre del propietario:</label>
-          <input type="text" id="ownerName" name="ownerName" required />
+          <input type="text" id="ownerName" required />
         </div>
         <div class="form-group">
           <label for="ownerPhone">Número de Teléfono:</label>
-          <input type="tel" id="ownerPhone" name="ownerPhone" required />
+          <input type="tel" id="ownerPhone" required />
         </div>
         <div class="form-group">
           <label for="ownerEmail">Correo:</label>
-          <input type="email" id="ownerEmail" name="ownerEmail" required />
+          <input type="email" id="ownerEmail" required />
         </div>
       </div>
     </fieldset>
@@ -37,11 +36,11 @@
       <div class="grid-two-cols">
         <div class="form-group">
           <label for="petName">Nombre de la mascota:</label>
-          <input type="text" id="petName" name="petName" required />
+          <input type="text" id="petName" required />
         </div>
         <div class="form-group">
           <label for="pet-species">Especie:</label>
-          <select id="pet-species" name="species" required>
+          <select id="pet-species" required>
             <option value="">-- Selecciona --</option>
             <option value="perro">Perro</option>
             <option value="gato">Gato</option>
@@ -55,47 +54,127 @@
         </div>
         <div class="form-group">
           <label for="breed">Raza:</label>
-          <select id="breed" name="breed" required>
+          <select id="breed" required>
             <option value="">-- Selecciona especie primero --</option>
           </select>
           <input type="text" id="breed-other" placeholder="Especificar otra raza" style="display:none; margin-top:5px;" />
         </div>
         <div class="form-group">
-          <label for="age">Edad (años.decimales):</label>
-          <input type="number" id="age" name="age" step="0.1" min="0" />
+          <label for="age">Edad (años):</label>
+          <input type="number" id="age" step="0.1" min="0" />
         </div>
         <div class="form-group">
-          <label for="weight">Peso (kg.decimales):</label>
-          <input type="number" id="weight" name="weight" step="0.01" min="0" />
+          <label for="weight">Peso (kg):</label>
+          <input type="number" id="weight" step="0.01" min="0" />
         </div>
         <div class="form-group">
           <label>¿Está esterilizado?</label>
-          <div class="radio-group">
-            <label for="sterilized-si">
-              <input type="radio" id="sterilized-si" name="sterilized" value="si" /> Sí
-            </label>
-            <label for="sterilized-no">
-              <input type="radio" id="sterilized-no" name="sterilized" value="no" /> No
-            </label>
-          </div>
+          <label><input type="radio" name="sterilized" value="si" /> Sí</label>
+          <label><input type="radio" name="sterilized" value="no" /> No</label>
         </div>
       </div>
 
-      <!-- Observaciones -->
       <div class="form-group">
         <label for="observations">Observaciones:</label>
-        <textarea id="observations" name="observations" rows="2"></textarea>
+        <textarea id="observations" rows="2"></textarea>
       </div>
 
-      <!-- Diagrama Corporal con hotspots -->
       <div id="cliente-diagrama" class="diagrama-container">
         <img id="diagrama-img" src="svg/placeholder.png" alt="Diagrama mascota" />
       </div>
     </fieldset>
 
-    <button type="submit" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
+    <button type="submit" class="button-86">Guardar Cliente</button>
   </form>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const especieSelect = document.getElementById("pet-species");
+  const razaSelect = document.getElementById("breed");
+  const razaOther = document.getElementById("breed-other");
+  const diagramaImg = document.getElementById("diagrama-img");
+  const searchPet = document.getElementById("searchPet");
+
+  const especiesRazas = {
+    perro: ["Criollo", "Bulldog", "Chihuahua", "Pastor Alemán", "Labrador", "Pug", "Otro"],
+    gato: ["Criollo", "Persa", "Siamés", "Maine Coon", "Bengala", "Otro"],
+    ave: ["Canario", "Periquito", "Loro", "Cotorra", "Otro"],
+    tortuga: ["Orejas Rojas", "Caja", "Leopardo", "Sulcata", "Otro"],
+    serpiente: ["Pitón", "Boa", "Maíz", "Otro"],
+    lagarto: ["Iguana", "Gecko", "Otro"],
+    pez: ["Betta", "Goldfish", "Otro"],
+    roedor: ["Hámster", "Cuy", "Ratón", "Conejo", "Otro"]
+  };
+
+  const especieImg = {
+    perro: "svg/perro.png",
+    gato: "svg/felino.svg",
+    ave: "svg/ave.png",
+    tortuga: "svg/tortuga.svg",
+    serpiente: "svg/serpiente.svg",
+    lagarto: "svg/lagarto.png",
+    pez: "svg/pez.svg",
+    roedor: "svg/roedor.svg"
+  };
+
+  async function cargarClientes() {
+    const clientes = await window.loadAllClients();
+    clientes.forEach(c => {
+      if (c["Nombre de la mascota"]) {
+        const opt = document.createElement("option");
+        opt.value = c["Nombre de la mascota"];
+        opt.textContent = `${c["Nombre de la mascota"]} (${c["Nombre del propietario"]})`;
+        searchPet.appendChild(opt);
+      }
+    });
+
+    searchPet.addEventListener("change", () => {
+      const selected = clientes.find(c => c["Nombre de la mascota"] === searchPet.value);
+      if (!selected) return;
+
+      document.getElementById("ownerName").value = selected["Nombre del propietario"] || "";
+      document.getElementById("ownerPhone").value = selected["Número de Teléfono"] || "";
+      document.getElementById("ownerEmail").value = selected["Correo"] || "";
+      document.getElementById("petName").value = selected["Nombre de la mascota"] || "";
+      document.getElementById("age").value = selected["Edad"] || "";
+      document.getElementById("weight").value = selected["Peso"] || "";
+      document.getElementById("observations").value = selected["Observaciones"] || "";
+
+      const especie = selected["Especie"]?.toLowerCase();
+      especieSelect.value = especie || "";
+      actualizarRazas(especie);
+      razaSelect.value = selected["Raza"] || "";
+      diagramaImg.src = especieImg[especie] || "svg/placeholder.png";
+
+      const est = (selected["Esterilizado"] || "").toLowerCase();
+      document.querySelector(`input[name='sterilized'][value='${est === "sí" || est === "si" ? "si" : "no"}']`).checked = true;
+    });
+  }
+
+  function actualizarRazas(especie) {
+    razaSelect.innerHTML = `<option value="">-- Selecciona raza --</option>`;
+    if (!especie || !especiesRazas[especie]) return;
+    especiesRazas[especie].forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r;
+      opt.textContent = r;
+      razaSelect.appendChild(opt);
+    });
+  }
+
+  especieSelect.addEventListener("change", () => {
+    actualizarRazas(especieSelect.value);
+    diagramaImg.src = especieImg[especieSelect.value] || "svg/placeholder.png";
+  });
+
+  razaSelect.addEventListener("change", () => {
+    razaOther.style.display = razaSelect.value === "Otro" ? "block" : "none";
+  });
+
+  cargarClientes();
+});
+</script>
 
 <style>
 .modal-clientes {
@@ -104,65 +183,31 @@
   border-radius: 12px;
   width: 90%;
   max-width: 900px;
-  position: relative;
-  overflow-y: auto;
   max-height: 95vh;
+  overflow-y: auto;
 }
-.modal-content {
-  width: 90%;
-  max-width: 900px;
+.grid-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 .diagrama-container img {
   max-width: 100%;
-  margin-top: 1em;
   border: 1px solid #ccc;
   border-radius: 8px;
+  margin-top: 1em;
+}
+.button-86 {
+  margin-top: 1em;
+  padding: 0.5em 1em;
+  background: #0d47a1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 </style>
-
-<script>
-document.addEventListener("DOMContentLoaded", async () => {
-  await busquedaClientes({
-    selectId: "searchPet",
-    formId: "form-clientes",
-    especieId: "pet-species",
-    razaId: "breed",
-    campos: {
-      "Nombre del propietario": "ownerName",
-      "Número de Teléfono": "ownerPhone",
-      "Correo": "ownerEmail",
-      "Nombre de la mascota": "petName",
-      "Edad": "age",
-      "Peso": "weight",
-      "Observaciones": "observations"
-    }
-  });
-
-  // Manejamos mostrar/ocultar input de otra raza
-  const razaSelect = document.getElementById("breed");
-  const razaOther = document.getElementById("breed-other");
-  razaSelect.addEventListener("change", () => {
-    if (razaSelect.value === "Otro") {
-      razaOther.style.display = "block";
-    } else {
-      razaOther.style.display = "none";
-    }
-  });
-
-  // Cargar diagrama según especie seleccionada
-  document.getElementById("pet-species").addEventListener("change", () => {
-    const especie = document.getElementById("pet-species").value;
-    const mapaImagen = {
-      perro: 'svg/perro.png',
-      gato: 'svg/felino.svg',
-      ave: 'svg/ave.png',
-      tortuga: 'svg/tortuga.svg',
-      serpiente: 'svg/serpiente.svg',
-      lagarto: 'svg/lagarto.png',
-      pez: 'svg/pez.svg',
-      roedor: 'svg/roedor.svg'
-    };
-    document.getElementById("diagrama-img").src = mapaImagen[especie] || 'svg/placeholder.png';
-  });
-});
-</script>
