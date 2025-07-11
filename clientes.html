@@ -1,4 +1,4 @@
-<!-- clientes.html FUNCIONAL Y LIMPIO -->
+<!-- clientes.html con console.log para depuración paso a paso -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
@@ -90,11 +90,17 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("🚦 Iniciando modal clientes...");
+
   const especieSelect = document.getElementById("pet-species");
   const razaSelect = document.getElementById("breed");
   const razaOther = document.getElementById("breed-other");
   const diagramaImg = document.getElementById("diagrama-img");
   const searchPet = document.getElementById("searchPet");
+
+  console.log("📌 Elementos cargados:", {
+    especieSelect, razaSelect, razaOther, diagramaImg, searchPet
+  });
 
   const especiesRazas = {
     perro: ["Criollo", "Bulldog", "Chihuahua", "Pastor Alemán", "Labrador", "Pug", "Otro"],
@@ -119,8 +125,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   async function cargarClientes() {
+    console.log("🔄 Solicitando clientes desde GAS...");
     const clientes = await window.loadAllClients();
-    clientes.forEach(c => {
+    console.log("✅ Clientes recibidos:", clientes);
+
+    clientes.forEach((c, idx) => {
+      console.log(`👤 Cliente[${idx}]:`, c["Nombre de la mascota"], c["Nombre del propietario"]);
       if (c["Nombre de la mascota"]) {
         const opt = document.createElement("option");
         opt.value = c["Nombre de la mascota"];
@@ -130,8 +140,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     searchPet.addEventListener("change", () => {
+      console.log("🔍 Mascota seleccionada:", searchPet.value);
       const selected = clientes.find(c => c["Nombre de la mascota"] === searchPet.value);
-      if (!selected) return;
+      if (!selected) {
+        console.log("⚠️ Mascota no encontrada en clientes");
+        return;
+      }
+      console.log("✅ Datos del cliente encontrados:", selected);
 
       document.getElementById("ownerName").value = selected["Nombre del propietario"] || "";
       document.getElementById("ownerPhone").value = selected["Número de Teléfono"] || "";
@@ -142,17 +157,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("observations").value = selected["Observaciones"] || "";
 
       const especie = selected["Especie"]?.toLowerCase();
+      console.log("🐾 Especie:", especie);
       especieSelect.value = especie || "";
       actualizarRazas(especie);
       razaSelect.value = selected["Raza"] || "";
       diagramaImg.src = especieImg[especie] || "svg/placeholder.png";
 
       const est = (selected["Esterilizado"] || "").toLowerCase();
+      console.log("🩺 Esterilizado:", est);
       document.querySelector(`input[name='sterilized'][value='${est === "sí" || est === "si" ? "si" : "no"}']`).checked = true;
     });
   }
 
   function actualizarRazas(especie) {
+    console.log("🔄 Actualizando razas para especie:", especie);
     razaSelect.innerHTML = `<option value="">-- Selecciona raza --</option>`;
     if (!especie || !especiesRazas[especie]) return;
     especiesRazas[especie].forEach(r => {
@@ -164,15 +182,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   especieSelect.addEventListener("change", () => {
+    console.log("🐾 Cambio de especie manual:", especieSelect.value);
     actualizarRazas(especieSelect.value);
     diagramaImg.src = especieImg[especieSelect.value] || "svg/placeholder.png";
   });
 
   razaSelect.addEventListener("change", () => {
+    console.log("🧬 Cambio de raza:", razaSelect.value);
     razaOther.style.display = razaSelect.value === "Otro" ? "block" : "none";
   });
 
-  cargarClientes();
+  await cargarClientes();
 });
 </script>
 
