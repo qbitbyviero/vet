@@ -1,4 +1,4 @@
-<!-- clientes.html limpio y listo para modal con clientes.js modular -->
+<!-- clientes.html listo para modal con clientes.js modular -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
@@ -84,9 +84,13 @@
       </div>
     </fieldset>
 
-    <button type="submit" class="button-86">Guardar Cliente</button>
+    <!-- ✅ Botón con ID correcto para funcionar con clientes.js -->
+    <button type="button" class="button-86" id="btnGuardarCliente">Guardar Cliente</button>
   </form>
 </div>
+
+<!-- Modular -->
+<script src="clientes.js"></script>
 
 <style>
 .modal-clientes {
