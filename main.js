@@ -616,18 +616,23 @@ document.querySelectorAll('a[data-module]').forEach(link => {
       });
 
       // Insertar contenido cargado en el modal
-      modalContent.innerHTML = html;
+      // Insertar contenido cargado en el modal
+modalContent.innerHTML = html;
 
-      // 🩶 Cargar clientes.js dinámicamente si es clientes.html
-      if (archivo.includes("clientes.html")) {
-        console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
-        try {
-          await import('./clientes.js');
-          console.log("✅ clientes.js cargado correctamente en modal clientes.");
-        } catch (error) {
-          console.error("❌ Error cargando clientes.js dinámicamente:", error);
-        }
-      }
+// 🩶 Cargar clientes.js dinámicamente si es clientes.html
+if (archivo.includes("clientes.html")) {
+    console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
+    try {
+        // ✅ Esperar parseo completo del DOM
+        await new Promise(requestAnimationFrame);
+
+        await import('./clientes.js');
+        console.log("✅ clientes.js cargado correctamente en modal clientes.");
+    } catch (error) {
+        console.error("❌ Error cargando clientes.js dinámicamente:", error);
+    }
+}
+
 
       // Insertar botón de cierre y modal en el overlay
       modalContent.appendChild(closeButton);
