@@ -415,38 +415,8 @@ function showTimeSlots(date) {
   renderCalendar();
 });
 //12 modales
-document.querySelectorAll('a[data-module]').forEach(link => {
-  link.addEventListener('click', async e => {
-    e.preventDefault();
-    const file = link.getAttribute('data-module');
-    const modalContainer = document.getElementById('modal-container');
-    const modalHTML = document.getElementById('modal-html');
-
-    try {
-      const response = await fetch(file);
-      if (!response.ok) throw new Error("Error al cargar el módulo");
-      const html = await response.text();
-      modalHTML.innerHTML = html;
-      modalContainer.style.display = 'flex';
-    } catch (err) {
-      modalHTML.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
-      modalContainer.style.display = 'flex';
-    }
-  });
-});
-
-document.getElementById('modal-close').addEventListener('click', () => {
-  document.getElementById('modal-container').style.display = 'none';
-  document.getElementById('modal-html').innerHTML = '';
-});
 //modal Clientes scripts unicos
-  function cerrarModalClientes(e) {
-    if (!e || e.target.classList.contains('modal-clientes-overlay')) {
-      document.querySelector('.modal-clientes-overlay')?.remove();
-    }
-  }
-
-  const mapaImagen = {
+   const mapaImagen = {
     perro: 'svg/perro.png',
     gato: 'svg/felino.svg',
     ave: 'svg/ave.png',
@@ -533,34 +503,6 @@ document.getElementById('modal-close').addEventListener('click', () => {
       });
     }
   });
-function abrirModalClientes() {
-  fetch("clientes.html")
-    .then(res => res.text())
-    .then(html => {
-      const temp = document.createElement("div");
-      temp.innerHTML = html;
-      document.body.appendChild(temp);
-    });
-}
-// Función universal para abrir cualquier módulo como modal
-document.addEventListener("click", async function (e) {
-  const link = e.target.closest("a[data-module]");
-  if (!link) return;
-
-  e.preventDefault();
-  const archivo = link.getAttribute("data-module");
-
-  try {
-    const res = await fetch(archivo);
-    const html = await res.text();
-
-    const contenedor = document.createElement("div");
-    contenedor.innerHTML = html;
-    document.body.appendChild(contenedor);
-  } catch (err) {
-    console.error("❌ Error al cargar el módulo:", archivo, err);
-  }
-});
 // =======================
 // FUNCIÓN REUTILIZABLE PARA MODALES
 // =======================
@@ -598,3 +540,85 @@ async function cargarMascotasEnModal(selectId, placeholder = "Selecciona mascota
     select.innerHTML = `<option value="">Error al cargar</option>`;
   }
 }
+// =============================
+// SISTEMA DE MÚLTIPLES MODALES DINÁMICOS POR BOTÓN
+// =============================
+
+document.querySelectorAll('a[data-module]').forEach(link => {
+  link.addEventListener('click', async e => {
+    e.preventDefault();
+    const archivo = link.getAttribute('data-module');
+
+    try {
+      // Fetch del contenido del módulo
+      const response = await fetch(archivo);
+      if (!response.ok) throw new Error(`Error al cargar ${archivo}`);
+      const html = await response.text();
+
+      // Crear modal overlay independiente
+      const modalOverlay = document.createElement('div');
+      modalOverlay.classList.add('modal-overlay');
+      modalOverlay.style.position = 'fixed';
+      modalOverlay.style.top = '0';
+      modalOverlay.style.left = '0';
+      modalOverlay.style.width = '100vw';
+      modalOverlay.style.height = '100vh';
+      modalOverlay.style.background = 'rgba(0, 0, 0, 0.5)';
+      modalOverlay.style.display = 'flex';
+      modalOverlay.style.justifyContent = 'center';
+      modalOverlay.style.alignItems = 'center';
+      modalOverlay.style.zIndex = '2000';
+      modalOverlay.style.overflowY = 'auto';
+
+      // Desactivar scroll del fondo mientras este modal esté abierto
+      document.body.style.overflow = 'hidden';
+
+      // Crear contenido interno del modal
+      const modalContent = document.createElement('div');
+      modalContent.classList.add('modal-content');
+      modalContent.style.background = '#fff';
+      modalContent.style.borderRadius = '8px';
+      modalContent.style.padding = '1em';
+      modalContent.style.maxWidth = '90vw';
+      modalContent.style.maxHeight = '90vh';
+      modalContent.style.overflowY = 'auto';
+      modalContent.style.position = 'relative';
+
+      // Botón de cierre
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Cerrar';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '0.5em';
+      closeButton.style.right = '0.5em';
+      closeButton.style.background = '#e53935';
+      closeButton.style.color = '#fff';
+      closeButton.style.border = 'none';
+      closeButton.style.padding = '0.5em 1em';
+      closeButton.style.borderRadius = '4px';
+      closeButton.style.cursor = 'pointer';
+
+      // Evento de cierre del modal
+      closeButton.addEventListener('click', () => {
+        modalOverlay.remove();
+        // Restaurar scroll del fondo solo si no quedan más modales abiertos
+        if (document.querySelectorAll('.modal-overlay').length === 0) {
+          document.body.style.overflow = '';
+        }
+      });
+
+      // Insertar contenido cargado y botón en el modal
+      modalContent.innerHTML = html;
+      modalContent.appendChild(closeButton);
+
+      // Insertar modal en el overlay
+      modalOverlay.appendChild(modalContent);
+
+      // Insertar overlay en el body
+      document.body.appendChild(modalOverlay);
+
+    } catch (error) {
+      console.error(`❌ Error cargando el módulo ${archivo}:`, error);
+      alert(`Error al cargar ${archivo}: ${error.message}`);
+    }
+  });
+});
