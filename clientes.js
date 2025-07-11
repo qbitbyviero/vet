@@ -1,15 +1,16 @@
-// clientes.js funcional, limpio y con console.log para depuración
+// clientes.js funcional, limpio y con console.log para depuración ordenada
 
 console.log("🚦 clientes.js cargado correctamente.");
 
 (async () => {
-  // Comprobación de existencia de window.loadAllClients
+  // Verificar existencia de loadAllClients para evitar error en modal
   if (typeof window.loadAllClients !== "function") {
-    console.error("❌ Error: window.loadAllClients no está definido. Verifica que main.js esté cargado antes que clientes.js.");
-    return;
+    console.warn("⚠️ Aviso: window.loadAllClients no está definido aún.");
+    console.warn("🩹 Este archivo requiere que 'main.js' o el contenedor padre cargue loadAllClients ANTES de abrir este modal.");
+    return; // Termina aquí si no existe, evitando romper el modal
   }
 
-  // Obtener referencias a elementos de UI
+  // Obtener referencias
   const especieSelect = document.getElementById("pet-species");
   const razaSelect = document.getElementById("breed");
   const razaOther = document.getElementById("breed-other");
@@ -45,7 +46,7 @@ console.log("🚦 clientes.js cargado correctamente.");
   async function cargarClientes() {
     console.log("🔄 Solicitando clientes desde GAS...");
     const clientes = await window.loadAllClients();
-    console.log("✅ Clientes cargados:", clientes);
+    console.log("✅ Clientes recibidos:", clientes);
 
     clientes.forEach((c, idx) => {
       if (c["Nombre de la mascota"]) {
@@ -53,7 +54,7 @@ console.log("🚦 clientes.js cargado correctamente.");
         opt.value = c["Nombre de la mascota"];
         opt.textContent = `${c["Nombre de la mascota"]} (${c["Nombre del propietario"]})`;
         searchPet.appendChild(opt);
-        console.log(`➕ Cliente agregado al selector [${idx}]:`, opt.textContent);
+        console.log(`➕ Cliente agregado [${idx}]: ${opt.textContent}`);
       }
     });
 
@@ -61,7 +62,7 @@ console.log("🚦 clientes.js cargado correctamente.");
       console.log("🔍 Mascota seleccionada:", searchPet.value);
       const selected = clientes.find(c => c["Nombre de la mascota"] === searchPet.value);
       if (!selected) {
-        console.warn("⚠️ Mascota no encontrada en clientes");
+        console.warn("⚠️ Mascota no encontrada entre clientes.");
         return;
       }
 
@@ -82,12 +83,13 @@ console.log("🚦 clientes.js cargado correctamente.");
 
       const est = (selected["Esterilizado"] || "").toLowerCase();
       document.querySelector(`input[name='sterilized'][value='${(est === "sí" || est === "si") ? "si" : "no"}']`).checked = true;
-      console.log("✅ Formulario poblado correctamente");
+
+      console.log("✅ Formulario poblado correctamente con cliente seleccionado.");
     });
   }
 
   function actualizarRazas(especie) {
-    console.log("🔄 Actualizando razas para:", especie);
+    console.log("🔄 Actualizando razas para especie:", especie);
     razaSelect.innerHTML = `<option value="">-- Selecciona raza --</option>`;
     if (!especie || !especiesRazas[especie]) return;
     especiesRazas[especie].forEach(r => {
@@ -99,16 +101,15 @@ console.log("🚦 clientes.js cargado correctamente.");
   }
 
   especieSelect.addEventListener("change", () => {
-    console.log("🐾 Cambio manual de especie:", especieSelect.value);
+    console.log("🐾 Cambio manual de especie a:", especieSelect.value);
     actualizarRazas(especieSelect.value);
     diagramaImg.src = especieImg[especieSelect.value] || "svg/placeholder.png";
   });
 
   razaSelect.addEventListener("change", () => {
-    console.log("🧬 Cambio de raza:", razaSelect.value);
+    console.log("🧬 Cambio de raza a:", razaSelect.value);
     razaOther.style.display = razaSelect.value === "Otro" ? "block" : "none";
   });
 
-  // Inicializar carga de clientes
   await cargarClientes();
 })();
