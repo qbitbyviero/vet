@@ -622,3 +622,105 @@ document.querySelectorAll('a[data-module]').forEach(link => {
     }
   });
 });
+// ===============================
+// FUNCIÓN UNIVERSAL busquedaClientes
+// ===============================
+async function busquedaClientes(config) {
+  // Config espera:
+  // {
+  //   selectId: 'id_del_select_mascota_existente',
+  //   formId: 'id_del_formulario',
+  //   especieId: 'id_select_especie',
+  //   razaId: 'id_select_raza',
+  //   campos: { ownerName: '', ownerPhone: '', ownerEmail: '', petName: '', age: '', weight: '', esterilizado: '', observaciones: '' }
+  // }
+
+  const especiesRazas = {
+    perro: ['Criollo', 'Bulldog', 'Chihuahua', 'Pastor Alemán', 'Labrador', 'Pug', 'Golden Retriever', 'Beagle', 'Pitbull', 'Otro'],
+    gato: ['Criollo', 'Persa', 'Siamés', 'Maine Coon', 'Bengala', 'Azul Ruso', 'Sphynx', 'Británico', 'Scottish Fold', 'Otro'],
+    ave: ['Criollo', 'Canario', 'Periquito', 'Cotorra', 'Loro', 'Agapornis', 'Calopsita', 'Guacamayo', 'Cockatiel', 'Otro'],
+    tortuga: ['Criollo', 'Tortuga de Orejas Rojas', 'Tortuga de Caja', 'Tortuga Leopardo', 'Tortuga Sulcata', 'Tortuga de Agua', 'Tortuga Rusa', 'Tortuga de Tierra', 'Tortuga de Espolones', 'Otro'],
+    serpiente: ['Criollo', 'Pitón Bola', 'Boa', 'Serpiente de Maíz', 'Serpiente Rey', 'Serpiente de Leche', 'Serpiente de Agua', 'Serpiente Jardín', 'Serpiente Verde', 'Otro'],
+    lagarto: ['Criollo', 'Iguana Verde', 'Gecko Leopardo', 'Dragón Barbudo', 'Anolis', 'Camaleón', 'Uromastyx', 'Lagartija', 'Teju', 'Otro'],
+    pez: ['Criollo', 'Betta', 'Goldfish', 'Guppy', 'Molly', 'Platy', 'Tetra', 'Cíclido', 'Disco', 'Otro'],
+    roedor: ['Criollo', 'Hámster', 'Cuy', 'Rata', 'Ratón', 'Gerbo', 'Chinchilla', 'Conejillo', 'Conejo', 'Otro']
+  };
+
+  const selectMascota = document.getElementById(config.selectId);
+  const especieSelect = document.getElementById(config.especieId);
+  const razaSelect = document.getElementById(config.razaId);
+
+  if (!selectMascota || !especieSelect || !razaSelect) {
+    console.error("❌ Error: IDs inválidos en configuración de busquedaClientes.");
+    return;
+  }
+
+  const clientes = await loadAllClients();
+  selectMascota.innerHTML = `<option value="">-- Buscar mascota existente --</option>`;
+  clientes.forEach(c => {
+    if (c["Nombre de la mascota"]) {
+      const opt = document.createElement("option");
+      opt.value = c["ID fila"] || c["ID cliente"] || c["Nombre de la mascota"];
+      opt.textContent = `${c["Nombre de la mascota"]} (${c["Nombre del propietario"]})`;
+      selectMascota.appendChild(opt);
+    }
+  });
+
+  selectMascota.addEventListener("change", async function() {
+    if (!this.value) {
+      habilitarCampos(true);
+      return;
+    }
+    const cliente = clientes.find(c => c["ID fila"] == this.value || c["ID cliente"] == this.value);
+    if (cliente) {
+      for (const [key, id] of Object.entries(config.campos)) {
+        const el = document.getElementById(id);
+        if (el) el.value = cliente[key] || '';
+      }
+      especieSelect.value = cliente["Especie"] || '';
+      actualizarRazas(cliente["Especie"] || '');
+      razaSelect.value = cliente["Raza"] || '';
+      document.querySelector(`input[name="${config.esterilizadoName}"][value="${(cliente["Esterilizado"] || "").toLowerCase()}"]`)?.checked = true;
+      habilitarCampos(false);
+    }
+  });
+
+  especieSelect.addEventListener('change', function() {
+    actualizarRazas(this.value);
+  });
+
+  function actualizarRazas(especie) {
+    const razas = especiesRazas[especie] || [];
+    razaSelect.innerHTML = '';
+    razas.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r;
+      opt.textContent = r;
+      razaSelect.appendChild(opt);
+    });
+    razaSelect.addEventListener("change", () => {
+      if (razaSelect.value === 'Otro') {
+        if (!document.getElementById('otraRazaInput')) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.id = "otraRazaInput";
+          input.placeholder = "Especificar otra raza";
+          razaSelect.parentElement.appendChild(input);
+        }
+      } else {
+        document.getElementById('otraRazaInput')?.remove();
+      }
+    });
+  }
+
+  function habilitarCampos(enable) {
+    Object.values(config.campos).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !enable;
+    });
+    especieSelect.disabled = !enable;
+    razaSelect.disabled = !enable;
+  }
+
+  habilitarCampos(true);
+}
