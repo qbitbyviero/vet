@@ -414,9 +414,11 @@ function showTimeSlots(date) {
   // Iniciar
   renderCalendar();
 });
-//12 modales
-//modal Clientes scripts unicos
-   const mapaImagen = {
+// =======================
+// modal Clientes scripts unicos encapsulados
+// =======================
+if (document.getElementById('diagrama-img') && document.getElementById('cliente-diagrama')) {
+  const mapaImagen = {
     perro: 'svg/perro.png',
     gato: 'svg/felino.svg',
     ave: 'svg/ave.png',
@@ -477,6 +479,7 @@ function showTimeSlots(date) {
     document.getElementById("breed").value      = result["Raza"] || "";
     document.getElementById("age").value        = result["Edad"] || "";
     document.getElementById("weight").value     = result["Peso"] || "";
+    document.getElementById("observations").value = result["Observaciones"] || "";
 
     const est = (result["Esterilizado"] || "").toLowerCase();
     if (est === "sí" || est === "si") {
@@ -487,22 +490,28 @@ function showTimeSlots(date) {
 
     cargarDiagramaCliente();
     const btn = document.getElementById("btnGuardarCliente");
-    btn.disabled = true;
-    btn.textContent = "Cliente ya registrado";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Cliente ya registrado";
+    }
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.loadAllClients === "function") {
       mascotasGlobal = await window.loadAllClients();
       const select = document.getElementById("searchPet");
-      mascotasGlobal.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c["Nombre de la mascota"];
-        opt.textContent = c["Nombre de la mascota"];
-        select.appendChild(opt);
-      });
+      if (select) {
+        mascotasGlobal.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c["Nombre de la mascota"];
+          opt.textContent = c["Nombre de la mascota"];
+          select.appendChild(opt);
+        });
+      }
     }
   });
+}
+
 // =======================
 // FUNCIÓN REUTILIZABLE PARA MODALES
 // =======================
