@@ -123,6 +123,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     pez: "svg/pez.svg",
     roedor: "svg/roedor.svg"
   };
+if (!window.loadAllClients) {
+  console.log("⚠️ No se encontró loadAllClients, usando datos simulados para pruebas locales.");
+  window.loadAllClients = async () => ([
+    {
+      "Nombre de la mascota": "Tobi",
+      "Nombre del propietario": "Juan Pérez",
+      "Número de Teléfono": "5512345678",
+      "Correo": "juan@ejemplo.com",
+      "Edad": "3",
+      "Peso": "12.5",
+      "Observaciones": "Sin observaciones",
+      "Especie": "perro",
+      "Raza": "Bulldog",
+      "Esterilizado": "Sí"
+    },
+    {
+      "Nombre de la mascota": "Michi",
+      "Nombre del propietario": "Ana López",
+      "Número de Teléfono": "5598765432",
+      "Correo": "ana@ejemplo.com",
+      "Edad": "2",
+      "Peso": "4.2",
+      "Observaciones": "Alergia leve",
+      "Especie": "gato",
+      "Raza": "Siamés",
+      "Esterilizado": "No"
+    }
+  ]);
+}
 
   async function cargarClientes() {
     console.log("🔄 Solicitando clientes desde GAS...");
