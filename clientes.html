@@ -1,4 +1,4 @@
-<!-- clientes.html corregido y funcional -->
+<!-- clientes.html completamente corregido y funcional -->
 <div class="modal-clientes">
   <h2>Registro de Cliente 🐾</h2>
 
@@ -128,8 +128,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     roedor: ['Hámster', 'Cuy', 'Ratón', 'Rata', 'Conejo', 'Otro']
   };
 
-  const clientes = await loadAllClients();
+  const clientes = await window.loadAllClients();
   const searchPet = document.getElementById("searchPet");
+  const especieSelect = document.getElementById("pet-species");
+  const razaSelect = document.getElementById("breed");
+  const razaInput = document.getElementById("breed-other");
+
   clientes.forEach(cliente => {
     if (cliente["Nombre de la mascota"]) {
       const opt = document.createElement("option");
@@ -147,26 +151,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("ownerPhone").value = selected["Número de Teléfono"] || "";
     document.getElementById("ownerEmail").value = selected["Correo"] || "";
     document.getElementById("petName").value = selected["Nombre de la mascota"] || "";
-    document.getElementById("pet-species").value = selected["Especie"] || "";
+    especieSelect.value = selected["Especie"] || "";
     document.getElementById("age").value = selected["Edad"] || "";
     document.getElementById("weight").value = selected["Peso"] || "";
     document.getElementById("observations").value = selected["Observaciones"] || "";
 
     const est = (selected["Esterilizado"] || "").toLowerCase();
-    document.querySelector(`input[name="sterilized"][value="${est === 'sí' || est === 'si' ? 'si' : 'no'}"]`).checked = true;
+    document.querySelector(`input[name="sterilized"][value="${(est === 'sí' || est === 'si') ? 'si' : 'no'}"]`).checked = true;
 
     actualizarRazas(selected["Especie"] || "");
-    document.getElementById("breed").value = selected["Raza"] || "";
+    razaSelect.value = selected["Raza"] || "";
     cargarDiagramaCliente();
   });
 
-  document.getElementById("pet-species").addEventListener("change", function() {
+  especieSelect.addEventListener("change", function() {
     actualizarRazas(this.value);
     cargarDiagramaCliente();
   });
 
   function actualizarRazas(especie) {
-    const razaSelect = document.getElementById("breed");
     razaSelect.innerHTML = '<option value="">-- Selecciona --</option>';
     if (!especie || !especiesRazas[especie]) return;
     especiesRazas[especie].forEach(r => {
@@ -175,18 +178,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       opt.textContent = r;
       razaSelect.appendChild(opt);
     });
-    razaSelect.addEventListener("change", () => {
-      const input = document.getElementById("breed-other");
-      if (razaSelect.value === "Otro") {
-        input.style.display = "block";
-      } else {
-        input.style.display = "none";
-      }
-    });
   }
 
+  razaSelect.addEventListener("change", () => {
+    if (razaSelect.value === "Otro") {
+      razaInput.style.display = "block";
+    } else {
+      razaInput.style.display = "none";
+    }
+  });
+
   function cargarDiagramaCliente() {
-    const especie = document.getElementById("pet-species").value;
+    const especie = especieSelect.value;
     const mapaImagen = {
       perro: 'svg/perro.png',
       gato: 'svg/felino.svg',
