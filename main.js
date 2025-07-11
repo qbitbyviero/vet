@@ -1,5 +1,5 @@
 // =======================
-// main.js (VERSIÓN 100% FUNCIONAL)
+// main.js (VERSIÓN 100% FUNCIONALnuevo)
 // =======================
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
