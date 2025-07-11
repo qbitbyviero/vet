@@ -203,4 +203,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("diagrama-img").src = mapaImagen[especie] || 'svg/placeholder.png';
   }
 });
+document.addEventListener("DOMContentLoaded", () => {
+  busquedaClientes({
+    selectId: "searchPet",
+    formId: "form-clientes",
+    especieId: "pet-species",
+    razaId: "breed",
+    campos: {
+      "Nombre del propietario": "ownerName",
+      "Número de Teléfono": "ownerPhone",
+      "Correo": "ownerEmail",
+      "Nombre de la mascota": "petName",
+      "Edad": "age",
+      "Peso": "weight",
+      "Observaciones": "observations"
+    }
+  });
+});
 </script>
