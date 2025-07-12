@@ -7,27 +7,35 @@ console.log("✂️ estetica.js cargado correctamente.");
 let clienteActual = null; // 🩶 Para mantener persistencia durante el modal abierto
 
 document.addEventListener("DOMContentLoaded", () => {
-  const btnBuscar = document.getElementById("buscar-mascota");
-  const inputNombre = document.getElementById("estetica-petName");
+  const selectMascota = document.getElementById("estetica-searchPet");
   const infoMascota = document.getElementById("estetica-pet-info");
   const form = document.getElementById("form-estetica");
-  const btnLimpiar = document.createElement("button");
-  btnLimpiar.textContent = "Limpiar";
-  btnLimpiar.type = "button";
-  btnLimpiar.className = "button-86";
-  form.appendChild(btnLimpiar);
+  const btnLimpiar = document.getElementById("btn-limpiar-estetica");
 
-  // Buscar mascota real
-  btnBuscar.addEventListener("click", async () => {
-    const nombre = inputNombre.value.trim();
-    if (!nombre) {
-      infoMascota.innerHTML = "<p>Ingresa un nombre válido</p>";
-      return;
+  // 1️⃣ Cargar clientes desde GAS y llenar el select
+  window.loadAllClients().then(clientes => {
+    console.log("📦 Clientes para estética:", clientes.length);
+    clientes.forEach(c => {
+      const option = document.createElement("option");
+      option.value = c["Nombre de la mascota"];
+      option.textContent = `${c["Nombre de la mascota"]} - ${c["Nombre del propietario"]}`;
+      option.dataset.info = JSON.stringify(c);
+      selectMascota.appendChild(option);
+    });
+
+    // Si hay una selección previa
+    if (clienteActual) {
+      selectMascota.value = clienteActual["Nombre de la mascota"];
+      selectMascota.dispatchEvent(new Event("change"));
     }
-    const clientes = await window.loadAllClients();
-    const cliente = clientes.find(c => c["Nombre de la mascota"].toLowerCase() === nombre.toLowerCase());
-    if (cliente) {
-      clienteActual = cliente; // Guardar cliente actual
+  });
+
+  // 2️⃣ Al seleccionar una mascota, mostrar los datos
+  selectMascota.addEventListener("change", () => {
+    const selected = selectMascota.selectedOptions[0];
+    if (selected && selected.dataset.info) {
+      const cliente = JSON.parse(selected.dataset.info);
+      clienteActual = cliente;
       infoMascota.innerHTML = `
         <p><strong>Mascota:</strong> ${cliente["Nombre de la mascota"]}</p>
         <p><strong>Propietario:</strong> ${cliente["Nombre del propietario"]}</p>
@@ -37,21 +45,16 @@ document.addEventListener("DOMContentLoaded", () => {
         <p><strong>Raza:</strong> ${cliente["Raza"]}</p>
         <p><em>Datos cargados correctamente ✅</em></p>`;
     } else {
-      infoMascota.innerHTML = "<p>No se encontró la mascota</p>";
+      clienteActual = null;
+      infoMascota.innerHTML = "<p>Selecciona una mascota válida.</p>";
     }
   });
 
-  // Mantener última búsqueda si existe
-  if (clienteActual) {
-    inputNombre.value = clienteActual["Nombre de la mascota"];
-    btnBuscar.click();
-  }
-
-  // Guardar estética
+  // 3️⃣ Guardar estética
   form.addEventListener("submit", async e => {
     e.preventDefault();
     if (!clienteActual) {
-      alert("Busca y selecciona primero una mascota antes de guardar.");
+      alert("Selecciona primero una mascota válida antes de guardar.");
       return;
     }
 
@@ -92,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Botón limpiar
+  // 4️⃣ Botón limpiar
   btnLimpiar.addEventListener("click", () => {
     if (confirm("¿Seguro que deseas limpiar el formulario? Se perderán los datos no guardados.")) {
       limpiarModalEstetica();
@@ -100,12 +103,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function limpiarModalEstetica() {
-    inputNombre.value = "";
+    selectMascota.value = "";
     infoMascota.innerHTML = "";
     clienteActual = null;
     document.querySelectorAll('#tabla-productos tbody tr').forEach((row, idx) => {
       if (idx === 0) {
-        row.querySelectorAll('input').forEach(inp => inp.value = idx === 0 ? inp.value : "");
+        row.querySelectorAll('input').forEach(inp => inp.value = "");
+        row.querySelector('.subtotal').textContent = "$0.00";
       } else {
         row.remove();
       }
