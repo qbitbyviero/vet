@@ -9,18 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 2. Funciones básicas
   function jsonpRequest(url) {
-    return new Promise((resolve, reject) => {
-      const callbackName = `jsonp_${Date.now()}`;
-      window[callbackName] = data => {
-        delete window[callbackName];
-        resolve(data);
-      };
-      const script = document.createElement('script');
-      script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
-      script.onerror = () => reject(new Error('Error JSONP'));
-      document.body.appendChild(script);
-    });
-  }
+  return new Promise((resolve, reject) => {
+    const callbackName = `jsonp_${Date.now()}`;
+    window[callbackName] = data => {
+      delete window[callbackName];
+      resolve(data);
+    };
+    const script = document.createElement('script');
+    script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
+    script.onerror = () => reject(new Error('Error JSONP'));
+    document.body.appendChild(script);
+  });
+}
+// Hacemos disponible la función JSONP para otros módulos
+window.jsonpRequest = jsonpRequest;
 
   function normalizeDate(dateStr) {
     if (!dateStr) return '';
@@ -611,27 +613,28 @@ document.querySelectorAll('a[data-module]').forEach(link => {
         }
       });
 
-      // Insertar contenido cargado en el modal
-      // Insertar contenido cargado en el modal
+   // Insertar contenido cargado en el modal
 modalContent.innerHTML = html;
 
 // ✅ Cargar clientes.js dinámicamente si se abre clientes.html
 if (archivo.includes("clientes.html")) {
-    console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
-
-    // Antes de insertar un nuevo script, elimina scripts previos de clientes.js si los hubiera
-    document.querySelectorAll('script[data-clientes-script]').forEach(s => s.remove());
-
-    const script = document.createElement('script');
-    script.src = './clientes.js';
-    script.dataset.clientesScript = "true"; // para identificarlo
-    script.onload = () => console.log("✅ clientes.js cargado correctamente en modal clientes.");
-    script.onerror = () => console.error("❌ Error cargando clientes.js en modal clientes.");
-
-    // Insertar en el BODY, no dentro de modalContent, para que se ejecute correctamente
-    document.body.appendChild(script);
+  /* … carga clientes.js … */
+}
+// ✅ Cargar estetica.js dinámicamente si se abre estetica.html
+else if (archivo.includes("estetica.html")) {
+  console.log("⚡ Cargando estetica.js en modal estética…");
+  document.querySelectorAll('script[data-estetica-script]').forEach(s => s.remove());
+  const scriptE = document.createElement('script');
+  scriptE.src = './estetica.js';
+  scriptE.dataset.esteticaScript = 'true';
+  scriptE.onload  = () => console.log("✅ estetica.js cargado correctamente.");
+  scriptE.onerror = () => console.error("❌ Error cargando estetica.js.");
+  document.body.appendChild(scriptE);
 }
 
+modalContent.appendChild(closeButton);
+modalOverlay.appendChild(modalContent);
+document.body.appendChild(modalOverlay);
       // Insertar botón de cierre y modal en el overlay
       modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
