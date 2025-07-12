@@ -619,28 +619,23 @@ document.querySelectorAll('a[data-module]').forEach(link => {
       // Insertar contenido cargado en el modal
 modalContent.innerHTML = html;
 
-// 🩶 Cargar clientes.js dinámicamente si es clientes.html
+// ✅ Cargar clientes.js dinámicamente si se abre clientes.html
 if (archivo.includes("clientes.html")) {
     console.log("⚡ Cargando clientes.js dentro del modal de clientes...");
 
-    try {
-        // ✅ Crear el script dinámico
-        const script = document.createElement('script');
-        script.src = './clientes.js';
-        script.type = 'module'; // si clientes.js usa módulos
-        script.onload = () => {
-            console.log("✅ clientes.js cargado correctamente en modal clientes.");
-        };
-        script.onerror = (err) => {
-            console.error("❌ Error cargando clientes.js dinámicamente:", err);
-        };
+    // Antes de insertar un nuevo script, elimina scripts previos de clientes.js si los hubiera
+    document.querySelectorAll('script[data-clientes-script]').forEach(s => s.remove());
 
-        // ✅ Insertar el script después de agregar el contenido
-        modalContent.appendChild(script);
-    } catch (error) {
-        console.error(`❌ Error insertando script clientes.js dinámico:`, error);
-    }
+    const script = document.createElement('script');
+    script.src = './clientes.js';
+    script.dataset.clientesScript = "true"; // para identificarlo
+    script.onload = () => console.log("✅ clientes.js cargado correctamente en modal clientes.");
+    script.onerror = () => console.error("❌ Error cargando clientes.js en modal clientes.");
+
+    // Insertar en el BODY, no dentro de modalContent, para que se ejecute correctamente
+    document.body.appendChild(script);
 }
+
       // Insertar botón de cierre y modal en el overlay
       modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
