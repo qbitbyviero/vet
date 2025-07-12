@@ -1,6 +1,4 @@
-// =======================
-// main.js (VERSIÓN 100% FUNCIONALnuevo)
-// =======================
+// main.js
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Configuración inicial
   const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
@@ -101,7 +99,7 @@ window.loadAllClients = loadAllClients;
 
   UI.init();
   UI.card.classList.add('show-front');
-  // 5. Función para mostrar formulario de cita (¡FALTABA ESTA FUNCIÓN!)
+  // 5. Función para mostrar formulario de cita
   function showAppointmentForm(date, time) {
     console.log('Mostrando formulario para:', date, time);
     const backPanel = document.querySelector('.back');
@@ -414,9 +412,7 @@ function showTimeSlots(date) {
   // Iniciar
   renderCalendar();
 });
-// =======================
 // modal Clientes scripts unicos encapsulados
-// =======================
 if (document.getElementById('diagrama-img') && document.getElementById('cliente-diagrama')) {
   const mapaImagen = {
     perro: 'svg/perro.png',
