@@ -1,17 +1,17 @@
-<!-- estetica.html: Módulo de Estética ✂️ mejorado -->
+<!-- estetica.html: Módulo de Estética ✂️ Final -->
 <div class="modal-estetica">
   <h2>Registro de Estética ✂️</h2>
   <form id="form-estetica">
+
     <!-- Búsqueda de mascota -->
     <fieldset>
       <legend>Buscar Mascota</legend>
       <label>Nombre de la Mascota:</label>
       <input type="text" id="estetica-petName" name="petName" placeholder="Ingresa nombre..." required />
       <button type="button" class="button-86" id="buscar-mascota">Buscar</button>
-      <!-- Resultado de búsqueda -->
       <div id="estetica-pet-info"></div>
     </fieldset>
-    
+
     <!-- Fotos Antes/Después -->
     <fieldset>
       <legend>Fotos</legend>
@@ -62,64 +62,54 @@
   </form>
 </div>
 
-<script>
-  // Previews de fotos
-  function setupPreview(inputId, imgId) {
-    const inp = document.getElementById(inputId);
-    const img = document.getElementById(imgId);
-    inp.onchange = e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      img.src = URL.createObjectURL(file);
-    };
-  }
-  setupPreview('foto-antes', 'preview-antes');
-  setupPreview('foto-despues', 'preview-despues');
-
-  // Añadir/Eliminar productos, calcular subtotales y total
-  const tableBody = document.querySelector('#tabla-productos tbody');
-  function recalcTotal() {
-    let total = 0;
-    tableBody.querySelectorAll('tr').forEach(row => {
-      const qty = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-      const price = parseFloat(row.querySelector('input[name="precio[]"]').value) || 0;
-      const sub = qty * price;
-      row.querySelector('.subtotal').textContent = '$' + sub.toFixed(2);
-      total += sub;
-    });
-    document.getElementById('total-estetica').textContent = total.toFixed(2);
-  }
-  document.getElementById('add-producto').onclick = () => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td><input type="text" name="producto[]" placeholder="Nuevo producto" /></td>
-      <td><input type="number" name="cantidad[]" min="1" value="1" /></td>
-      <td><input type="number" name="precio[]" step="0.01" value="0.00" /></td>
-      <td class="subtotal">$0.00</td>
-      <td><button type="button" class="button-86 btn-remove">Eliminar</button></td>`;
-    tableBody.appendChild(row);
-    row.querySelectorAll('input[name="cantidad[]"], input[name="precio[]"]').forEach(inp => inp.oninput = recalcTotal);
-    row.querySelector('.btn-remove').onclick = () => { row.remove(); recalcTotal(); };
-  };
-  // Inicializar fila existente
-  tableBody.querySelectorAll('input[name="cantidad[]"], input[name="precio[]"]').forEach(inp => inp.oninput = recalcTotal);
-  tableBody.querySelectorAll('.btn-remove').forEach(btn => btn.onclick = () => { btn.closest('tr').remove(); recalcTotal(); });
-
-  // Buscar mascota (simulado)
-  document.getElementById('buscar-mascota').onclick = () => {
-    const name = document.getElementById('estetica-petName').value.trim();
-    const info = document.getElementById('estetica-pet-info');
-    info.innerHTML = name
-      ? `<p><strong>Mascota:</strong> ${name}</p><p><em>Datos cargados (simulado)</em></p>`
-      : `<p>Ingresa un nombre válido</p>`;
-  };
-
-  // Guardar estética (simulado)
-  document.getElementById('form-estetica').onsubmit = e => {
-    e.preventDefault();
-    alert('Datos de estética guardados! Total: $' + document.getElementById('total-estetica').textContent);
-  };
-
-  // Calcular total inicial
-  recalcTotal();
-</script>
+<style>
+.modal-estetica {
+  background: white;
+  padding: 1em;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 95vh;
+  overflow-y: auto;
+}
+.foto-group {
+  display: flex;
+  justify-content: space-around;
+  gap: 1em;
+}
+.foto-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.foto-item img {
+  max-width: 150px;
+  max-height: 150px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 0.5em;
+}
+#tabla-productos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5em;
+}
+#tabla-productos th, #tabla-productos td {
+  border: 1px solid #ccc;
+  padding: 0.3em;
+  text-align: center;
+}
+.button-86 {
+  margin-top: 0.5em;
+  padding: 0.4em 0.8em;
+  background: #0d47a1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.total-container {
+  margin-top: 0.5em;
+  font-size: 1.2em;
+}
+</style>
