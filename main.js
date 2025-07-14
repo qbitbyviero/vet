@@ -564,13 +564,78 @@ document.querySelectorAll('a[data-module]').forEach(link => {
       // 2. Crear overlay y contenido
       const modalOverlay = document.createElement('div');
       modalOverlay.classList.add('modal-overlay');
-      Object.assign(modalOverlay.style, {
-        position: 'fixed', top: 0, left: 0,
-        width: '100vw', height: '100vh',
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-        zIndex: 2000, overflowY: 'auto'
-      });
+     document.querySelectorAll('a[data-module]').forEach(link => {
+  link.addEventListener('click', async e => {
+    e.preventDefault();
+    const archivo = link.getAttribute('data-module');
+    const response = await fetch(archivo);
+    if (!response.ok) throw new Error(`Error al cargar ${archivo}`);
+    const html = await response.text();
+
+    // 1) Overlay (ya no hace scroll)
+    const modalOverlay = document.createElement('div');
+    modalOverlay.classList.add('modal-overlay');
+    Object.assign(modalOverlay.style, {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 2000,
+      overflow: 'hidden'      // <- aquí quitamos el scroll exterior
+    });
+    document.body.style.overflow = 'hidden';
+
+    // 2) Contenido (solo este hace scroll)
+    const modalContent = document.createElement('div');
+    modalContent.classList.add('modal-content');
+    Object.assign(modalContent.style, {
+      background: '#fff',
+      borderRadius: '8px',
+      padding: '1em',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      overflowY: 'auto'       // <- scroll interior
+    });
+    modalContent.innerHTML = html;
+
+    // 3) Carga dinámica de scripts según módulo…
+    if (archivo.includes('clientes.html')) {
+      // … tu lógica de clientes.js …
+    } else if (archivo.includes('estetica.html')) {
+      // … tu lógica de estetica.js …
+    }
+
+    // 4) Botón cerrar
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Cerrar';
+    Object.assign(closeButton.style, {
+      position: 'absolute',
+      top: '0.5em',
+      right: '0.5em',
+      background: '#e53935',
+      color: '#fff',
+      border: 'none',
+      padding: '0.5em 1em',
+      borderRadius: '4px',
+      cursor: 'pointer'
+    });
+    closeButton.addEventListener('click', () => {
+      modalOverlay.remove();
+      document.body.style.overflow = '';
+    });
+
+    // 5) Montar modal
+    modalContent.appendChild(closeButton);
+    modalOverlay.appendChild(modalContent);
+    document.body.appendChild(modalOverlay);
+  });
+});
+
       document.body.style.overflow = 'hidden';
 
       const modalContent = document.createElement('div');
