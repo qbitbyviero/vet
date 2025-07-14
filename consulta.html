@@ -4,7 +4,6 @@
   <form id="form-consulta">
     <!-- Botón para mostrar consulta detallada -->
     <button type="button" class="button-86" id="toggle-avanzado" style="margin-bottom: 1em;">🧬 Consulta Detallada</button>
-
     <!-- Sección de búsqueda o nueva consulta -->
     <fieldset>
       <legend>Identificación de Mascota</legend>
@@ -27,7 +26,6 @@
         <label>Raza:</label><input type="text" name="breedNew" />
       </div>
     </fieldset>
-
     <!-- Diagrama -->
     <fieldset>
       <legend>Diagrama de Tratamiento</legend>
@@ -35,7 +33,6 @@
         <img id="consulta-diagrama-img" src="" alt="Diagrama Mascota" />
       </div>
     </fieldset>
-
     <!-- Signos vitales y síntomas -->
     <fieldset>
       <legend>Signos Vitales y Síntomas</legend>
@@ -52,7 +49,6 @@
       </select>
       <label>Síntomas Observados:</label><textarea name="symptoms" rows="3"></textarea>
     </fieldset>
-
     <!-- Diagnóstico final -->
     <fieldset>
       <legend>Evaluación y Plan Médico 🧾</legend>
@@ -62,7 +58,6 @@
       <label>Recomendaciones:</label><textarea name="recomendaciones" rows="2"></textarea>
       <label>Próximo Control:</label><input type="date" name="proximoControl" />
     </fieldset>
-
     <!-- Medicamentos y precios -->
     <fieldset>
       <legend>Medicamentos Administrados</legend>
@@ -84,12 +79,10 @@
       <button type="button" class="button-86" id="add-med">Añadir Medicamento</button>
       <div class="total-consulta"><strong>Total:</strong> $<span id="total-consulta">0.00</span></div>
     </fieldset>
-
     <!-- Botones y vista previa receta -->
     <button type="button" class="button-86" id="preview-receta">Vista Previa Receta</button>
     <button type="submit" class="button-86">Guardar Consulta</button>
   </form>
-
   <!-- Sección Avanzada (escondida inicialmente) -->
   <div id="seccion-avanzada" style="display:none; margin-top:1em;">
     <fieldset>
@@ -122,15 +115,5 @@
       <label>Reflejos Neurológicos:</label><textarea name="reflejos"></textarea>
     </fieldset>
   </div>
-
   <div id="receta-container" style="display:none; margin-top:1em; border:1px solid #0277bd;"></div>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('toggle-avanzado').onclick = () => {
-      const sec = document.getElementById('seccion-avanzada');
-      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
-    };
-  });
-</script>
