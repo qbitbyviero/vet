@@ -613,33 +613,85 @@ document.querySelectorAll('a[data-module]').forEach(link => {
         }
       });
 
-   // Insertar contenido cargado en el modal
-modalContent.innerHTML = html;
+  // =============================
+// SISTEMA DE MÚLTIPLES MODALES DINÁMICOS POR BOTÓN
+// =============================
+document.querySelectorAll('a[data-module]').forEach(link => {
+  link.addEventListener('click', async e => {
+    e.preventDefault();
+    const archivo = link.getAttribute('data-module');
 
-// ✅ Cargar clientes.js dinámicamente si se abre clientes.html
-if (archivo.includes("clientes.html")) {
-  /* … carga clientes.js … */
-}
-// ✅ Cargar estetica.js dinámicamente si se abre estetica.html
-else if (archivo.includes("estetica.html")) {
-  console.log("⚡ Cargando estetica.js en modal estética…");
-  document.querySelectorAll('script[data-estetica-script]').forEach(s => s.remove());
-  const scriptE = document.createElement('script');
-  scriptE.src = './estetica.js';
-  scriptE.dataset.esteticaScript = 'true';
-  scriptE.onload  = () => console.log("✅ estetica.js cargado correctamente.");
-  scriptE.onerror = () => console.error("❌ Error cargando estetica.js.");
-  document.body.appendChild(scriptE);
-}
+    try {
+      // 1. Traer HTML
+      const response = await fetch(archivo);
+      if (!response.ok) throw new Error(`Error al cargar ${archivo}`);
+      const html = await response.text();
 
-modalContent.appendChild(closeButton);
-modalOverlay.appendChild(modalContent);
-document.body.appendChild(modalOverlay);
-      // Insertar botón de cierre y modal en el overlay
+      // 2. Crear overlay y contenido
+      const modalOverlay = document.createElement('div');
+      modalOverlay.classList.add('modal-overlay');
+      Object.assign(modalOverlay.style, {
+        position: 'fixed', top: 0, left: 0,
+        width: '100vw', height: '100vh',
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        zIndex: 2000, overflowY: 'auto'
+      });
+      document.body.style.overflow = 'hidden';
+
+      const modalContent = document.createElement('div');
+      modalContent.classList.add('modal-content');
+      Object.assign(modalContent.style, {
+        background: '#fff', borderRadius: '8px',
+        padding: '1em', maxWidth: '90vw', maxHeight: '90vh',
+        overflowY: 'auto', position: 'relative'
+      });
+
+      // 3. Inyectar HTML
+      modalContent.innerHTML = html;
+
+      // 4. Carga dinámica de scripts según el módulo
+      if (archivo.includes('clientes.html')) {
+        console.log('⚡ Cargando clientes.js dentro del modal de clientes…');
+        // Eliminar instancias previas
+        document.querySelectorAll('script[data-clientes-script]').forEach(s => s.remove());
+        const scriptC = document.createElement('script');
+        scriptC.src = './clientes.js';
+        scriptC.dataset.clientesScript = 'true';
+        scriptC.onload =  () => console.log('✅ clientes.js cargado correctamente en modal clientes.');
+        scriptC.onerror = () => console.error('❌ Error cargando clientes.js en modal clientes.');
+        document.body.appendChild(scriptC);
+
+      } else if (archivo.includes('estetica.html')) {
+        console.log('⚡ Cargando estetica.js en modal estética…');
+        document.querySelectorAll('script[data-estetica-script]').forEach(s => s.remove());
+        const scriptE = document.createElement('script');
+        scriptE.src = './estetica.js';
+        scriptE.dataset.esteticaScript = 'true';
+        scriptE.onload  = () => console.log('✅ estetica.js cargado correctamente.');
+        scriptE.onerror = () => console.error('❌ Error cargando estetica.js.');
+        document.body.appendChild(scriptE);
+      }
+
+      // 5. Botón de cierre
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Cerrar';
+      Object.assign(closeButton.style, {
+        position: 'absolute', top: '0.5em', right: '0.5em',
+        background: '#e53935', color: '#fff',
+        border: 'none', padding: '0.5em 1em',
+        borderRadius: '4px', cursor: 'pointer'
+      });
+      closeButton.addEventListener('click', () => {
+        modalOverlay.remove();
+        if (!document.querySelector('.modal-overlay')) {
+          document.body.style.overflow = '';
+        }
+      });
+
+      // 6. Montar modal en el documento
       modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
-
-      // Insertar overlay en el body
       document.body.appendChild(modalOverlay);
 
     } catch (error) {
@@ -648,6 +700,7 @@ document.body.appendChild(modalOverlay);
     }
   });
 });
+
 // ===============================
 // FUNCIÓN UNIVERSAL busquedaClientes
 // ===============================
