@@ -578,7 +578,16 @@ document.querySelectorAll('a[data-module]').forEach(link => {
         scriptE.onerror = () => console.error('❌ Error cargando estetica.js.');
         document.body.appendChild(scriptE);
       }
-
+      else if (archivo.includes('consulta.html')) {
+  console.log('⚡ Cargando consulta.js en modal de Consulta…');
+  document.querySelectorAll('script[data-consulta-script]').forEach(s => s.remove());
+  const script = document.createElement('script');
+  script.src = './consulta.js';
+  script.dataset.consultaScript = 'true';
+  script.onload  = () => console.log('✅ consulta.js cargado y eventos activos.');
+  script.onerror = () => console.error('❌ Error cargando consulta.js.');
+  document.body.appendChild(script);
+}
       // 5. Crear y montar botón de cierre
       const closeButton = document.createElement('button');
       closeButton.textContent = 'Cerrar';
