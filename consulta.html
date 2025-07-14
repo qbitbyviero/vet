@@ -1,4 +1,4 @@
-<!-- consulta.html: Módulo de Consulta con Diagrama y Receta Preview 🩺 -->
+<!-- consulta.html: Módulo de Consulta Veterinaria 🩺 -->
 <div class="modal-consulta">
   <h2>Consulta Veterinaria 🩺</h2>
   <form id="form-consulta">
@@ -25,7 +25,7 @@
       </div>
     </fieldset>
 
-    <!-- Diagrama de Tratamiento -->
+    <!-- Diagrama -->
     <fieldset>
       <legend>Diagrama de Tratamiento</legend>
       <div id="consulta-diagrama" class="diagrama-container">
@@ -33,7 +33,7 @@
       </div>
     </fieldset>
 
-    <!-- Sección de signos vitales y síntomas -->
+    <!-- Signos vitales y síntomas -->
     <fieldset>
       <legend>Signos Vitales y Síntomas</legend>
       <label>Edad (años):</label><input type="number" name="age" min="0" />
@@ -48,6 +48,16 @@
         <option value="dañado">Dañado</option>
       </select>
       <label>Síntomas Observados:</label><textarea name="symptoms" rows="3"></textarea>
+    </fieldset>
+
+    <!-- Diagnóstico final -->
+    <fieldset>
+      <legend>Evaluación y Plan Médico 🧾</legend>
+      <label>Diagnóstico Presuntivo/Definitivo:</label><textarea name="diagnosticoFinal" rows="2" /></textarea>
+      <label>Pruebas Realizadas:</label><textarea name="pruebas" rows="2" /></textarea>
+      <label>Medicación Prescrita:</label><textarea name="medicacion" rows="2" /></textarea>
+      <label>Recomendaciones:</label><textarea name="recomendaciones" rows="2" /></textarea>
+      <label>Próximo Control:</label><input type="date" name="proximoControl" />
     </fieldset>
 
     <!-- Medicamentos y precios -->
@@ -72,17 +82,50 @@
       <div class="total-consulta"><strong>Total:</strong> $<span id="total-consulta">0.00</span></div>
     </fieldset>
 
-    <!-- Botones -->
+    <!-- Botones y vista previa receta -->
+    <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
     <button type="button" class="button-86" id="preview-receta">Vista Previa Receta</button>
     <button type="submit" class="button-86">Guardar Consulta</button>
   </form>
 
-  <!-- Contenedor para Receta -->
+  <!-- Sección Avanzada (escondida inicialmente) -->
+  <div id="seccion-avanzada" style="display:none; margin-top:1em;">
+    <fieldset>
+      <legend>Historial Clínico Adicional 📋</legend>
+      <label>Motivo de Consulta:</label><textarea name="motivoConsulta" rows="2"></textarea>
+      <label>Historial Médico Previo:</label><textarea name="historialMedico" rows="2"></textarea>
+      <label>Vacunación:</label><input type="text" name="vacunacion" placeholder="Ej: Al día - 10/07/2025" />
+      <label>Desparasitación:</label><input type="text" name="desparasitacion" placeholder="Ej: Endogard - 15/06/2025" />
+      <label>Alimentación:</label><input type="text" name="alimentacion" placeholder="Ej: Croquetas, dieta barf..." />
+      <label>Estado Corporal (1-9):</label><input type="number" name="estadoCorporal" min="1" max="9" />
+      <label>Hidratación (% o descripción):</label><input type="text" name="hidratacion" />
+      <label>Mucosas:</label><input type="text" name="mucosas" />
+      <label>TRC (segundos):</label><input type="number" name="trc" />
+      <label>FR (rpm):</label><input type="number" name="fr" />
+      <label>Auscultación Cardíaca/Pulmonar:</label><textarea name="auscultacion"></textarea>
+      <label>Ojos/Oídos:</label><textarea name="ojosOidos"></textarea>
+      <label>Boca:</label><textarea name="boca"></textarea>
+      <label>Abdomen:</label><textarea name="abdomen"></textarea>
+      <label>Ganglios:</label><textarea name="ganglios"></textarea>
+      <label>Vómitos / Regurgitación:</label><textarea name="vomitos"></textarea>
+      <label>Diarrea / Estreñimiento:</label><textarea name="diarrea"></textarea>
+      <label>Tos / Estornudos:</label><textarea name="tos"></textarea>
+      <label>Cojera:</label><textarea name="cojera"></textarea>
+      <label>Orina / Sed:</label><textarea name="orinaSed"></textarea>
+      <label>Dolor (Escala 1-5):</label><input type="number" name="dolor" min="1" max="5" />
+      <label>Cambios de Comportamiento:</label><textarea name="comportamiento"></textarea>
+      <label>Presión Arterial:</label><input type="text" name="presion" />
+      <label>Sat O₂:</label><input type="text" name="oxigeno" />
+      <label>Glucosa (mg/dL):</label><input type="number" name="glucosa" />
+      <label>Reflejos Neurológicos:</label><textarea name="reflejos"></textarea>
+    </fieldset>
+  </div>
+
   <div id="receta-container" style="display:none; margin-top:1em; border:1px solid #0277bd;"></div>
 </div>
 
 <script>
-  // Toggle existente/nueva consulta
+  // Mostrar/ocultar secciones según tipo de consulta
   document.querySelectorAll('input[name="consultaType"]').forEach(r => {
     r.onchange = () => {
       document.getElementById('consulta-existente').style.display =
@@ -92,7 +135,7 @@
     };
   });
 
-  // Diagrama
+  // Mostrar diagrama según especie (simulado)
   const mapaDiag = {
     perro: 'svg/perro.png',
     gato: 'svg/felino.svg',
@@ -118,7 +161,6 @@
     d.style.top = (y - 10) + 'px';
     diagCont.appendChild(d);
   }
-
   document.getElementById('buscar-consulta').onclick = () => {
     const name = document.getElementById('consulta-petName').value.trim();
     const res = document.getElementById('consulta-result');
@@ -130,6 +172,12 @@
     diagImg.src = mapaDiag['perro'];
     clearHotspots();
     diagCont.addEventListener('click', addHotspot);
+  };
+
+  // Toggle sección avanzada
+  document.getElementById('toggle-avanzado').onclick = () => {
+    const sec = document.getElementById('seccion-avanzada');
+    sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
   };
 
   // Medicamentos
@@ -173,7 +221,6 @@
   medsBody.querySelectorAll('.btn-remove').forEach(b => b.onclick = e => { e.target.closest('tr').remove(); recalcConsultaTotal(); });
   recalcConsultaTotal();
 
-  // Receta preview y PDF (simulado)
   document.getElementById('preview-receta').onclick = async () => {
     const cont = document.getElementById('receta-container');
     const tpl = await fetch('Receta.html').then(r => r.text());
@@ -186,6 +233,5 @@
     cont.style.display = 'block';
     const tpl = await fetch('Receta.html').then(r => r.text());
     cont.innerHTML = tpl;
-    // Aquí podrías agregar jsPDF o html2pdf si es necesario
   };
 </script>
