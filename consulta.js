@@ -20,8 +20,16 @@ export function activarEventosConsulta() {
 }
 
 // Puedes extender este archivo con más funciones si lo deseas
-document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("toggle-avanzado")) {
-    activarEventosConsulta();
+document.addEventListener('DOMContentLoaded', function () {
+  const toggleBtn = document.getElementById('toggle-avanzado');
+  const seccionAvanzada = document.getElementById('seccion-avanzada');
+  if (toggleBtn && seccionAvanzada) {
+    toggleBtn.addEventListener('click', () => {
+      seccionAvanzada.style.display = seccionAvanzada.style.display === 'none' ? 'block' : 'none';
+    });
+    console.log('✅ Consulta detallada conectada correctamente.');
+  } else {
+    console.warn('❌ No se encontró el botón o sección avanzada.');
   }
 });
+
