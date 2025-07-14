@@ -2,6 +2,9 @@
 <div class="modal-consulta">
   <h2>Consulta Veterinaria 🩺</h2>
   <form id="form-consulta">
+    <!-- Botón para mostrar consulta detallada -->
+    <button type="button" class="button-86" id="toggle-avanzado" style="margin-bottom: 1em;">🧬 Consulta Detallada</button>
+
     <!-- Sección de búsqueda o nueva consulta -->
     <fieldset>
       <legend>Identificación de Mascota</legend>
@@ -53,10 +56,10 @@
     <!-- Diagnóstico final -->
     <fieldset>
       <legend>Evaluación y Plan Médico 🧾</legend>
-      <label>Diagnóstico Presuntivo/Definitivo:</label><textarea name="diagnosticoFinal" rows="2" /></textarea>
-      <label>Pruebas Realizadas:</label><textarea name="pruebas" rows="2" /></textarea>
-      <label>Medicación Prescrita:</label><textarea name="medicacion" rows="2" /></textarea>
-      <label>Recomendaciones:</label><textarea name="recomendaciones" rows="2" /></textarea>
+      <label>Diagnóstico Presuntivo/Definitivo:</label><textarea name="diagnosticoFinal" rows="2"></textarea>
+      <label>Pruebas Realizadas:</label><textarea name="pruebas" rows="2"></textarea>
+      <label>Medicación Prescrita:</label><textarea name="medicacion" rows="2"></textarea>
+      <label>Recomendaciones:</label><textarea name="recomendaciones" rows="2"></textarea>
       <label>Próximo Control:</label><input type="date" name="proximoControl" />
     </fieldset>
 
@@ -83,7 +86,6 @@
     </fieldset>
 
     <!-- Botones y vista previa receta -->
-    <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
     <button type="button" class="button-86" id="preview-receta">Vista Previa Receta</button>
     <button type="submit" class="button-86">Guardar Consulta</button>
   </form>
@@ -125,113 +127,10 @@
 </div>
 
 <script>
-  // Mostrar/ocultar secciones según tipo de consulta
-  document.querySelectorAll('input[name="consultaType"]').forEach(r => {
-    r.onchange = () => {
-      document.getElementById('consulta-existente').style.display =
-        r.value === 'existente' && r.checked ? 'block' : 'none';
-      document.getElementById('consulta-nueva').style.display =
-        r.value === 'nueva' && r.checked ? 'block' : 'none';
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('toggle-avanzado').onclick = () => {
+      const sec = document.getElementById('seccion-avanzada');
+      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
     };
   });
-
-  // Mostrar diagrama según especie (simulado)
-  const mapaDiag = {
-    perro: 'svg/perro.png',
-    gato: 'svg/felino.svg',
-    ave: 'svg/ave.png',
-    tortuga: 'svg/tortuga.svg',
-    serpiente: 'svg/serpiente.svg',
-    lagarto: 'svg/lagarto.png',
-    pez: 'svg/pez.svg',
-    roedor: 'svg/roedor.svg'
-  };
-  const diagImg = document.getElementById('consulta-diagrama-img');
-  const diagCont = document.getElementById('consulta-diagrama');
-  function clearHotspots() {
-    diagCont.querySelectorAll('.hotspot').forEach(h => h.remove());
-  }
-  function addHotspot(e) {
-    const r = diagCont.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-    const d = document.createElement('div');
-    d.className = 'hotspot';
-    d.style.left = (x - 10) + 'px';
-    d.style.top = (y - 10) + 'px';
-    diagCont.appendChild(d);
-  }
-  document.getElementById('buscar-consulta').onclick = () => {
-    const name = document.getElementById('consulta-petName').value.trim();
-    const res = document.getElementById('consulta-result');
-    if (!name) {
-      res.textContent = 'Ingresa un nombre válido';
-      return;
-    }
-    res.innerHTML = `<p><strong>Mascota:</strong> ${name}</p><p><em>Datos simulados cargados</em></p>`;
-    diagImg.src = mapaDiag['perro'];
-    clearHotspots();
-    diagCont.addEventListener('click', addHotspot);
-  };
-
-  // Toggle sección avanzada
-  document.getElementById('toggle-avanzado').onclick = () => {
-    const sec = document.getElementById('seccion-avanzada');
-    sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
-  };
-
-  // Medicamentos
-  const medsBody = document.querySelector('#tabla-meds-consulta tbody');
-  function medSelectTemplate() {
-    const s = document.createElement('select');
-    s.name = 'medicamento[]';
-    s.className = 'med-select';
-    ['Antibiótico 1', 'Medicamento 2', 'Medicamento 3'].forEach(m => {
-      const o = document.createElement('option');
-      o.value = o.textContent = m;
-      s.appendChild(o);
-    });
-    return s;
-  }
-  function recalcConsultaTotal() {
-    let t = 0;
-    medsBody.querySelectorAll('tr').forEach(r => {
-      const m = r.querySelector('.med-select').value;
-      const p = { 'Antibiótico 1': 250, 'Medicamento 2': 100, 'Medicamento 3': 150 }[m] || 0;
-      r.querySelector('.price-cell').textContent = '$' + p.toFixed(2);
-      t += p;
-    });
-    document.getElementById('total-consulta').textContent = t.toFixed(2);
-  }
-  document.getElementById('add-med').onclick = () => {
-    const r = document.createElement('tr');
-    r.innerHTML = `
-      <td></td>
-      <td><input name="dosage[]" placeholder="100 ml"/></td>
-      <td><select name="route[]"><option>Oral</option><option>Intravenoso</option></select></td>
-      <td class="price-cell">$0.00</td>
-      <td><button type="button" class="button-86 btn-remove">Eliminar</button></td>`;
-    r.querySelector('td:first-child').appendChild(medSelectTemplate());
-    medsBody.appendChild(r);
-    r.querySelector('.med-select').onchange = recalcConsultaTotal;
-    r.querySelector('.btn-remove').onclick = () => { r.remove(); recalcConsultaTotal(); };
-    recalcConsultaTotal();
-  };
-  medsBody.querySelectorAll('.med-select').forEach(s => s.onchange = recalcConsultaTotal);
-  medsBody.querySelectorAll('.btn-remove').forEach(b => b.onclick = e => { e.target.closest('tr').remove(); recalcConsultaTotal(); });
-  recalcConsultaTotal();
-
-  document.getElementById('preview-receta').onclick = async () => {
-    const cont = document.getElementById('receta-container');
-    const tpl = await fetch('Receta.html').then(r => r.text());
-    cont.innerHTML = tpl;
-    cont.style.display = 'block';
-  };
-  document.getElementById('form-consulta').onsubmit = async e => {
-    e.preventDefault();
-    const cont = document.getElementById('receta-container');
-    cont.style.display = 'block';
-    const tpl = await fetch('Receta.html').then(r => r.text());
-    cont.innerHTML = tpl;
-  };
 </script>
