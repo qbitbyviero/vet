@@ -510,43 +510,6 @@ if (document.getElementById('diagrama-img') && document.getElementById('cliente-
   });
 }
 
-// =======================
-// FUNCIÓN REUTILIZABLE PARA MODALES
-// =======================
-async function cargarMascotasEnModal(selectId, placeholder = "Selecciona mascota") {
-  try {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-
-    select.innerHTML = `<option value="">${placeholder}...</option>`;
-    
-    const clientes = await loadAllClients(); // Usa tu función existente
-    const mascotasUnicas = [];
-    
-    // Evita duplicados y filtra mascotas con nombre
-    clientes.forEach(cliente => {
-      if (cliente['Nombre de la mascota'] && !mascotasUnicas.some(m => m.nombre === cliente['Nombre de la mascota'])) {
-        mascotasUnicas.push({
-          nombre: cliente['Nombre de la mascota'],
-          propietario: cliente['Nombre del propietario'],
-          id: cliente['ID fila'] || cliente['ID cliente']
-        });
-      }
-    });
-
-    // Llena el select
-    mascotasUnicas.forEach(m => {
-      const option = document.createElement('option');
-      option.value = m.id;
-      option.textContent = `${m.nombre} (${m.propietario})`;
-      select.appendChild(option);
-    });
-
-  } catch (error) {
-    console.error("Error cargando mascotas para modal:", error);
-    select.innerHTML = `<option value="">Error al cargar</option>`;
-  }
-}
 // =============================
 // SISTEMA DE MÚLTIPLES MODALES DINÁMICOS POR BOTÓN
 // =============================
@@ -556,135 +519,87 @@ document.querySelectorAll('a[data-module]').forEach(link => {
     const archivo = link.getAttribute('data-module');
 
     try {
-      // 1. Traer HTML
+      // 1. Traer HTML del módulo
       const response = await fetch(archivo);
       if (!response.ok) throw new Error(`Error al cargar ${archivo}`);
       const html = await response.text();
 
-      // 2. Crear overlay y contenido
+      // 2. Crear el overlay (bloquea scroll del body)
       const modalOverlay = document.createElement('div');
       modalOverlay.classList.add('modal-overlay');
-     document.querySelectorAll('a[data-module]').forEach(link => {
-  link.addEventListener('click', async e => {
-    e.preventDefault();
-    const archivo = link.getAttribute('data-module');
-    const response = await fetch(archivo);
-    if (!response.ok) throw new Error(`Error al cargar ${archivo}`);
-    const html = await response.text();
+      Object.assign(modalOverlay.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: '9999',
+        overflow: 'hidden'
+      });
+      document.body.style.overflow = 'hidden';
 
-    // 1) Overlay (ya no hace scroll)
-    // Dentro de tu listener de click de los links [data-module], reemplaza la sección de "2. Crear overlay y contenido" por esto:
-
-// 2. Crear overlay y contenido
-const modalOverlay = document.createElement('div');
-modalOverlay.classList.add('modal-overlay');
-Object.assign(modalOverlay.style, {
-  position: 'fixed',
-  top: '0',
-  left: '0',
-  width: '100vw',
-  height: '100vh',
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: '9999',    // Muy por encima de todo
-  overflow: 'hidden' // Evita scroll doble en el overlay
-});
-// Para bloquear el scroll del body mientras el modal está abierto:
-document.body.style.overflow = 'hidden';
-
-const modalContent = document.createElement('div');
-modalContent.classList.add('modal-content');
-Object.assign(modalContent.style, {
-  position: 'relative',
-  zIndex: '10000',     // Un poco más arriba que el overlay (aunque no estrictamente necesario)
-  background: '#fff',
-  borderRadius: '8px',
-  padding: '1em',
-  maxWidth: '90vw',
-  maxHeight: '90vh',
-  overflowY: 'auto'    // El scroll interior
-});
-
-// 3. Inyectar HTML dentro de modalContent
-modalContent.innerHTML = html;
-
-// 4. Carga dinámica de scripts según el módulo…
-if (archivo.includes('clientes.html')) {
-  // … tu código para cargar clientes.js …
-} else if (archivo.includes('estetica.html')) {
-  // … tu código para cargar estetica.js …
-}
-
-// 5. Botón de cierre
-const closeButton = document.createElement('button');
-closeButton.textContent = 'Cerrar';
-Object.assign(closeButton.style, {
-  position: 'absolute',
-  top: '0.5em',
-  right: '0.5em',
-  background: '#e53935',
-  color: '#fff',
-  border: 'none',
-  padding: '0.5em 1em',
-  borderRadius: '4px',
-  cursor: 'pointer'
-});
-closeButton.addEventListener('click', () => {
-  modalOverlay.remove();
-  document.body.style.overflow = ''; // Restaurar scroll del body
-});
-
-// 6. Montar modal en el documento
-modalContent.appendChild(closeButton);
-modalOverlay.appendChild(modalContent);
-document.body.appendChild(modalOverlay);
-
-      // 3. Inyectar HTML
+      // 3. Crear el contenedor interior con scroll propio
+      const modalContent = document.createElement('div');
+      modalContent.classList.add('modal-content');
+      Object.assign(modalContent.style, {
+        position: 'relative',
+        zIndex: '10000',
+        background: '#fff',
+        borderRadius: '8px',
+        padding: '1em',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      });
       modalContent.innerHTML = html;
 
-      // 4. Carga dinámica de scripts según el módulo
+      // 4. Carga dinámica del script correspondiente
       if (archivo.includes('clientes.html')) {
-        console.log('⚡ Cargando clientes.js dentro del modal de clientes…');
-        // Eliminar instancias previas
+        console.log('⚡ Cargando clientes.js en modal de Clientes…');
         document.querySelectorAll('script[data-clientes-script]').forEach(s => s.remove());
         const scriptC = document.createElement('script');
         scriptC.src = './clientes.js';
         scriptC.dataset.clientesScript = 'true';
-        scriptC.onload =  () => console.log('✅ clientes.js cargado correctamente en modal clientes.');
-        scriptC.onerror = () => console.error('❌ Error cargando clientes.js en modal clientes.');
+        scriptC.onload  = () => console.log('✅ clientes.js cargado.');
+        scriptC.onerror = () => console.error('❌ Error cargando clientes.js.');
         document.body.appendChild(scriptC);
-
-      } else if (archivo.includes('estetica.html')) {
-        console.log('⚡ Cargando estetica.js en modal estética…');
+      }
+      else if (archivo.includes('estetica.html')) {
+        console.log('⚡ Cargando estetica.js en modal de Estética…');
         document.querySelectorAll('script[data-estetica-script]').forEach(s => s.remove());
         const scriptE = document.createElement('script');
         scriptE.src = './estetica.js';
         scriptE.dataset.esteticaScript = 'true';
-        scriptE.onload  = () => console.log('✅ estetica.js cargado correctamente.');
+        scriptE.onload  = () => console.log('✅ estetica.js cargado.');
         scriptE.onerror = () => console.error('❌ Error cargando estetica.js.');
         document.body.appendChild(scriptE);
       }
 
-      // 5. Botón de cierre
+      // 5. Crear y montar botón de cierre
       const closeButton = document.createElement('button');
       closeButton.textContent = 'Cerrar';
       Object.assign(closeButton.style, {
-        position: 'absolute', top: '0.5em', right: '0.5em',
-        background: '#e53935', color: '#fff',
-        border: 'none', padding: '0.5em 1em',
-        borderRadius: '4px', cursor: 'pointer'
+        position: 'absolute',
+        top: '0.5em',
+        right: '0.5em',
+        background: '#e53935',
+        color: '#fff',
+        border: 'none',
+        padding: '0.5em 1em',
+        borderRadius: '4px',
+        cursor: 'pointer'
       });
       closeButton.addEventListener('click', () => {
         modalOverlay.remove();
-        if (!document.querySelector('.modal-overlay')) {
-          document.body.style.overflow = '';
-        }
+        document.body.style.overflow = ''; // Restaurar scroll de body
       });
+      modalContent.appendChild(closeButton);
 
       // 6. Montar modal en el documento
-      modalContent.appendChild(closeButton);
       modalOverlay.appendChild(modalContent);
       document.body.appendChild(modalOverlay);
 
@@ -694,7 +609,6 @@ document.body.appendChild(modalOverlay);
     }
   });
 });
-
 // ===============================
 // FUNCIÓN UNIVERSAL busquedaClientes
 // ===============================
