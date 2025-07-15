@@ -1,8 +1,6 @@
-// consulta.js
-console.log("🩺 consulta.js activo");
+console.log("🩺 consulta.js activo2");
 
-// Esperar a que el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', function () {
+function activarConsultaAvanzada() {
   const toggleBtn = document.getElementById('toggle-avanzado');
   const seccionAvanzada = document.getElementById('seccion-avanzada');
 
@@ -21,6 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     console.log("✅ Consulta detallada conectada correctamente.");
   } else {
-    console.warn("❌ No se encontró el botón o la sección avanzada.");
+    console.warn("❌ No se encontró el botón o la sección avanzada. Reintentando...");
+    // Reintentar después de un pequeño delay
+    setTimeout(activarConsultaAvanzada, 300);
   }
-});
+}
+
+// Iniciar la activación (sin esperar DOMContentLoaded porque es carga dinámica)
+activarConsultaAvanzada();
