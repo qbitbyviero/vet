@@ -1,75 +1,60 @@
-// consulta.js actualizado para el módulo de consulta veterinaria
+// consulta.js versión 4 – limpio y funcional
+console.log("🩺 consulta.js activo v4");
 
-console.log("🩺 consulta.js activo3");
-
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const btnToggle = document.getElementById('toggle-avanzado');
   const seccionAvanzada = document.getElementById('seccion-avanzada');
   const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
   const divExistente = document.getElementById('consulta-existente');
   const divNueva = document.getElementById('consulta-nueva');
+  const btnBuscar = document.getElementById('buscar-consulta');
+  const form = document.getElementById('form-consulta');
 
-  // Mostrar/ocultar sección avanzada
-  if (btnToggle && seccionAvanzada) {
-    btnToggle.addEventListener('click', () => {
-      const mostrar = seccionAvanzada.style.display === 'none';
-      seccionAvanzada.style.display = mostrar ? 'block' : 'none';
-      console.log(mostrar ? "🔼 Mostrando consulta detallada" : "🔽 Ocultando consulta detallada");
-    });
-  }
-
-  // Mostrar/ocultar campos según tipo de consulta
+  // Alternar campos nueva/existente
   tipoRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
-      if (e.target.value === 'nueva') {
+      const tipo = e.target.value;
+      if (tipo === 'nueva') {
         divNueva.style.display = 'block';
         divExistente.style.display = 'none';
-        console.log("🆕 Activando campos para nueva mascota");
+        console.log("🆕 Mostrando campos para nueva mascota");
       } else {
         divNueva.style.display = 'none';
         divExistente.style.display = 'block';
-        console.log("🔁 Activando búsqueda para mascota existente");
+        console.log("🔁 Mostrando búsqueda de mascota existente");
       }
     });
   });
 
-  // Evento para botón de búsqueda (futuro fetch de info de mascota)
-  const btnBuscar = document.getElementById('buscar-consulta');
+  // Toggle sección avanzada
+  btnToggle.addEventListener('click', () => {
+    const visible = seccionAvanzada.style.display === 'block';
+    seccionAvanzada.style.display = visible ? 'none' : 'block';
+    console.log(visible ? "🔽 Ocultando detalles" : "🔼 Mostrando detalles");
+  });
+
+  // Simulación búsqueda
   if (btnBuscar) {
     btnBuscar.addEventListener('click', () => {
-      const nombreMascota = document.getElementById('consulta-petName').value.trim();
-      const resultadoDiv = document.getElementById('consulta-result');
-      if (!nombreMascota) {
-        resultadoDiv.innerHTML = '<span style="color:red">⚠️ Ingrese un nombre válido</span>';
+      const nombre = document.getElementById('consulta-petName').value.trim();
+      const resultado = document.getElementById('consulta-result');
+      if (!nombre) {
+        resultado.innerHTML = '<span style="color:red">⚠️ Escribe un nombre válido</span>';
         return;
       }
-
-      // Aquí se conectará al Google Sheet en el futuro
-      resultadoDiv.innerHTML = `🔍 Buscando datos de <strong>${nombreMascota}</strong>... <em>(función en desarrollo)</em>`;
-      // TODO: integrar lógica de búsqueda real
+      resultado.innerHTML = `🔍 Buscando datos de <strong>${nombre}</strong>... <em>(en desarrollo)</em>`;
     });
   }
 
-  // Guardado de datos (formulario)
-  const form = document.getElementById('form-consulta');
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const dataObj = {};
-    formData.forEach((value, key) => {
-      if (dataObj[key]) {
-        // Si ya existe la clave, convierte en arreglo
-        if (!Array.isArray(dataObj[key])) dataObj[key] = [dataObj[key]];
-        dataObj[key].push(value);
-      } else {
-        dataObj[key] = value;
-      }
+  // Guardado simulado
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((val, key) => data[key] = val);
+      console.log("📤 Enviando consulta:", data);
+      alert("✅ Consulta guardada (simulado)");
     });
-
-    console.log("📤 Enviando datos a Spreadsheet (simulado):", dataObj);
-    alert("✅ Consulta guardada (simulado)");
-
-    // Aquí se puede agregar lógica para enviar a Google Sheets con fetch o Google Apps Script
-    // Ejemplo: fetch('https://script.google.com/xxx', { method: 'POST', body: JSON.stringify(dataObj) })
-  });
+  }
 });
