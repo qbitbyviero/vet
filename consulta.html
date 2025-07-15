@@ -1,119 +1,111 @@
-<!-- consulta.html: Módulo de Consulta Veterinaria2 🩺 -->
+<style>
+  .grid-parejas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1em;
+  }
+  .grid-parejas label {
+    font-weight: bold;
+    margin-top: 0.5em;
+  }
+  .fieldset-titulo {
+    background-color: #e3f2fd;
+    padding: 0.5em;
+    border-radius: 8px;
+    margin-bottom: 1em;
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+  fieldset {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1.5em;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+  }
+</style>
+
+<!-- CONSULTA VETERINARIA MEJORADA -->
 <div class="modal-consulta">
   <h2>Consulta Veterinaria 🩺</h2>
   <form id="form-consulta">
-    <!-- Botón para mostrar consulta detallada -->
-    <button type="button" class="button-86" id="toggle-avanzado" style="margin-bottom: 1em;">🧬 Consulta Detallada</button>
-    <!-- Sección de búsqueda o nueva consulta -->
+
+    <!-- TIPO DE CONSULTA -->
     <fieldset>
-      <legend>Identificación de Mascota</legend>
+      <legend class="fieldset-titulo">🐶 Identificación de Mascota</legend>
       <label><input type="radio" name="consultaType" value="existente" checked /> Consulta existente</label>
       <label><input type="radio" name="consultaType" value="nueva" /> Consulta nueva (cliente y mascota)</label>
+
       <div id="consulta-existente">
-        <label>Nombre de la Mascota:</label>
-        <input type="text" id="consulta-petName" placeholder="Ingresar nombre..." />
+        <label>🔍 Nombre de la Mascota:</label>
+        <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa..." />
         <button type="button" class="button-86" id="buscar-consulta">Buscar</button>
         <div id="consulta-result"></div>
       </div>
-      <div id="consulta-nueva" style="display:none; margin-top:1em;">
-        <h4>Datos Propietario</h4>
-        <label>Nombre:</label><input type="text" name="ownerName" />
-        <label>Teléfono:</label><input type="tel" name="ownerPhone" />
-        <label>Correo:</label><input type="email" name="ownerEmail" />
-        <h4>Datos Mascota</h4>
-        <label>Nombre Mascota:</label><input type="text" name="petNameNew" />
-        <label>Especie:</label><input type="text" name="speciesNew" />
-        <label>Raza:</label><input type="text" name="breedNew" />
+
+      <div id="consulta-nueva" style="display:none;">
+        <div class="grid-parejas">
+          <label>👤 Nombre del Propietario:<input type="text" name="ownerName" /></label>
+          <label>📞 Teléfono:<input type="tel" name="ownerPhone" /></label>
+          <label>📧 Correo:<input type="email" name="ownerEmail" /></label>
+          <label>🐾 Nombre Mascota:<input type="text" name="petNameNew" /></label>
+          <label>🧬 Especie:<input type="text" name="speciesNew" /></label>
+          <label>🐕 Raza:<input type="text" name="breedNew" /></label>
+          <label>🎂 Edad:<input type="number" name="age" min="0" /></label>
+          <label>⚖️ Peso (kg):<input type="number" name="weight" step="0.1" /></label>
+          <label>💉 Esterilizado:<select name="esterilizado"><option>Sí</option><option>No</option></select></label>
+          <label>📝 Observaciones:<textarea name="observaciones" rows="2"></textarea></label>
+        </div>
       </div>
     </fieldset>
-    <!-- Diagrama -->
-    <fieldset>
-      <legend>Diagrama de Tratamiento</legend>
-      <div id="consulta-diagrama" class="diagrama-container">
-        <img id="consulta-diagrama-img" src="" alt="Diagrama Mascota" />
-      </div>
-    </fieldset>
-    <!-- Signos vitales y síntomas -->
-    <fieldset>
-      <legend>Signos Vitales y Síntomas</legend>
-      <label>Edad (años):</label><input type="number" name="age" min="0" />
-      <label>Peso (kg):</label><input type="number" name="weight" step="0.1" />
-      <label>Frecuencia Cardíaca (lpm):</label><input type="number" name="heartRate" />
-      <label>Temperatura (°C):</label><input type="number" name="temperature" step="0.1" />
-      <label>Condición del Manto:</label>
-      <select name="coatCondition">
-        <option value="normal">Normal</option>
-        <option value="seco">Seco</option>
-        <option value="graso">Graso</option>
-        <option value="dañado">Dañado</option>
-      </select>
-      <label>Síntomas Observados:</label><textarea name="symptoms" rows="3"></textarea>
-    </fieldset>
-    <!-- Diagnóstico final -->
-    <fieldset>
-      <legend>Evaluación y Plan Médico 🧾</legend>
-      <label>Diagnóstico Presuntivo/Definitivo:</label><textarea name="diagnosticoFinal" rows="2"></textarea>
-      <label>Pruebas Realizadas:</label><textarea name="pruebas" rows="2"></textarea>
-      <label>Medicación Prescrita:</label><textarea name="medicacion" rows="2"></textarea>
-      <label>Recomendaciones:</label><textarea name="recomendaciones" rows="2"></textarea>
-      <label>Próximo Control:</label><input type="date" name="proximoControl" />
-    </fieldset>
-    <!-- Medicamentos y precios -->
-    <fieldset>
-      <legend>Medicamentos Administrados</legend>
-      <p class="notice">Una patita amiga siempre ayuda: la consulta, por cuenta de la casa 🐾</p>
-      <table id="tabla-meds-consulta">
-        <thead>
-          <tr><th>Medicamento</th><th>Dosificación</th><th>Vía</th><th>Precio</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><select name="medicamento[]" class="med-select"></select></td>
-            <td><input type="text" name="dosage[]" placeholder="100 ml" /></td>
-            <td><select name="route[]"><option>Oral</option><option>Intravenoso</option><option>Intramuscular</option><option>Tópico</option></select></td>
-            <td class="price-cell">$0.00</td>
-            <td><button type="button" class="button-86 btn-remove">Eliminar</button></td>
-          </tr>
-        </tbody>
-      </table>
-      <button type="button" class="button-86" id="add-med">Añadir Medicamento</button>
-      <div class="total-consulta"><strong>Total:</strong> $<span id="total-consulta">0.00</span></div>
-    </fieldset>
-    <!-- Botones y vista previa receta -->
-    <button type="button" class="button-86" id="preview-receta">Vista Previa Receta</button>
-    <button type="submit" class="button-86">Guardar Consulta</button>
+
+    <!-- TOGGLE SECCIÓN AVANZADA -->
+    <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
+
+    <div id="seccion-avanzada" style="display:none;">
+      <fieldset>
+        <legend class="fieldset-titulo">📋 Historial Clínico Adicional</legend>
+        <div class="grid-parejas">
+          <label>📖 Motivo de Consulta:<textarea name="motivoConsulta"></textarea></label>
+          <label>🏥 Historial Médico:<textarea name="historialMedico"></textarea></label>
+          <label>💉 Vacunación:<input type="text" name="vacunacion" /></label>
+          <label>🐛 Desparasitación:<input type="text" name="desparasitacion" /></label>
+          <label>🥩 Alimentación:<input type="text" name="alimentacion" /></label>
+          <label>📊 Estado Corporal (1-9):<input type="number" name="estadoCorporal" min="1" max="9" /></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- BOTONES FINALES -->
+    <button type="submit" class="button-86">💾 Guardar Consulta</button>
   </form>
-  <!-- Sección Avanzada (escondida inicialmente) -->
-  <div id="seccion-avanzada" style="display:none; margin-top:1em;">
-    <fieldset>
-      <legend>Historial Clínico Adicional 📋</legend>
-      <label>Motivo de Consulta:</label><textarea name="motivoConsulta" rows="2"></textarea>
-      <label>Historial Médico Previo:</label><textarea name="historialMedico" rows="2"></textarea>
-      <label>Vacunación:</label><input type="text" name="vacunacion" placeholder="Ej: Al día - 10/07/2025" />
-      <label>Desparasitación:</label><input type="text" name="desparasitacion" placeholder="Ej: Endogard - 15/06/2025" />
-      <label>Alimentación:</label><input type="text" name="alimentacion" placeholder="Ej: Croquetas, dieta barf..." />
-      <label>Estado Corporal (1-9):</label><input type="number" name="estadoCorporal" min="1" max="9" />
-      <label>Hidratación (% o descripción):</label><input type="text" name="hidratacion" />
-      <label>Mucosas:</label><input type="text" name="mucosas" />
-      <label>TRC (segundos):</label><input type="number" name="trc" />
-      <label>FR (rpm):</label><input type="number" name="fr" />
-      <label>Auscultación Cardíaca/Pulmonar:</label><textarea name="auscultacion"></textarea>
-      <label>Ojos/Oídos:</label><textarea name="ojosOidos"></textarea>
-      <label>Boca:</label><textarea name="boca"></textarea>
-      <label>Abdomen:</label><textarea name="abdomen"></textarea>
-      <label>Ganglios:</label><textarea name="ganglios"></textarea>
-      <label>Vómitos / Regurgitación:</label><textarea name="vomitos"></textarea>
-      <label>Diarrea / Estreñimiento:</label><textarea name="diarrea"></textarea>
-      <label>Tos / Estornudos:</label><textarea name="tos"></textarea>
-      <label>Cojera:</label><textarea name="cojera"></textarea>
-      <label>Orina / Sed:</label><textarea name="orinaSed"></textarea>
-      <label>Dolor (Escala 1-5):</label><input type="number" name="dolor" min="1" max="5" />
-      <label>Cambios de Comportamiento:</label><textarea name="comportamiento"></textarea>
-      <label>Presión Arterial:</label><input type="text" name="presion" />
-      <label>Sat O₂:</label><input type="text" name="oxigeno" />
-      <label>Glucosa (mg/dL):</label><input type="number" name="glucosa" />
-      <label>Reflejos Neurológicos:</label><textarea name="reflejos"></textarea>
-    </fieldset>
-  </div>
-  <div id="receta-container" style="display:none; margin-top:1em; border:1px solid #0277bd;"></div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const btnToggle = document.getElementById('toggle-avanzado');
+    const seccionAvanzada = document.getElementById('seccion-avanzada');
+    const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
+    const divExistente = document.getElementById('consulta-existente');
+    const divNueva = document.getElementById('consulta-nueva');
+
+    if (btnToggle && seccionAvanzada) {
+      btnToggle.addEventListener('click', () => {
+        const mostrar = seccionAvanzada.style.display === 'none';
+        seccionAvanzada.style.display = mostrar ? 'block' : 'none';
+      });
+    }
+
+    tipoRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.value === 'nueva') {
+          divNueva.style.display = 'block';
+          divExistente.style.display = 'none';
+        } else {
+          divNueva.style.display = 'none';
+          divExistente.style.display = 'block';
+        }
+      });
+    });
+  });
+</script>
