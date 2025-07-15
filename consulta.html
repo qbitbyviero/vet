@@ -1,36 +1,8 @@
-<style>
-  .grid-parejas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1em;
-  }
-  .grid-parejas label {
-    font-weight: bold;
-    margin-top: 0.5em;
-  }
-  .fieldset-titulo {
-    background-color: #e3f2fd;
-    padding: 0.5em;
-    border-radius: 8px;
-    margin-bottom: 1em;
-    font-weight: bold;
-    font-size: 1.1em;
-  }
-  fieldset {
-    border: 1px solid #ccc;
-    padding: 1em;
-    margin-bottom: 1.5em;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-  }
-</style>
-
-<!-- CONSULTA VETERINARIA MEJORADA -->
+<!-- consulta.html – Versión completa e integrada para pruebas -->
 <div class="modal-consulta">
-  <h2>Consulta Veterinaria 🩺</h2>
+  <h2>Consulta Veterinaria 🩺 v2</h2>
   <form id="form-consulta">
-
-    <!-- TIPO DE CONSULTA -->
+    <!-- Identificación -->
     <fieldset>
       <legend class="fieldset-titulo">🐶 Identificación de Mascota</legend>
       <label><input type="radio" name="consultaType" value="existente" checked /> Consulta existente</label>
@@ -43,7 +15,7 @@
         <div id="consulta-result"></div>
       </div>
 
-      <div id="consulta-nueva" style="display:none;">
+      <div id="consulta-nueva" style="display:none; margin-top:1em;">
         <div class="grid-parejas">
           <label>👤 Nombre del Propietario:<input type="text" name="ownerName" /></label>
           <label>📞 Teléfono:<input type="tel" name="ownerPhone" /></label>
@@ -59,7 +31,7 @@
       </div>
     </fieldset>
 
-    <!-- TOGGLE SECCIÓN AVANZADA -->
+    <!-- Consulta detallada -->
     <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
 
     <div id="seccion-avanzada" style="display:none;">
@@ -76,26 +48,100 @@
       </fieldset>
     </div>
 
-    <!-- BOTONES FINALES -->
+    <!-- Botón final -->
     <button type="submit" class="button-86">💾 Guardar Consulta</button>
   </form>
 </div>
 
+<style>
+  .modal-consulta {
+    padding: 1em;
+    border-radius: 10px;
+    background: #e3f2fd;
+    border: 2px solid #0288d1;
+    margin: 0 auto;
+    max-width: 700px;
+  }
+
+  .fieldset-titulo {
+    background-color: #bbdefb;
+    padding: 0.5em;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 1em;
+  }
+
+  .grid-parejas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1em;
+  }
+
+  .grid-parejas label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    font-size: 0.95em;
+  }
+
+  fieldset {
+    border: 1px solid #90caf9;
+    border-radius: 10px;
+    padding: 1em;
+    margin-bottom: 1.5em;
+    background-color: #f1f8ff;
+  }
+
+  .button-86 {
+    background: #0288d1;
+    color: white;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 1em;
+  }
+
+  .button-86:hover {
+    background: #0277bd;
+  }
+
+  textarea, input, select {
+    padding: 0.3em;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+  }
+
+  input[type="radio"] {
+    margin-right: 0.5em;
+  }
+
+  h2 {
+    color: #01579b;
+    text-align: center;
+    margin-bottom: 1em;
+  }
+</style>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("🧪 consulta.js versión de prueba integrada");
+
     const btnToggle = document.getElementById('toggle-avanzado');
     const seccionAvanzada = document.getElementById('seccion-avanzada');
     const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
     const divExistente = document.getElementById('consulta-existente');
     const divNueva = document.getElementById('consulta-nueva');
 
-    if (btnToggle && seccionAvanzada) {
-      btnToggle.addEventListener('click', () => {
-        const mostrar = seccionAvanzada.style.display === 'none';
-        seccionAvanzada.style.display = mostrar ? 'block' : 'none';
-      });
-    }
+    // Alternar sección detallada
+    btnToggle.addEventListener('click', () => {
+      const visible = seccionAvanzada.style.display === 'block';
+      seccionAvanzada.style.display = visible ? 'none' : 'block';
+    });
 
+    // Mostrar campos dependiendo de radio seleccionado
     tipoRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
         if (e.target.value === 'nueva') {
