@@ -1,20 +1,26 @@
 // consulta.js
 console.log("🩺 consulta.js activo");
 
-// Escuchar cuando el DOM ya esté listo
+// Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
   const toggleBtn = document.getElementById('toggle-avanzado');
   const seccionAvanzada = document.getElementById('seccion-avanzada');
 
   if (toggleBtn && seccionAvanzada) {
     toggleBtn.addEventListener('click', () => {
-      const visible = seccionAvanzada.style.display === 'block';
-      seccionAvanzada.style.display = visible ? 'none' : 'block';
-      console.log(visible ? "🔽 Ocultando consulta detallada" : "🔼 Mostrando consulta detallada");
+      const isHidden = window.getComputedStyle(seccionAvanzada).display === 'none';
+      seccionAvanzada.style.display = isHidden ? 'block' : 'none';
+
+      if (isHidden) {
+        console.log("🔼 Consulta detallada mostrada.");
+        console.log("📋 Campos clínicos adicionales activados.");
+      } else {
+        console.log("🔽 Consulta detallada oculta.");
+      }
     });
 
-    console.log('✅ Consulta detallada conectada correctamente.');
+    console.log("✅ Consulta detallada conectada correctamente.");
   } else {
-    console.warn('❌ No se encontró el botón o sección avanzada.');
+    console.warn("❌ No se encontró el botón o la sección avanzada.");
   }
 });
