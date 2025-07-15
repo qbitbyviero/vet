@@ -1,6 +1,6 @@
 // consulta.js actualizado para el módulo de consulta veterinaria
 
-console.log("🩺 consulta.js activo");
+console.log("🩺 consulta.js activo3");
 
 document.addEventListener('DOMContentLoaded', function () {
   const btnToggle = document.getElementById('toggle-avanzado');
