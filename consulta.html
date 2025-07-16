@@ -1,141 +1,126 @@
 <!-- consulta.html -->
 <div class="modal-consulta">
-  <h2>Consulta Veterinaria 🩺 v3</h2>
-
+  <h2>Consulta Veterinaria 🩺</h2>
   <form id="form-consulta">
-
-    <!-- TIPO DE CONSULTA -->
+    <!-- 1. IDENTIFICACIÓN -->
     <fieldset>
       <legend class="fieldset-titulo">🐶 Identificación de Mascota</legend>
-      <label><input type="radio" name="consultaType" value="existente" checked /> Consulta existente</label>
-      <label><input type="radio" name="consultaType" value="nueva" /> Consulta nueva (cliente y mascota)</label>
+      <label>
+        <input type="radio" name="consultaType" value="existente" checked />
+        Consulta existente
+      </label>
+      <label>
+        <input type="radio" name="consultaType" value="nueva" />
+        Consulta nueva (cliente y mascota)
+      </label>
 
-      <!-- BUSCAR EXISTENTE -->
+      <!-- EXISTENTE: buscador + listado -->
       <div id="consulta-existente">
-        <label>🔍 Nombre de la Mascota:</label>
-        <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa..." />
-        <button type="button" class="button-86" id="buscar-consulta">Buscar</button>
-        <div id="consulta-result"></div>
-      </div>
-
-      <!-- EDICIÓN DE CLIENTE (solo existente) -->
-      <div id="cliente-edicion" style="display:none; margin-top:1em;">
-        <h4>✏️ Editar Datos del Cliente</h4>
         <div class="grid-parejas">
-          <label>👤 Propietario:<input type="text" id="edit-ownerName" /></label>
-          <label>📞 Teléfono:<input type="tel" id="edit-ownerPhone" /></label>
-          <label>📧 Correo:<input type="email" id="edit-ownerEmail" /></label>
-          <label>🐾 Mascota:<input type="text" id="edit-petName" /></label>
-          <label>🧬 Especie:<input type="text" id="edit-species" /></label>
-          <label>🐕 Raza:<input type="text" id="edit-breed" /></label>
-          <label>🎂 Edad:<input type="number" id="edit-age" min="0" /></label>
-          <label>⚖️ Peso:<input type="number" id="edit-weight" step="0.1" /></label>
-          <label>💉 Esterilizado:
-            <select id="edit-sterilized">
-              <option value="Sí">Sí</option>
-              <option value="No">No</option>
-            </select>
+          <label>🔍 Nombre Mascota:
+            <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa…" />
           </label>
-          <label>📝 Observaciones:<textarea id="edit-notes" rows="2"></textarea></label>
+          <button type="button" class="button-86" id="buscar-consulta">Buscar</button>
         </div>
-        <button type="button" class="button-86" id="btn-actualizar-cliente">✏️ Actualizar Cliente</button>
+        <ul id="consulta-results-list"></ul>
       </div>
 
-      <!-- NUEVA CONSULTA (cliente+mascota) -->
+      <!-- NUEVA / EDITAR datos de cliente -->
       <div id="consulta-nueva" style="display:none; margin-top:1em;">
         <div class="grid-parejas">
-          <label>👤 Propietario:<input type="text" name="ownerName" /></label>
-          <label>📞 Teléfono:<input type="tel" name="ownerPhone" /></label>
-          <label>📧 Correo:<input type="email" name="ownerEmail" /></label>
-          <label>🐾 Mascota:<input type="text" name="petNameNew" /></label>
-          <label>🧬 Especie:<input type="text" name="speciesNew" /></label>
-          <label>🐕 Raza:<input type="text" name="breedNew" /></label>
-          <label>🎂 Edad:<input type="number" name="age" min="0" /></label>
-          <label>⚖️ Peso:<input type="number" name="weight" step="0.1" /></label>
+          <label>👤 Propietario:
+            <input type="text" name="ownerName" id="ownerName" />
+          </label>
+          <label>📞 Teléfono:
+            <input type="tel" name="ownerPhone" id="ownerPhone" />
+          </label>
+          <label>📧 Correo:
+            <input type="email" name="ownerEmail" id="ownerEmail" />
+          </label>
+          <label>🐾 Nombre Mascota:
+            <input type="text" name="petNameNew" id="petNameNew" />
+          </label>
+          <label>🧬 Especie:
+            <input type="text" name="speciesNew" id="speciesNew" />
+          </label>
+          <label>🐕 Raza:
+            <input type="text" name="breedNew" id="breedNew" />
+          </label>
+          <label>🎂 Edad:
+            <input type="number" name="age" id="age" min="0" />
+          </label>
+          <label>⚖️ Peso:
+            <input type="number" name="weight" id="weight" step="0.1" />
+          </label>
           <label>💉 Esterilizado:
-            <select name="esterilizado">
+            <select name="esterilizado" id="esterilizado">
               <option>Sí</option><option>No</option>
             </select>
           </label>
-          <label>📝 Observaciones:<textarea name="observaciones" rows="2"></textarea></label>
+          <label>📝 Observaciones:
+            <textarea name="observaciones" id="observaciones" rows="2"></textarea>
+          </label>
         </div>
+        <button type="button" class="button-86" id="update-client-btn">✏️ Actualizar Cliente</button>
       </div>
     </fieldset>
 
-    <!-- CONSULTA DETALLADA -->
+    <!-- 2. CONSULTA DETALLADA -->
     <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
     <div id="seccion-avanzada" style="display:none; margin-top:1em;">
       <fieldset>
         <legend class="fieldset-titulo">📋 Historial Clínico Adicional</legend>
         <div class="grid-parejas">
-          <label>📖 Motivo:<textarea name="motivoConsulta"></textarea></label>
-          <label>🏥 Historial Médico:<textarea name="historialMedico"></textarea></label>
-          <label>💉 Vacunación:<input type="text" name="vacunacion" /></label>
-          <label>🐛 Desparasitación:<input type="text" name="desparasitacion" /></label>
-          <label>🥩 Alimentación:<input type="text" name="alimentacion" /></label>
-          <label>📊 Estado Corporal:<input type="number" name="estadoCorporal" min="1" max="9" /></label>
+          <label>📖 Motivo:
+            <textarea name="motivoConsulta" id="motivoConsulta"></textarea>
+          </label>
+          <label>🏥 Historial:
+            <textarea name="historialMedico" id="historialMedico"></textarea>
+          </label>
+          <label>💉 Vacunación:
+            <input type="text" name="vacunacion" id="vacunacion" />
+          </label>
+          <label>🐛 Desparasitación:
+            <input type="text" name="desparasitacion" id="desparasitacion" />
+          </label>
+          <label>🥩 Alimentación:
+            <input type="text" name="alimentacion" id="alimentacion" />
+          </label>
+          <label>📊 Estado Corporal:
+            <input type="number" name="estadoCorporal" id="estadoCorporal" min="1" max="9" />
+          </label>
         </div>
       </fieldset>
     </div>
 
-    <!-- GUARDAR CONSULTA -->
+    <!-- 3. MEDICAMENTOS -->
+    <fieldset>
+      <legend class="fieldset-titulo">💊 Medicamentos Administrados</legend>
+      <table id="tabla-meds-consulta">
+        <thead>
+          <tr>
+            <th>Medicamento</th><th>Dosificación</th>
+            <th>Vía</th><th>Precio</th><th>Acción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button type="button" class="button-86 small" id="add-med">➕ Añadir Medicamento</button>
+      <div style="margin-top:1em">
+        <strong>Total: $<span id="total-consulta">0.00</span></strong>
+      </div>
+    </fieldset>
+
+    <!-- 4. GUARDAR -->
     <button type="submit" class="button-86">💾 Guardar Consulta</button>
   </form>
 </div>
 
 <style>
-  .modal-consulta {
-    padding: 1em;
-    border-radius: 10px;
-    background: #e3f2fd;
-    border: 2px solid #0288d1;
-    margin: 0 auto;
-    max-width: 720px;
-  }
-  .fieldset-titulo {
-    background: #bbdefb;
-    padding: 0.5em;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 1.1em;
-    margin-bottom: 1em;
-  }
-  .grid-parejas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1em;
-  }
-  .grid-parejas label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.95em;
-    font-weight: bold;
-  }
-  textarea, input, select {
-    padding: 0.4em;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 0.95em;
-  }
-  fieldset {
-    border: 1px solid #90caf9;
-    border-radius: 10px;
-    padding: 1em;
-    margin-bottom: 1.5em;
-    background-color: #f1f8ff;
-  }
-  .button-86 {
-    background: #0288d1;
-    color: white;
-    padding: 0.5em 1.2em;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 1em;
-  }
-  .button-86:hover {
-    background: #0277bd;
-  }
+  /* estilos resumidos… */
+  .grid-parejas { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1em; }
+  .button-86.small { font-size:.85rem; padding:.3em .8em; }
+  table { width:100%; border-collapse:collapse; margin-top:.5em; }
+  th,td { border:1px solid #ccc; padding:.4em; text-align:left; }
 </style>
-
 <script src="consulta.js"></script>
