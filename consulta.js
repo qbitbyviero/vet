@@ -1,60 +1,62 @@
-// consulta.js versión 4 – limpio y funcional
-console.log("🩺 consulta.js activo v4");
+// consulta.js
+console.log("🩺 consulta.js activo v5");
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
   const btnToggle = document.getElementById('toggle-avanzado');
   const seccionAvanzada = document.getElementById('seccion-avanzada');
   const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
   const divExistente = document.getElementById('consulta-existente');
   const divNueva = document.getElementById('consulta-nueva');
-  const btnBuscar = document.getElementById('buscar-consulta');
-  const form = document.getElementById('form-consulta');
 
-  // Alternar campos nueva/existente
-  tipoRadios.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const tipo = e.target.value;
-      if (tipo === 'nueva') {
-        divNueva.style.display = 'block';
-        divExistente.style.display = 'none';
-        console.log("🆕 Mostrando campos para nueva mascota");
-      } else {
-        divNueva.style.display = 'none';
-        divExistente.style.display = 'block';
-        console.log("🔁 Mostrando búsqueda de mascota existente");
-      }
-    });
-  });
-
-  // Toggle sección avanzada
-  btnToggle.addEventListener('click', () => {
-    const visible = seccionAvanzada.style.display === 'block';
-    seccionAvanzada.style.display = visible ? 'none' : 'block';
-    console.log(visible ? "🔽 Ocultando detalles" : "🔼 Mostrando detalles");
-  });
-
-  // Simulación búsqueda
-  if (btnBuscar) {
-    btnBuscar.addEventListener('click', () => {
-      const nombre = document.getElementById('consulta-petName').value.trim();
-      const resultado = document.getElementById('consulta-result');
-      if (!nombre) {
-        resultado.innerHTML = '<span style="color:red">⚠️ Escribe un nombre válido</span>';
-        return;
-      }
-      resultado.innerHTML = `🔍 Buscando datos de <strong>${nombre}</strong>... <em>(en desarrollo)</em>`;
+  // Alternar consulta detallada
+  if (btnToggle && seccionAvanzada) {
+    btnToggle.addEventListener('click', () => {
+      const mostrar = seccionAvanzada.style.display === 'none';
+      seccionAvanzada.style.display = mostrar ? 'block' : 'none';
+      console.log(mostrar ? "🔼 Mostrando consulta detallada" : "🔽 Ocultando consulta detallada");
     });
   }
 
-  // Guardado simulado
+  // Alternar entre consulta existente y nueva
+  tipoRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const tipo = e.target.value;
+      divExistente.style.display = tipo === 'existente' ? 'block' : 'none';
+      divNueva.style.display = tipo === 'nueva' ? 'block' : 'none';
+      console.log(tipo === 'nueva' ? "🆕 Activando nueva consulta" : "🔁 Activando búsqueda de mascota");
+    });
+  });
+
+  // Simulación búsqueda mascota
+  const btnBuscar = document.getElementById('buscar-consulta');
+  if (btnBuscar) {
+    btnBuscar.addEventListener('click', () => {
+      const nombreMascota = document.getElementById('consulta-petName').value.trim();
+      const resultadoDiv = document.getElementById('consulta-result');
+      if (!nombreMascota) {
+        resultadoDiv.innerHTML = '<span style="color:red">⚠️ Ingrese un nombre válido</span>';
+        return;
+      }
+      resultadoDiv.innerHTML = `🔍 Buscando a <strong>${nombreMascota}</strong>... <em>(en desarrollo)</em>`;
+    });
+  }
+
+  // Envío de formulario
+  const form = document.getElementById('form-consulta');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      const formData = new FormData(form);
       const data = {};
-      formData.forEach((val, key) => data[key] = val);
-      console.log("📤 Enviando consulta:", data);
-      alert("✅ Consulta guardada (simulado)");
+      new FormData(form).forEach((value, key) => {
+        if (data[key]) {
+          if (!Array.isArray(data[key])) data[key] = [data[key]];
+          data[key].push(value);
+        } else {
+          data[key] = value;
+        }
+      });
+      console.log("📤 Datos recopilados para envío:", data);
+      alert("✅ Consulta guardada exitosamente (simulado)");
     });
   }
 });
