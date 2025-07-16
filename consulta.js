@@ -1,26 +1,6 @@
 // consulta.js
 console.log("🩺 consulta.js activo v5");
 
-// ————————
-// Nada de DOMContentLoaded: ejecutamos YA que el script se carga
-// ————————
-
-const btnToggle      = document.getElementById('toggle-avanzado');
-const seccionAvanzada= document.getElementById('seccion-avanzada');
-const tipoRadios     = document.querySelectorAll('input[name="consultaType"]');
-const divExistente   = document.getElementById('consulta-existente');
-const divNueva       = document.getElementById('consulta-nueva');
-
-// 1) Alternar sección detallada
-if (btnToggle && seccionAvanzada) {
-  btnToggle.addEventListener('click', () => {
-    const mostrar = seccionAvanzada.style.display === 'none';
-    seccionAvanzada.style.display = mostrar ? 'block' : 'none';
-    console.log(mostrar
-      ? "🔼 Mostrando consulta detallada"
-      : "🔽 Ocultando consulta detallada");
-  });
-}
 // URL de tu GAS (idéntica a main.js)
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
@@ -46,7 +26,6 @@ btnToggle.addEventListener('click', () => {
   console.log(mostrar ? "🔼 Mostrando consulta detallada" : "🔽 Ocultando consulta detallada");
 });
 
-// 2) Alternar entre existente / nueva
 // 2) alternar existente / nueva
 tipoRadios.forEach(radio => {
   radio.addEventListener('change', e => {
@@ -60,17 +39,6 @@ tipoRadios.forEach(radio => {
   });
 });
 
-// 3) Botón “Buscar”
-const btnBuscar = document.getElementById('buscar-consulta');
-if (btnBuscar) {
-  btnBuscar.addEventListener('click', () => {
-    const nombre = document.getElementById('consulta-petName').value.trim();
-    const resultadoDiv = document.getElementById('consulta-result');
-    if (!nombre) {
-      resultadoDiv.innerHTML = '<span style="color:red">⚠️ Ingrese un nombre válido</span>';
-      return;
-    }
-    resultadoDiv.innerHTML = `🔍 Buscando a <strong>${nombre}</strong>... <em>(en desarrollo)</em>`;
 // 3) cargar todos los clientes al inicio
 window.jsonpRequest(`${GAS_BASE_URL}?sheet=Clientes`)
   .then(data => { clientesData = data; console.log("🗄️ Clientes cargados:", data.length); })
@@ -123,16 +91,6 @@ function cargarEdicionCliente(c) {
   clienteEdicion.style.display = 'block';
 }
 
-// 4) Envío del formulario
-const form = document.getElementById('form-consulta');
-if (form) {
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const data = {};
-    new FormData(form).forEach((value, key) => {
-      if (data[key]) {
-        if (!Array.isArray(data[key])) data[key] = [ data[key] ];
-        data[key].push(value);
 // 6) actualizar cliente en sheet
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
@@ -160,7 +118,6 @@ btnActualizar.addEventListener('click', () => {
         // refrescar cache
         return window.jsonpRequest(`${GAS_BASE_URL}?sheet=Clientes`);
       } else {
-        data[key] = value;
         throw new Error(res.error||'Error');
       }
     })
@@ -172,10 +129,6 @@ btnActualizar.addEventListener('click', () => {
       console.error(err);
       alert('❌ No se pudo actualizar cliente');
     });
-    console.log("📤 Datos recopilados para envío:", data);
-    alert("✅ Consulta guardada exitosamente (simulado)");
-  });
-}
 });
 
 // 7) al enviar, guardamos en hoja “Consulta”
