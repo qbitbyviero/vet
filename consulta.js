@@ -1,40 +1,48 @@
-// consulta.js (v6 corregido)
-console.log("🩺 consulta.js activo v6");
+// consulta.js
+(function() {
+  console.log("🩺 consulta.js inicializado");
 
-document.addEventListener('DOMContentLoaded', () => {
+  // Localiza el modal recién inyectado
+  const modal = document.querySelector('.modal-consulta');
+  if (!modal) {
+    console.warn("❌ consulta.js: modal no encontrado");
+    return;
+  }
+
+  // Referencias dentro del modal
+  const tipoRadios = modal.querySelectorAll('input[name="consultaType"]');
+  const divExist   = modal.querySelector('#consulta-existente');
+  const divNueva   = modal.querySelector('#consulta-nueva');
+  const btnBuscar  = modal.querySelector('#buscar-consulta');
+  const resultsUl  = modal.querySelector('#consulta-results-list');
+  const btnUpdate  = modal.querySelector('#update-client-btn');
+  const btnToggle  = modal.querySelector('#toggle-avanzado');
+  const secAdv     = modal.querySelector('#seccion-avanzada');
+  const tablaMeds  = modal.querySelector('#tabla-meds-consulta tbody');
+  const spanTot    = modal.querySelector('#total-consulta');
+  const form       = modal.querySelector('#form-consulta');
+
+  let currentClient = null;
   const GAS = "https://script.google.com/macros/s/…/exec";
   const jsonp = window.jsonpRequest;
 
-  // Referencias DOM
-  const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
-  const divExist = document.getElementById('consulta-existente');
-  const divNueva = document.getElementById('consulta-nueva');
-  const listRes  = document.getElementById('consulta-results-list');
-  const btnBuscar= document.getElementById('buscar-consulta');
-  const btnUpdate= document.getElementById('update-client-btn');
-  const btnToggle= document.getElementById('toggle-avanzado');
-  const secAdv   = document.getElementById('seccion-avanzada');
-  const tablaMeds= document.querySelector('#tabla-meds-consulta tbody');
-  const spanTot  = document.getElementById('total-consulta');
-  const form     = document.getElementById('form-consulta');
+  // 1) Alterna existente / nueva
+  tipoRadios.forEach(radio => {
+    radio.addEventListener('change', e => {
+      if (e.target.value === 'nueva') {
+        divExist.style.display = 'none';
+        divNueva.style.display = 'block';
+      } else {
+        divExist.style.display = 'block';
+        divNueva.style.display = 'none';
+      }
+    });
+  });
 
-  let currentClient = null;
-
-  // 1) Alternar existente/nueva
-  tipoRadios.forEach(r => r.addEventListener('change', e => {
-    if (e.target.value === 'nueva') {
-      divExist.style.display = 'none';
-      divNueva.style.display = 'block';
-    } else {
-      divExist.style.display = 'block';
-      divNueva.style.display = 'none';
-    }
-  }));
-
-  // 2) Buscar mascotas
+  // 2) Buscar mascotas en "Clientes"
   btnBuscar.addEventListener('click', async () => {
-    const q = document.getElementById('consulta-petName').value.trim().toLowerCase();
-    listRes.innerHTML = '';
+    const q = modal.querySelector('#consulta-petName').value.trim().toLowerCase();
+    resultsUl.innerHTML = '';
     if (!q) return alert('Ingrese un nombre válido');
     try {
       const clientes = await jsonp(`${GAS}?sheet=Clientes`);
@@ -42,13 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
         (c['Nombre de la mascota']||'').toLowerCase().includes(q)
       );
       if (!matches.length) {
-        listRes.innerHTML = '<li>⚠️ No hay resultados</li>';
+        resultsUl.innerHTML = '<li>⚠️ No hay resultados</li>';
       } else {
         matches.forEach(c => {
           const li = document.createElement('li');
           li.textContent = `${c['Nombre de la mascota']} — ${c['Nombre del propietario']}`;
           li.onclick = () => loadClient(c);
-          listRes.appendChild(li);
+          resultsUl.appendChild(li);
         });
       }
     } catch (err) {
@@ -57,10 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 3) Cargar cliente al form
+  // 3) Carga datos de cliente en el formulario
   function loadClient(c) {
     currentClient = c;
-    // Mapea id→campo
     const M = {
       ownerName: 'Nombre del propietario',
       ownerPhone:'Número de Teléfono',
@@ -73,17 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
       observaciones:'Observaciones'
     };
     Object.keys(M).forEach(id => {
-      document.getElementById(id).value = c[M[id]]||'';
+      modal.querySelector(`#${id}`).value = c[M[id]] || '';
     });
-    document.getElementById('esterilizado').value = c['Esterilizado']||'Sí';
-
-    // Mostrar sección nueva/edición
-    document.querySelector('input[value="nueva"]').checked = true;
+    modal.querySelector('#esterilizado').value = c['Esterilizado'] || 'Sí';
+    // Fuerza modo edición
+    modal.querySelector('input[value="nueva"]').checked = true;
     divExist.style.display = 'none';
     divNueva.style.display = 'block';
   }
 
-  // 4) Actualizar cliente en sheet
+  // 4) Actualizar cliente en la hoja
   btnUpdate.addEventListener('click', async () => {
     if (!currentClient) return alert('Selecciona un cliente primero');
     const params = new URLSearchParams({
@@ -91,16 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
       actualizar: 'true',
       'Nombre de la mascota clave': currentClient['Nombre de la mascota']
     });
-    // agrega todos los campos
+    // vuelve a mapear los mismos campos
     ['ownerName','ownerPhone','ownerEmail','petNameNew','speciesNew','breedNew','age','weight','observaciones']
       .forEach(id => {
-        const val = document.getElementById(id).value.trim();
-        params.append(
-          M[id] || id,
-          val
-        );
+        params.append(M[id]||id, modal.querySelector(`#${id}`).value.trim());
       });
-    params.append('Esterilizado', document.getElementById('esterilizado').value);
+    params.append('Esterilizado', modal.querySelector('#esterilizado').value);
     try {
       const res = await jsonp(`${GAS}?${params}`);
       if (res.success) alert('✅ Cliente actualizado');
@@ -110,50 +112,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5) Medicamentos: añadir / eliminar / recalcular
-  document.getElementById('add-med').onclick = () => {
+  // 5) Medicamentos: añadir, eliminar y recalcular total
+  modal.querySelector('#add-med').onclick = () => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input name="medicamento[]" class="med-input" /></td>
+      <td><input name="medicamento[]" /></td>
       <td><input name="dosage[]" /></td>
       <td><input name="via[]" /></td>
-      <td><input name="precio[]" class="precio-input" value="0" /></td>
+      <td><input name="precio[]" value="0" /></td>
       <td><button type="button" class="button-86 small btn-remove">✖️</button></td>
     `;
     tablaMeds.appendChild(tr);
     tr.querySelector('.btn-remove').onclick = () => { tr.remove(); recalc(); };
-    tr.querySelector('.precio-input').oninput = recalc;
+    tr.querySelector('input[name="precio[]"]').oninput = recalc;
   };
   function recalc() {
     let tot = 0;
-    document.querySelectorAll('.precio-input').forEach(i => tot += parseFloat(i.value)||0);
+    tablaMeds.querySelectorAll('input[name="precio[]"]').forEach(i => {
+      tot += parseFloat(i.value) || 0;
+    });
     spanTot.textContent = tot.toFixed(2);
   }
 
   // 6) Toggle sección detallada
   btnToggle.onclick = () => {
-    secAdv.style.display = secAdv.style.display==='block'?'none':'block';
+    secAdv.style.display = secAdv.style.display === 'block' ? 'none' : 'block';
   };
 
-  // 7) Guardar consulta + ventas
+  // 7) Guardar consulta y registrar en VentasDiarias
   form.onsubmit = async e => {
     e.preventDefault();
     const data = {};
-    new FormData(form).forEach((v,k)=>{
+    new FormData(form).forEach((v,k) => {
       if (data[k]) {
-        if (!Array.isArray(data[k])) data[k]=[data[k]];
+        if (!Array.isArray(data[k])) data[k] = [data[k]];
         data[k].push(v);
-      } else data[k]=v;
+      } else data[k] = v;
     });
-    // agrega total, tipo y fecha
     data.total = spanTot.textContent;
     data.tipo  = 'Consulta';
-    data.fecha = (new Date()).toISOString().split('T')[0];
+    data.fecha = new Date().toISOString().split('T')[0];
 
     try {
-      // sheet Consulta
+      // crea en hoja "Consulta"
       await jsonp(`${GAS}?sheet=Consulta&nuevo=true&${new URLSearchParams(data)}`);
-      // sheet VentasDiarias
+      // crea en hoja "VentasDiarias"
       await jsonp(`${GAS}?sheet=VentasDiarias&nuevo=true&${new URLSearchParams({
         Fecha: data.fecha, Tipo: data.tipo, Total: data.total
       })}`);
@@ -163,4 +166,4 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('❌ Error guardando consulta/venta');
     }
   };
-});
+})();
