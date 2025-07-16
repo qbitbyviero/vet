@@ -1,168 +1,182 @@
 // consulta.js
-console.log("🩺 consulta.js activo v5");
+console.log("🩺 consulta.js activo v6");
 
-// URL de tu GAS (idéntica a main.js)
-const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
+document.addEventListener('DOMContentLoaded', () => {
+  const GAS = "https://script.google.com/macros/s/.../exec";
+  const jsonp = window.jsonpRequest;
 
-// nodos
-const btnToggle       = document.getElementById('toggle-avanzado');
-const seccionAvanzada = document.getElementById('seccion-avanzada');
-const tipoRadios      = document.querySelectorAll('input[name="consultaType"]');
-const divExistente    = document.getElementById('consulta-existente');
-const divNueva        = document.getElementById('consulta-nueva');
-const btnBuscar       = document.getElementById('buscar-consulta');
-const resultadoDiv    = document.getElementById('consulta-result');
-const clienteEdicion  = document.getElementById('cliente-edicion');
-const btnActualizar   = document.getElementById('btn-actualizar-cliente');
-const form            = document.getElementById('form-consulta');
+  // — Elementos clave —
+  const tipoRadios = document.querySelectorAll('input[name="consultaType"]');
+  const divExist = document.getElementById('consulta-existente');
+  const divNueva = document.getElementById('consulta-nueva');
+  const listResults = document.getElementById('consulta-results-list');
+  const btnBuscar   = document.getElementById('buscar-consulta');
+  const btnUpdate   = document.getElementById('update-client-btn');
+  const btnToggle   = document.getElementById('toggle-avanzado');
+  const secAvanzada = document.getElementById('seccion-avanzada');
+  const tablaMeds   = document.querySelector('#tabla-meds-consulta tbody');
+  const spanTotal   = document.getElementById('total-consulta');
+  const form        = document.getElementById('form-consulta');
 
-let clientesData = [];      // cache de clientes
-let seleccionado = null;    // cliente seleccionado
+  let currentClient = null;   // objeto cliente cargado (incluye ID fila)
 
-// 1) toggle sección detallada
-btnToggle.addEventListener('click', () => {
-  const mostrar = seccionAvanzada.style.display === 'none';
-  seccionAvanzada.style.display = mostrar ? 'block' : 'none';
-  console.log(mostrar ? "🔼 Mostrando consulta detallada" : "🔽 Ocultando consulta detallada");
-});
+  // 1) Cambio radio existente/nueva
+  tipoRadios.forEach(r => r.addEventListener('change', e => {
+    if (e.target.value === 'nueva') {
+      divExist.style.display = 'none';
+      divNueva.style.display = 'block';
+    } else {
+      divExist.style.display = 'block';
+      divNueva.style.display = 'none';
+    }
+  }));
 
-// 2) alternar existente / nueva
-tipoRadios.forEach(radio => {
-  radio.addEventListener('change', e => {
-    const tipo = e.target.value;
-    divExistente.style.display = (tipo === 'existente') ? 'block' : 'none';
-    divNueva.style.display      = (tipo === 'nueva')     ? 'block' : 'none';
-    clienteEdicion.style.display = 'none';  // ocultar edición si cambiamos
-    console.log(tipo === 'nueva'
-      ? "🆕 Activando nueva consulta"
-      : "🔁 Activando búsqueda de mascota");
-  });
-});
+  // 2) Buscar mascotas en “Clientes”
+  btnBuscar.addEventListener('click', async () => {
+    const q = document.getElementById('consulta-petName').value.trim().toLowerCase();
+    listResults.innerHTML = '';
+    if (!q) return alert('Ingrese un nombre válido');
 
-// 3) cargar todos los clientes al inicio
-window.jsonpRequest(`${GAS_BASE_URL}?sheet=Clientes`)
-  .then(data => { clientesData = data; console.log("🗄️ Clientes cargados:", data.length); })
-  .catch(err => console.error(err));
-
-// 4) buscar coincidencias
-btnBuscar.addEventListener('click', () => {
-  const q = document.getElementById('consulta-petName').value.trim().toLowerCase();
-  if (!q) {
-    resultadoDiv.innerHTML = '<span style="color:red">⚠️ Ingrese un nombre válido</span>';
-    return;
-  }
-  const matches = clientesData.filter(c =>
-    (c["Nombre de la mascota"]||"").toLowerCase().includes(q)
-  );
-  if (!matches.length) {
-    resultadoDiv.innerHTML = '<span style="color:orange">🚫 No hay coincidencias</span>';
-    return;
-  }
-  // listar resultados
-  resultadoDiv.innerHTML = '<ul>' + matches.map((c,i) =>
-    `<li data-idx="${i}" class="button-86 small">
-       🐶 ${c["Nombre de la mascota"]} — ${c["Nombre del propietario"]}
-     </li>`
-  ).join('') + '</ul>';
-
-  // click en cada uno
-  resultadoDiv.querySelectorAll('li').forEach(li => {
-    li.addEventListener('click', () => {
-      const idx = +li.dataset.idx;
-      seleccionado = matches[idx];
-      cargarEdicionCliente(seleccionado);
-    });
-  });
-});
-
-// 5) cargar campos de edición
-function cargarEdicionCliente(c) {
-  // rellenar inputs
-  document.getElementById('edit-ownerName').value  = c["Nombre del propietario"]||"";
-  document.getElementById('edit-ownerPhone').value = c["Número de Teléfono"]||"";
-  document.getElementById('edit-ownerEmail').value = c["Correo"]||"";
-  document.getElementById('edit-petName').value     = c["Nombre de la mascota"]||"";
-  document.getElementById('edit-species').value    = c["Especie"]||"";
-  document.getElementById('edit-breed').value      = c["Raza"]||"";
-  document.getElementById('edit-age').value        = c["Edad"]||"";
-  document.getElementById('edit-weight').value     = c["Peso"]||"";
-  document.getElementById('edit-sterilized').value = c["Esterilizado"]||"Sí";
-  document.getElementById('edit-notes').value      = c["Observaciones"]||"";
-  clienteEdicion.style.display = 'block';
-}
-
-// 6) actualizar cliente en sheet
-btnActualizar.addEventListener('click', () => {
-  if (!seleccionado) return;
-  const params = new URLSearchParams();
-  params.append('sheet','Clientes');
-  params.append('actualizar','true');
-  // clave para localizar fila
-  params.append('Nombre de la mascota clave', seleccionado["Nombre de la mascota"]);
-  // campos modificables
-  params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
-  params.append('Número de Teléfono',     document.getElementById('edit-ownerPhone').value);
-  params.append('Correo',                 document.getElementById('edit-ownerEmail').value);
-  params.append('Nombre de la mascota',   document.getElementById('edit-petName').value);
-  params.append('Especie',                document.getElementById('edit-species').value);
-  params.append('Raza',                   document.getElementById('edit-breed').value);
-  params.append('Edad',                   document.getElementById('edit-age').value);
-  params.append('Peso',                   document.getElementById('edit-weight').value);
-  params.append('Esterilizado',           document.getElementById('edit-sterilized').value);
-  params.append('Observaciones',          document.getElementById('edit-notes').value);
-
-  window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(res => {
-      if (res.success) {
-        alert('✅ Cliente actualizado correctamente');
-        // refrescar cache
-        return window.jsonpRequest(`${GAS_BASE_URL}?sheet=Clientes`);
+    try {
+      const clientes = await jsonp(`${GAS}?sheet=Clientes`);
+      // Filtramos coincidencias parciales en columna E (“Nombre de la mascota”)
+      const matches = clientes.filter(c =>
+        (c['Nombre de la mascota']||"").toLowerCase().includes(q)
+      );
+      if (!matches.length) {
+        listResults.innerHTML = `<li>⚠️ No hay resultados</li>`;
       } else {
-        throw new Error(res.error||'Error');
+        // listamos
+        matches.forEach(c => {
+          const li = document.createElement('li');
+          li.textContent = `${c['Nombre de la mascota']} — ${c['Nombre del propietario']}`;
+          li.style.cursor = 'pointer';
+          li.onclick = () => loadClientToForm(c);
+          listResults.appendChild(li);
+        });
       }
-    })
-    .then(data => {
-      clientesData = data;
-      clienteEdicion.style.display = 'none';
-    })
-    .catch(err => {
+    } catch (err) {
+      console.error(err);
+      alert('Error al buscar clientes');
+    }
+  });
+
+  // 3) Cargar cliente al formulario de edición
+  function loadClientToForm(c) {
+    currentClient = c;
+    // rellenamos inputs en #consulta-nueva
+    ['ownerName','ownerPhone','ownerEmail','petNameNew','speciesNew','breedNew','age','weight','observaciones']
+      .forEach(id => {
+        document.getElementById(id).value = c[ mapField(id) ]||"";
+      });
+    document.getElementById('esterilizado').value = c['Esterilizado'] || 'Sí';
+    // cambiamos a “nueva” para que se muestre
+    document.querySelector('input[value="nueva"]').checked = true;
+    divExist.style.display = 'none';
+    divNueva.style.display = 'block';
+  }
+
+  // Helper: map id → columna en sheet
+  function mapField(id) {
+    return {
+      ownerName:    'Nombre del propietario',
+      ownerPhone:   'Número de Teléfono',
+      ownerEmail:   'Correo',
+      petNameNew:   'Nombre de la mascota',
+      speciesNew:   'Especie',
+      breedNew:     'Raza',
+      age:          'Edad',
+      weight:       'Peso',
+      observaciones:'Observaciones'
+    }[id];
+  }
+
+  // 4) Actualizar cliente «sheet=Clientes&actualizar=true»
+  btnUpdate.addEventListener('click', async () => {
+    if (!currentClient) return alert('Primero busca y selecciona un cliente');
+    const params = new URLSearchParams({ sheet: 'Clientes', actualizar: 'true' });
+    params.append('Nombre de la mascota clave', currentClient['Nombre de la mascota']);
+    // campos editados
+    ['ownerName','ownerPhone','ownerEmail','petNameNew','speciesNew','breedNew','age','weight','observaciones']
+      .forEach(id => {
+        params.append(mapField(id), document.getElementById(id).value.trim());
+      });
+    params.append('Esterilizado', document.getElementById('esterilizado').value);
+    try {
+      const res = await jsonp(`${GAS}?${params}`);
+      if (res.success) {
+        alert('✅ Cliente actualizado');
+      } else {
+        throw new Error(res.error||'sin detalle');
+      }
+    } catch (err) {
       console.error(err);
       alert('❌ No se pudo actualizar cliente');
+    }
+  });
+
+  // 5) Tablas de medicamentos
+  document.getElementById('add-med').onclick = () => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input name="medicamento[]" class="med-input" /></td>
+      <td><input name="dosage[]" /></td>
+      <td><input name="via[]" /></td>
+      <td><input name="precio[]" class="precio-input" value="0" /></td>
+      <td><button type="button" class="btn-remove">✖️</button></td>
+    `;
+    tablaMeds.appendChild(tr);
+    tr.querySelector('.btn-remove').onclick = () => {
+      tr.remove();
+      recalcTotal();
+    };
+    tr.querySelector('.precio-input').oninput = recalcTotal;
+  };
+  function recalcTotal() {
+    let total = 0;
+    document.querySelectorAll('.precio-input').forEach(i => {
+      total += parseFloat(i.value)||0;
     });
-});
+    spanTotal.textContent = total.toFixed(2);
+  }
 
-// 7) al enviar, guardamos en hoja “Consulta”
-form.addEventListener('submit', e => {
-  e.preventDefault();
+  // 6) Toggle sección detallada
+  btnToggle.onclick = () => {
+    secAvanzada.style.display =
+      secAvanzada.style.display === 'block' ? 'none' : 'block';
+  };
 
-  const formData = new FormData(form);
-  const consultaParams = new URLSearchParams();
-  consultaParams.append('sheet','Consulta');
-  consultaParams.append('nuevo','true');
+  // 7) Al guardar la consulta:
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const data = {};
+    new FormData(form).forEach((v,k) => {
+      if (data[k]) {
+        if (!Array.isArray(data[k])) data[k] = [data[k]];
+        data[k].push(v);
+      } else data[k] = v;
+    });
+    // Total y tipo
+    data.total = spanTotal.textContent;
+    data.tipo  = 'Consulta';
+    data.fecha = (new Date()).toISOString().split('T')[0];
 
-  // volcar todos los campos (incluye los editados o los de “nueva”)
-  formData.forEach((val,key) => consultaParams.append(key,val));
-
-  window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
-    .then(res => {
-      if (res.success) {
-        alert('✅ Consulta guardada en hoja “Consulta”');
-        // opcional: reiniciar modal
-        form.reset();
-        divNueva.style.display      = 'none';
-        divExistente.style.display  = 'block';
-        seccionAvanzada.style.display = 'none';
-        clienteEdicion.style.display  = 'none';
-        resultadoDiv.innerHTML = '';
-        seleccionado = null;
-      } else {
-        throw new Error(res.error||'Error');
-      }
-    })
-    .catch(err => {
+    try {
+      // 7.1 -> sheet=Consulta
+      await jsonp(`${GAS}?sheet=Consulta&nuevo=true&` + new URLSearchParams(data));
+      // 7.2 -> sheet=VentasDiarias
+      await jsonp(`${GAS}?sheet=VentasDiarias&nuevo=true&` +
+        new URLSearchParams({
+          Fecha: data.fecha,
+          Tipo:  data.tipo,
+          Total: data.total
+        }));
+      alert('✅ Consulta y venta registradas');
+      window.location.reload();
+    } catch (err) {
       console.error(err);
-      alert('❌ No se pudo guardar la consulta');
-    });
-});
+      alert('❌ Error guardando consulta/venta');
+    }
+  };
 
-console.log("✅ consulta.js inicializado correctamente.");
+});
