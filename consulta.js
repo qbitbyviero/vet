@@ -1,5 +1,8 @@
 // consulta.js
-console.log("🩺 consulta.js activo v6");
+console.log("🩺 consulta.js activo v7");
+
+// === URL de tu GAS (idéntica a la de main.js) ===
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
 // — nodos —
 const btnToggle       = document.getElementById('toggle-avanzado');
@@ -20,9 +23,6 @@ let seleccionado  = null; // fila elegida
 btnToggle.addEventListener('click', () => {
   const mostrar = seccionAvanzada.style.display === 'none';
   seccionAvanzada.style.display = mostrar ? 'block' : 'none';
-  console.log(mostrar
-    ? "🔼 Mostrando consulta detallada"
-    : "🔽 Ocultando consulta detallada");
 });
 
 // 2) Alternar existente / nueva
@@ -31,22 +31,16 @@ tipoRadios.forEach(radio => {
     const tipo = e.target.value;
     divExistente.style.display   = (tipo === 'existente') ? 'block' : 'none';
     divNueva.style.display        = (tipo === 'nueva')     ? 'block' : 'none';
-    clienteEdicion.style.display  = 'none'; // ocultar edición si cambiamos
-    console.log(tipo === 'nueva'
-      ? "🆕 Activando nueva consulta"
-      : "🔁 Activando búsqueda de mascota");
+    clienteEdicion.style.display  = 'none';
   });
 });
 
-// 3) Traer clientes al arranque (usa tu función global de main.js)
+// 3) Traer clientes al arranque
 window.loadAllClients()
-  .then(data => {
-    clientesData = data;
-    console.log("🗄️ Clientes cargados:", data.length);
-  })
+  .then(data => { clientesData = data; })
   .catch(err => console.error("Error cargando clientes:", err));
 
-// 4) Buscar coincidencias en “Clientes”
+// 4) Buscar coincidencias
 btnBuscar.addEventListener('click', () => {
   const q = document.getElementById('consulta-petName').value.trim().toLowerCase();
   if (!q) {
@@ -60,14 +54,12 @@ btnBuscar.addEventListener('click', () => {
     resultadoDiv.innerHTML = '<span style="color:orange">🚫 No hay coincidencias</span>';
     return;
   }
-  // Listar resultados clicables
   resultadoDiv.innerHTML = '<ul>' + matches.map((c,i) =>
     `<li data-idx="${i}" class="button-86 small">
        🐶 ${c["Nombre de la mascota"]} — ${c["Nombre del propietario"]}
      </li>`
   ).join('') + '</ul>';
 
-  // Asociar click a cada uno
   resultadoDiv.querySelectorAll('li').forEach(li => {
     li.addEventListener('click', () => {
       seleccionado = matches[+li.dataset.idx];
@@ -76,7 +68,7 @@ btnBuscar.addEventListener('click', () => {
   });
 });
 
-// 5) Rellenar formulario de edición
+// 5) Cargar datos para edición
 function cargarEdicionCliente(c) {
   document.getElementById('edit-ownerName').value  = c["Nombre del propietario"] || "";
   document.getElementById('edit-ownerPhone').value = c["Número de Teléfono"]    || "";
@@ -91,57 +83,53 @@ function cargarEdicionCliente(c) {
   clienteEdicion.style.display = 'block';
 }
 
-// 6) Actualizar cliente en “Clientes”
+// 6) Actualizar cliente
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
   const params = new URLSearchParams();
   params.append('sheet',       'Clientes');
   params.append('actualizar',  'true');
   params.append('Nombre de la mascota clave', seleccionado["Nombre de la mascota"]);
-  // Campos permitidos (sin tocar columna ID)
-  params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
-  params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
-  params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
-  params.append('Nombre de la mascota',    document.getElementById('edit-petName').value);
-  params.append('Especie',                 document.getElementById('edit-species').value);
-  params.append('Raza',                    document.getElementById('edit-breed').value);
-  params.append('Edad',                    document.getElementById('edit-age').value);
-  params.append('Peso',                    document.getElementById('edit-weight').value);
-  params.append('Esterilizado',            document.getElementById('edit-sterilized').value);
-  params.append('Observaciones',           document.getElementById('edit-notes').value);
+  params.append('Nombre del propietario',     document.getElementById('edit-ownerName').value);
+  params.append('Número de Teléfono',          document.getElementById('edit-ownerPhone').value);
+  params.append('Correo',                      document.getElementById('edit-ownerEmail').value);
+  params.append('Nombre de la mascota',        document.getElementById('edit-petName').value);
+  params.append('Especie',                     document.getElementById('edit-species').value);
+  params.append('Raza',                        document.getElementById('edit-breed').value);
+  params.append('Edad',                        document.getElementById('edit-age').value);
+  params.append('Peso',                        document.getElementById('edit-weight').value);
+  params.append('Esterilizado',                document.getElementById('edit-sterilized').value);
+  params.append('Observaciones',               document.getElementById('edit-notes').value);
 
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
     .then(res => {
-      if (!res.success) throw new Error(res.error || 'Error desconocido');
-      alert('✅ Cliente actualizado correctamente');
-      return window.loadAllClients(); // refrescar caché
+      if (!res.success) throw new Error(res.error||'Error desconocido');
+      return window.loadAllClients();
     })
     .then(data => {
       clientesData = data;
       clienteEdicion.style.display = 'none';
+      alert('✅ Cliente actualizado correctamente');
     })
     .catch(err => {
-      console.error("❌ No se pudo actualizar cliente:", err);
+      console.error(err);
       alert('❌ No se pudo actualizar cliente:\n' + err.message);
     });
 });
 
-// 7) Guardar ficha en “Consulta”
+// 7) Guardar Consulta
 form.addEventListener('submit', e => {
   e.preventDefault();
   const fd = new FormData(form);
   const consultaParams = new URLSearchParams();
   consultaParams.append('sheet', 'Consulta');
   consultaParams.append('nuevo', 'true');
-
-  // Recorre *todos* los campos (existente o nueva + detallada)
-  fd.forEach((val, key) => consultaParams.append(key, val));
+  fd.forEach((val,key) => consultaParams.append(key,val));
 
   window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
     .then(res => {
-      if (!res.success) throw new Error(res.error || 'Error desconocido');
+      if (!res.success) throw new Error(res.error||'Error desconocido');
       alert('✅ Consulta guardada en hoja “Consulta”');
-      // Reset visual
       form.reset();
       divNueva.style.display       = 'none';
       divExistente.style.display   = 'block';
@@ -151,7 +139,7 @@ form.addEventListener('submit', e => {
       seleccionado = null;
     })
     .catch(err => {
-      console.error("❌ No se pudo guardar la consulta:", err);
+      console.error(err);
       alert('❌ No se pudo guardar la consulta:\n' + err.message);
     });
 });
