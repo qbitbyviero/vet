@@ -1,45 +1,37 @@
-<!-- consulta.html - Módulo consulta funcional v3 -->
+<!-- consulta.html -->
 <div class="modal-consulta">
   <h2>Consulta Veterinaria 🩺</h2>
   <form id="form-consulta">
-
     <!-- Identificación -->
     <fieldset>
       <legend class="fieldset-titulo">🐶 Identificación de Mascota</legend>
-      <label><input type="radio" name="consultaType" value="existente" checked> Consulta existente</label>
-      <label><input type="radio" name="consultaType" value="nueva"> Consulta nueva (cliente y mascota)</label>
+      <label><input type="radio" name="consultaType" value="existente" checked /> Consulta existente</label>
+      <label><input type="radio" name="consultaType" value="nueva" /> Consulta nueva (cliente y mascota)</label>
 
-      <!-- EXISTENTE -->
       <div id="consulta-existente">
         <label>🔍 Nombre de la Mascota:</label>
-        <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa...">
+        <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa..." />
         <button type="button" class="button-86" id="buscar-consulta">Buscar</button>
         <div id="consulta-result"></div>
       </div>
 
-      <!-- NUEVA -->
-      <div id="consulta-nueva" style="display:none;">
+      <div id="consulta-nueva" style="display:none; margin-top:1em;">
         <div class="grid-parejas">
-          <label>👤 Propietario:<input type="text" name="ownerName"></label>
-          <label>📞 Tel:<input type="tel" name="ownerPhone"></label>
-          <label>📧 Email:<input type="email" name="ownerEmail"></label>
-          <label>🐾 Mascota:<input type="text" name="petNameNew"></label>
-          <label>🧬 Especie:<input type="text" name="speciesNew"></label>
-          <label>🐕 Raza:<input type="text" name="breedNew"></label>
-          <label>🎂 Edad:<input type="number" name="age" min="0"></label>
-          <label>⚖️ Peso (kg):<input type="number" name="weight" step="0.1"></label>
-          <label>💉 Esterilizado:
-            <select name="esterilizado">
-              <option>Sí</option>
-              <option>No</option>
-            </select>
-          </label>
+          <label>👤 Propietario:<input type="text" name="ownerName" /></label>
+          <label>📞 Teléfono:<input type="tel" name="ownerPhone" /></label>
+          <label>📧 Correo:<input type="email" name="ownerEmail" /></label>
+          <label>🐾 Nombre Mascota:<input type="text" name="petNameNew" /></label>
+          <label>🧬 Especie:<input type="text" name="speciesNew" /></label>
+          <label>🐕 Raza:<input type="text" name="breedNew" /></label>
+          <label>🎂 Edad:<input type="number" name="age" min="0" /></label>
+          <label>⚖️ Peso:<input type="number" name="weight" step="0.1" /></label>
+          <label>💉 Esterilizado:<select name="esterilizado"><option>Sí</option><option>No</option></select></label>
           <label>📝 Observaciones:<textarea name="observaciones" rows="2"></textarea></label>
         </div>
       </div>
     </fieldset>
 
-    <!-- Consulta Detallada -->
+    <!-- Consulta detallada -->
     <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
 
     <div id="seccion-avanzada" style="display:none;">
@@ -47,15 +39,16 @@
         <legend class="fieldset-titulo">📋 Historial Clínico Adicional</legend>
         <div class="grid-parejas">
           <label>📖 Motivo:<textarea name="motivoConsulta"></textarea></label>
-          <label>🏥 Historial:<textarea name="historialMedico"></textarea></label>
-          <label>💉 Vacunas:<input type="text" name="vacunacion"></label>
-          <label>🐛 Desparasitación:<input type="text" name="desparasitacion"></label>
-          <label>🥩 Alimentación:<input type="text" name="alimentacion"></label>
-          <label>📊 Estado Corporal (1-9):<input type="number" name="estadoCorporal" min="1" max="9"></label>
+          <label>🏥 Historial Médico:<textarea name="historialMedico"></textarea></label>
+          <label>💉 Vacunación:<input type="text" name="vacunacion" /></label>
+          <label>🐛 Desparasitación:<input type="text" name="desparasitacion" /></label>
+          <label>🥩 Alimentación:<input type="text" name="alimentacion" /></label>
+          <label>📊 Estado Corporal:<input type="number" name="estadoCorporal" min="1" max="9" /></label>
         </div>
       </fieldset>
     </div>
 
+    <!-- Guardar -->
     <button type="submit" class="button-86">💾 Guardar Consulta</button>
   </form>
 </div>
@@ -66,10 +59,9 @@
     border-radius: 10px;
     background: #e3f2fd;
     border: 2px solid #0288d1;
-    max-width: 700px;
     margin: 0 auto;
+    max-width: 720px;
   }
-
   .fieldset-titulo {
     background: #bbdefb;
     padding: 0.5em;
@@ -78,59 +70,40 @@
     font-size: 1.1em;
     margin-bottom: 1em;
   }
-
   .grid-parejas {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1em;
   }
-
   .grid-parejas label {
     display: flex;
     flex-direction: column;
+    font-size: 0.95em;
     font-weight: bold;
-    font-size: 0.9em;
   }
-
-  fieldset {
-    border: 1px solid #90caf9;
-    border-radius: 10px;
-    padding: 1em;
-    margin-bottom: 1.5em;
-    background: #f1f8ff;
-  }
-
-  input, select, textarea {
+  textarea, input, select {
     padding: 0.4em;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 0.95em;
   }
-
+  fieldset {
+    border: 1px solid #90caf9;
+    border-radius: 10px;
+    padding: 1em;
+    margin-bottom: 1.5em;
+    background-color: #f1f8ff;
+  }
   .button-86 {
     background: #0288d1;
     color: white;
-    padding: 0.5em 1em;
+    padding: 0.5em 1.2em;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     margin-top: 1em;
   }
-
   .button-86:hover {
     background: #0277bd;
   }
-
-  h2 {
-    color: #01579b;
-    text-align: center;
-    margin-bottom: 1em;
-  }
-
-  input[type="radio"] {
-    margin-right: 0.4em;
-  }
 </style>
-
-<!-- Importa el JS -->
-<script src="./consulta.js"></script>
