@@ -1,14 +1,16 @@
 <!-- consulta.html -->
 <div class="modal-consulta">
-  <h2>Consulta Veterinaria 🩺 v2.1</h2>
+  <h2>Consulta Veterinaria 🩺 v3</h2>
 
   <form id="form-consulta">
-    <!-- Identificación -->
+
+    <!-- TIPO DE CONSULTA -->
     <fieldset>
       <legend class="fieldset-titulo">🐶 Identificación de Mascota</legend>
       <label><input type="radio" name="consultaType" value="existente" checked /> Consulta existente</label>
       <label><input type="radio" name="consultaType" value="nueva" /> Consulta nueva (cliente y mascota)</label>
 
+      <!-- BUSCAR EXISTENTE -->
       <div id="consulta-existente">
         <label>🔍 Nombre de la Mascota:</label>
         <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa..." />
@@ -16,26 +18,53 @@
         <div id="consulta-result"></div>
       </div>
 
+      <!-- EDICIÓN DE CLIENTE (solo existente) -->
+      <div id="cliente-edicion" style="display:none; margin-top:1em;">
+        <h4>✏️ Editar Datos del Cliente</h4>
+        <div class="grid-parejas">
+          <label>👤 Propietario:<input type="text" id="edit-ownerName" /></label>
+          <label>📞 Teléfono:<input type="tel" id="edit-ownerPhone" /></label>
+          <label>📧 Correo:<input type="email" id="edit-ownerEmail" /></label>
+          <label>🐾 Mascota:<input type="text" id="edit-petName" /></label>
+          <label>🧬 Especie:<input type="text" id="edit-species" /></label>
+          <label>🐕 Raza:<input type="text" id="edit-breed" /></label>
+          <label>🎂 Edad:<input type="number" id="edit-age" min="0" /></label>
+          <label>⚖️ Peso:<input type="number" id="edit-weight" step="0.1" /></label>
+          <label>💉 Esterilizado:
+            <select id="edit-sterilized">
+              <option value="Sí">Sí</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <label>📝 Observaciones:<textarea id="edit-notes" rows="2"></textarea></label>
+        </div>
+        <button type="button" class="button-86" id="btn-actualizar-cliente">✏️ Actualizar Cliente</button>
+      </div>
+
+      <!-- NUEVA CONSULTA (cliente+mascota) -->
       <div id="consulta-nueva" style="display:none; margin-top:1em;">
         <div class="grid-parejas">
           <label>👤 Propietario:<input type="text" name="ownerName" /></label>
           <label>📞 Teléfono:<input type="tel" name="ownerPhone" /></label>
           <label>📧 Correo:<input type="email" name="ownerEmail" /></label>
-          <label>🐾 Nombre Mascota:<input type="text" name="petNameNew" /></label>
+          <label>🐾 Mascota:<input type="text" name="petNameNew" /></label>
           <label>🧬 Especie:<input type="text" name="speciesNew" /></label>
           <label>🐕 Raza:<input type="text" name="breedNew" /></label>
           <label>🎂 Edad:<input type="number" name="age" min="0" /></label>
           <label>⚖️ Peso:<input type="number" name="weight" step="0.1" /></label>
-          <label>💉 Esterilizado:<select name="esterilizado"><option>Sí</option><option>No</option></select></label>
+          <label>💉 Esterilizado:
+            <select name="esterilizado">
+              <option>Sí</option><option>No</option>
+            </select>
+          </label>
           <label>📝 Observaciones:<textarea name="observaciones" rows="2"></textarea></label>
         </div>
       </div>
     </fieldset>
 
-    <!-- Consulta detallada -->
+    <!-- CONSULTA DETALLADA -->
     <button type="button" class="button-86" id="toggle-avanzado">🧬 Consulta Detallada</button>
-
-    <div id="seccion-avanzada" style="display:none;">
+    <div id="seccion-avanzada" style="display:none; margin-top:1em;">
       <fieldset>
         <legend class="fieldset-titulo">📋 Historial Clínico Adicional</legend>
         <div class="grid-parejas">
@@ -49,7 +78,7 @@
       </fieldset>
     </div>
 
-    <!-- Guardar -->
+    <!-- GUARDAR CONSULTA -->
     <button type="submit" class="button-86">💾 Guardar Consulta</button>
   </form>
 </div>
@@ -109,5 +138,4 @@
   }
 </style>
 
-<!-- carga tu JS aquí -->
 <script src="consulta.js"></script>
