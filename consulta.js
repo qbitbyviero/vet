@@ -1,10 +1,10 @@
-// consulta.js (v8)
-console.log("🩺 consulta.js activo v8");
+// consulta.js (v9)
+console.log("🩺 consulta.js activo v9");
 
-// === URL de tu GAS (idéntica a main.js) ===
+// === URL de tu GAS (idéntica a la de main.js) ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
-// nodos
+// — nodos —
 const btnToggle       = document.getElementById('toggle-avanzado');
 const seccionAvanzada = document.getElementById('seccion-avanzada');
 const tipoRadios      = document.querySelectorAll('input[name="consultaType"]');
@@ -35,9 +35,12 @@ tipoRadios.forEach(radio => {
   });
 });
 
-// 3) Traer todos los clientes al arrancar
+// 3) Traer clientes al arrancar
 window.loadAllClients()
-  .then(data => { clientesData = data; console.log("🗄️ Clientes:", data.length); })
+  .then(data => {
+    clientesData = data;
+    console.log("🗄️ Clientes cargados:", data.length);
+  })
   .catch(err => console.error("Error cargando clientes:", err));
 
 // 4) Buscar coincidencias
@@ -54,13 +57,11 @@ btnBuscar.addEventListener('click', () => {
     resultadoDiv.innerHTML = '<span style="color:orange">🚫 No hay coincidencias</span>';
     return;
   }
-  // Mostrar lista
   resultadoDiv.innerHTML = '<ul>' + matches.map((c,i) =>
     `<li data-idx="${i}" class="button-86 small">
        🐶 ${c["Nombre de la mascota"]} — ${c["Nombre del propietario"]}
      </li>`
   ).join('') + '</ul>';
-  // Click en cada resultado
   resultadoDiv.querySelectorAll('li').forEach(li => {
     li.addEventListener('click', () => {
       seleccionado = matches[+li.dataset.idx];
@@ -90,9 +91,9 @@ btnActualizar.addEventListener('click', () => {
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-  // Usamos ID fila para localizar la fila exacta
-   params.append('Nombre de la mascota clave', seleccionado["Nombre de la mascota"]);
-  // Campos editados (los mismos name del HTML)
+  // **Clave**: nombre de la mascota
+  params.append('Nombre de la mascota clave', seleccionado["Nombre de la mascota"]);
+  // Campos editados (usamos el atributo `name=` del HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
   params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
@@ -105,9 +106,8 @@ btnActualizar.addEventListener('click', () => {
   params.append('observaciones',           document.getElementById('edit-notes').value);
 
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(res => {
-      console.log("🔄 update cliente →", res);
-      if (!res.success) throw new Error(res.error||'Error desconocido');
+    .then(_res => {
+      // Ignoramos el contenido y recargamos cache directamente
       return window.loadAllClients();
     })
     .then(data => {
@@ -128,18 +128,15 @@ form.addEventListener('submit', e => {
   const consultaParams = new URLSearchParams();
   consultaParams.append('sheet', 'Consulta');
   consultaParams.append('nuevo', 'true');
-  // Añade cada par clave/valor (usa el name=… del HTML)
   fd.forEach((val,key) => consultaParams.append(key,val));
 
   window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
     .then(res => {
-      console.log("🔄 save consulta →", res);
       if (!res.success) throw new Error(res.error||'Error desconocido');
       alert('✅ Consulta guardada en hoja “Consulta”');
-      // reset
       form.reset();
-      divNueva.style.display       = 'none';
-      divExistente.style.display   = 'block';
+      divNueva.style.display        = 'none';
+      divExistente.style.display    = 'block';
       seccionAvanzada.style.display = 'none';
       clienteEdicion.style.display  = 'none';
       resultadoDiv.innerHTML        = '';
@@ -151,4 +148,4 @@ form.addEventListener('submit', e => {
     });
 });
 
-console.log("✅ consulta.js v8 inicializado correctamente.");
+console.log("✅ consulta.js v9 inicializado correctamente.");
