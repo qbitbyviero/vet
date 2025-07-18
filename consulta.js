@@ -1,5 +1,5 @@
-// consulta.js (v12)
-console.log("🩺 consulta.js activo v12");
+// consulta.js (v10)
+console.log("🩺 consulta.js activo v13");
 
 // === URL de tu GAS (idéntica a main.js) ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
@@ -40,9 +40,6 @@ window.loadAllClients()
   .then(data => {
     clientesData = data;
     console.log("🗄️ Clientes cargados:", data.length);
-    if (data.length) {
-      console.log("🔑 Claves disponibles:", Object.keys(data[0]));
-    }
   })
   .catch(err => console.error("Error cargando clientes:", err));
 
@@ -92,12 +89,12 @@ function cargarEdicionCliente(c) {
 // 6) Actualizar cliente en “Clientes”
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-  console.log("🔄 Actualizando cliente con ID:", seleccionado["cliente Id"]);
+  console.log("🔄 Actualizando fila:", seleccionado.rowNumber);
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-  // —— CLAVE: usamos 'cliente Id' (columna A) ——
-  params.append('cliente Id clave', seleccionado["cliente Id"]);
+  // —— CLAVE: rowNumber (número de fila real en la hoja) ——
+  params.append('rowNumber', seleccionado.rowNumber);
   // Campos editados (coinciden con name=… en el HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
@@ -150,4 +147,4 @@ form.addEventListener('submit', e => {
     });
 });
 
-console.log("✅ consulta.js v12 inicializado correctamente.");
+console.log("✅ consulta.js v10 inicializado correctamente.");
