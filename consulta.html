@@ -1,6 +1,6 @@
 <!-- consulta.html -->
 <div class="modal-consulta">
-  <h2>Consulta Veterinaria 🩺 v11</h2>
+  <h2>Consulta Veterinaria 🩺 v12</h2>
 
   <form id="form-consulta">
     <!-- TIPO DE CONSULTA -->
@@ -21,6 +21,11 @@
         <input type="text" id="consulta-petName" placeholder="Ej. Loki, Pelusa..." />
         <button type="button" class="button-86" id="buscar-consulta">Buscar</button>
         <div id="consulta-result"></div>
+      </div>
+
+      <!-- DIAGRAMA MASCOTA -->
+      <div id="cliente-diagrama" style="display:none; margin-top:1em; text-align:center;">
+        <img id="diagrama-img" src="svg/placeholder.png" alt="Diagrama Mascota" style="max-width:100%; max-height:200px;" />
       </div>
 
       <!-- EDICIÓN DE CLIENTE (solo existente) -->
@@ -160,7 +165,7 @@
       <button type="button" class="button-86 small" id="add-medicamento">➕ Añadir Medicamento</button>
       <label style="display:block; margin-top:1em;">
         📝 Indicaciones:
-        <textarea id="indicaciones" name="indicaciones" rows="2" style="width:100%;"></textarea>
+        <textarea id="indicaciones" rows="2" style="width:100%;"></textarea>
       </label>
     </fieldset>
 
@@ -170,76 +175,17 @@
 </div>
 
 <style>
-  .modal-consulta {
-    padding: 1em;
-    border-radius: 10px;
-    background: #e3f2fd;
-    border: 2px solid #0288d1;
-    margin: 0 auto;
-    max-width: 720px;
-  }
-  .fieldset-titulo {
-    background: #bbdefb;
-    padding: 0.5em;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 1.1em;
-    margin-bottom: 0.5em;
-  }
-  .grid-parejas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1em;
-  }
-  .grid-parejas label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.95em;
-    font-weight: bold;
-  }
-  textarea, input, select {
-    padding: 0.4em;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 0.95em;
-  }
-  fieldset {
-    border: 1px solid #90caf9;
-    border-radius: 10px;
-    padding: 1em;
-    margin-bottom: 1.5em;
-    background: #f1f8ff;
-  }
-
-  /* Estilos corregidos para la tabla de medicamentos */
-  .tabla-meds th,
-  .tabla-meds td {
-    border: 1px solid #00bfbf;
-    padding: 0.5em;
-    text-align: left;
-    word-break: break-word;
-  }
-  .tabla-meds th {
-    background-color: #00bfbf;
-    color: white;
-  }
-
-  .button-86 {
-    background: #0288d1;
-    color: white;
-    padding: 0.5em 1.2em;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 0.5em;
-  }
-  .button-86.small {
-    font-size: 0.8em;
-    padding: 0.3em 0.6em;
-  }
-  .button-86:hover {
-    background: #0277bd;
-  }
+  .modal-consulta { padding:1em; border-radius:10px; background:#e3f2fd; border:2px solid #0288d1; margin:0 auto; max-width:720px; }
+  .fieldset-titulo { background:#bbdefb; padding:0.5em; border-radius:6px; font-weight:bold; font-size:1.1em; margin-bottom:0.5em; }
+  .grid-parejas { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1em; }
+  .grid-parejas label { display:flex; flex-direction:column; font-size:0.95em; font-weight:bold; }
+  textarea, input, select { padding:0.4em; border-radius:5px; border:1px solid #ccc; font-size:0.95em; }
+  fieldset { border:1px solid #90caf9; border-radius:10px; padding:1em; margin-bottom:1.5em; background:#f1f8ff; }
+  .tabla-meds th, .tabla-meds td { border:1px solid #00bfbf; padding:0.5em; text-align:left; word-break:break-word; }
+  .tabla-meds th { background:#00bfbf; color:#fff; }
+  .button-86 { background:#0288d1; color:#fff; padding:0.5em 1.2em; border:none; border-radius:6px; cursor:pointer; margin-top:0.5em; }
+  .button-86.small { font-size:0.8em; padding:0.3em 0.6em; }
+  .button-86:hover { background:#0277bd; }
 </style>
 
 <script src="consulta.js"></script>
