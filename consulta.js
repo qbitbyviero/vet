@@ -91,7 +91,7 @@ btnActualizar.addEventListener('click', () => {
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
   // Usamos ID fila para localizar la fila exacta
-  params.append('ID fila',    seleccionado["ID fila"]);
+   params.append('Nombre de la mascota clave', seleccionado["Nombre de la mascota"]);
   // Campos editados (los mismos name del HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
