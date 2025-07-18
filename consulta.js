@@ -1,7 +1,7 @@
-// consulta.js (v14)
-console.log("🩺 consulta.js activo v14");
+// consulta.js (v15)
+console.log("🩺 consulta.js activo v15");
 
-// === URL de tu GAS (idéntica a main.js) ===
+// === URL de tu GAS ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbx6Up0O9--0fSItcQ83NfmTQdwHG3BWTIt3uySDfbuQ32OyDFHMvnoEkb9-l4EunRC9MQ/exec";
 
 // — nodos —
@@ -15,6 +15,11 @@ const resultadoDiv    = document.getElementById('consulta-result');
 const clienteEdicion  = document.getElementById('cliente-edicion');
 const btnActualizar   = document.getElementById('btn-actualizar-cliente');
 const form            = document.getElementById('form-consulta');
+
+// nodos tabla meds
+const medTableBody    = document.querySelector('#med-table tbody');
+const addMedBtn       = document.getElementById('add-med-row');
+const hiddenMeds      = document.getElementById('medicsuministrados');
 
 let clientesData = [];    // cache de clientes
 let seleccionado  = null; // cliente seleccionado
@@ -37,10 +42,7 @@ tipoRadios.forEach(radio => {
 
 // 3) Traer clientes al arrancar
 window.loadAllClients()
-  .then(data => {
-    clientesData = data;
-    console.log("🗄️ Clientes cargados:", data.length);
-  })
+  .then(data => { clientesData = data; console.log("🗄️ Clientes cargados:", data.length); })
   .catch(err => console.error("Error cargando clientes:", err));
 
 // 4) Buscar coincidencias
@@ -86,68 +88,75 @@ function cargarEdicionCliente(c) {
   clienteEdicion.style.display = 'block';
 }
 
-// 6) Actualizar cliente en “Clientes”
+// 6) Actualizar cliente
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-
-  // 1) Preparamos params con rowNumber
   const params = new URLSearchParams();
-  params.append('sheet',      'Clientes');
-  params.append('actualizar', 'true');
-  params.append('rowNumber',  seleccionado.rowNumber);
-
-  // 2) Agregamos TODOS los campos editables tal y como definiste name="…"
+  params.append('sheet','Clientes');
+  params.append('actualizar','true');
+  params.append('rowNumber', seleccionado.rowNumber);
   [
-    'Nombre del propietario',
-    'Número de Teléfono',
-    'Correo',
-    'Nombre de la mascota',
-    'Especie',
-    'Raza',
-    'Edad',
-    'Peso',
-    'Esterilizado',
-    'Observaciones'
+    'Nombre del propietario','Número de Teléfono','Correo',
+    'Nombre de la mascota','Especie','Raza','Edad','Peso',
+    'Esterilizado','Observaciones'
   ].forEach(col => {
     const el = document.querySelector(`[name="${col}"]`);
     if (el) params.append(col, el.value);
   });
 
-  // 3) Lanzamos JSONP y comprobamos res.success
-  window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
+  window.jsonpRequest(`${GAS_BASE_URL}?${params}`)
     .then(res => {
-      console.log('🔄 respuesta update →', res);
-      if (!res.success) throw new Error(res.error||'Error desconocido al actualizar');
-      // 4) recargamos cache
+      if (!res.success) throw new Error(res.error||'Error al actualizar');
       return window.loadAllClients();
     })
     .then(data => {
       clientesData = data;
-      // 5) localizar la fila nuevamente en el nuevo cache
-      seleccionado = clientesData.find(c => c.rowNumber === Number(params.get('rowNumber')));
-      if (!seleccionado) throw new Error('No se encontró la fila recargada');
-      // 6) recargamos el formulario con los valores actualizados
+      seleccionado = clientesData.find(c=>c.rowNumber===+params.get('rowNumber'));
       cargarEdicionCliente(seleccionado);
       alert('✅ Cliente actualizado correctamente');
     })
     .catch(err => {
-      console.error('❌ fallo update →', err);
-      alert('❌ No se pudo actualizar cliente:\n' + err.message);
+      console.error(err);
+      alert('❌ No se pudo actualizar cliente:\n'+err.message);
     });
 });
 
-// 7) Guardar toda la consulta en la hoja “Consulta”
+// 7) Dinámica de tabla de medicamentos
+addMedBtn.addEventListener('click', () => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
+    <td><input type="text" class="med-dosage" placeholder="Dosis/Cant." /></td>
+    <td><button type="button" class="button-86 small btn-remove-med">−</button></td>
+  `;
+  medTableBody.appendChild(tr);
+  tr.querySelector('.btn-remove-med').addEventListener('click', () => tr.remove());
+});
+
+// 8) Guardar toda la consulta
 form.addEventListener('submit', e => {
   e.preventDefault();
+
+  // 8.1) Serializar medicamentos
+  const meds = Array.from(medTableBody.querySelectorAll('tr'))
+    .map(row => {
+      const n = row.querySelector('.med-name').value.trim();
+      const d = row.querySelector('.med-dosage').value.trim();
+      return n ? (d ? `${n} (${d})` : n) : null;
+    })
+    .filter(x=>x).join(', ');
+  hiddenMeds.value = meds;
+
+  // 8.2) Enviar
   const fd = new FormData(form);
   const consultaParams = new URLSearchParams();
-  consultaParams.append('sheet', 'Consulta');
-  consultaParams.append('nuevo', 'true');
-  fd.forEach((val,key) => consultaParams.append(key,val));
+  consultaParams.append('sheet','Consulta');
+  consultaParams.append('nuevo','true');
+  fd.forEach((val,key)=>consultaParams.append(key,val));
 
-  window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
+  window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams}`)
     .then(res => {
-      if (!res.success) throw new Error(res.error||'Error desconocido');
+      if (!res.success) throw new Error(res.error||'Error al guardar');
       alert('✅ Consulta guardada en hoja “Consulta”');
       form.reset();
       divNueva.style.display        = 'none';
@@ -155,12 +164,17 @@ form.addEventListener('submit', e => {
       seccionAvanzada.style.display = 'none';
       clienteEdicion.style.display  = 'none';
       resultadoDiv.innerHTML        = '';
-      seleccionado = null;
+      // dejar una fila vacía en la tabla
+      medTableBody.innerHTML = `<tr>
+        <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
+        <td><input type="text" class="med-dosage" placeholder="Dosis/Cant." /></td>
+        <td><button type="button" class="button-86 small" id="add-med-row">+</button></td>
+      </tr>`;
     })
     .catch(err => {
       console.error(err);
-      alert('❌ No se pudo guardar la consulta:\n' + err.message);
+      alert('❌ No se pudo guardar la consulta:\n'+err.message);
     });
 });
 
-console.log("✅ consulta.js v14 inicializado correctamente.");
+console.log("✅ consulta.js v15 inicializado correctamente.");
