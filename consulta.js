@@ -1,5 +1,5 @@
 // consulta.js (v15)
-console.log("🩺 consulta.js activo v15");
+console.log("🩺 consulta.js activo v16");
 
 // === URL de tu GAS ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbx6Up0O9--0fSItcQ83NfmTQdwHG3BWTIt3uySDfbuQ32OyDFHMvnoEkb9-l4EunRC9MQ/exec";
@@ -17,26 +17,25 @@ const btnActualizar   = document.getElementById('btn-actualizar-cliente');
 const form            = document.getElementById('form-consulta');
 
 // nodos tabla meds
-const medTableBody    = document.querySelector('#med-table tbody');
-const addMedBtn       = document.getElementById('add-med-row');
-const hiddenMeds      = document.getElementById('medicsuministrados');
+const medTableBody = document.querySelector('#med-table tbody');
+const medTotalSpan = document.getElementById('med-total');
+const hiddenMeds   = document.getElementById('medicsuministrados');
 
 let clientesData = [];    // cache de clientes
 let seleccionado  = null; // cliente seleccionado
 
 // 1) Alternar sección detallada
 btnToggle.addEventListener('click', () => {
-  const show = seccionAvanzada.style.display === 'none';
-  seccionAvanzada.style.display = show ? 'block' : 'none';
+  seccionAvanzada.style.display =
+    seccionAvanzada.style.display === 'none' ? 'block' : 'none';
 });
 
 // 2) Alternar existente / nueva
 tipoRadios.forEach(radio => {
   radio.addEventListener('change', e => {
-    const tipo = e.target.value;
-    divExistente.style.display   = (tipo === 'existente') ? 'block' : 'none';
-    divNueva.style.display        = (tipo === 'nueva')     ? 'block' : 'none';
-    clienteEdicion.style.display  = 'none';
+    divExistente.style.display  = e.target.value === 'existente' ? 'block':'none';
+    divNueva.style.display       = e.target.value === 'nueva'     ? 'block':'none';
+    clienteEdicion.style.display = 'none';
   });
 });
 
@@ -64,12 +63,12 @@ btnBuscar.addEventListener('click', () => {
        🐶 ${c["Nombre de la mascota"]} — ${c["Nombre del propietario"]}
      </li>`
   ).join('') + '</ul>';
-  resultadoDiv.querySelectorAll('li').forEach(li => {
+  resultadoDiv.querySelectorAll('li').forEach(li =>
     li.addEventListener('click', () => {
       seleccionado = matches[+li.dataset.idx];
       cargarEdicionCliente(seleccionado);
-    });
-  });
+    })
+  );
 });
 
 // 5) Cargar datos para editar
@@ -91,10 +90,11 @@ function cargarEdicionCliente(c) {
 // 6) Actualizar cliente
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-  const params = new URLSearchParams();
-  params.append('sheet','Clientes');
-  params.append('actualizar','true');
-  params.append('rowNumber', seleccionado.rowNumber);
+  const params = new URLSearchParams({
+    sheet:      'Clientes',
+    actualizar: 'true',
+    rowNumber:  seleccionado.rowNumber
+  });
   [
     'Nombre del propietario','Número de Teléfono','Correo',
     'Nombre de la mascota','Especie','Raza','Edad','Peso',
@@ -111,7 +111,7 @@ btnActualizar.addEventListener('click', () => {
     })
     .then(data => {
       clientesData = data;
-      seleccionado = clientesData.find(c=>c.rowNumber===+params.get('rowNumber'));
+      seleccionado = clientesData.find(c => c.rowNumber===+params.get('rowNumber'));
       cargarEdicionCliente(seleccionado);
       alert('✅ Cliente actualizado correctamente');
     })
@@ -121,38 +121,60 @@ btnActualizar.addEventListener('click', () => {
     });
 });
 
-// 7) Dinámica de tabla de medicamentos
-addMedBtn.addEventListener('click', () => {
+// 7) Lógica de tabla de medicamentos
+
+// recalcula total de precios
+function recalcularTotal() {
+  let total = 0;
+  medTableBody.querySelectorAll('.med-price').forEach(inp => {
+    total += parseFloat(inp.value) || 0;
+  });
+  medTotalSpan.textContent = total.toFixed(2);
+}
+
+// añade una fila nueva
+function addMedRow() {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
-    <td><input type="text" class="med-dosage" placeholder="Dosis/Cant." /></td>
-    <td><button type="button" class="button-86 small btn-remove-med">−</button></td>
-  `;
+    <td><input type="number" class="med-qty" placeholder="Cantidad" min="0" step="1" /></td>
+    <td><input type="number" class="med-price" placeholder="Precio" min="0" step="0.01" /></td>
+    <td>
+      <button type="button" class="button-86 small btn-remove-med">−</button>
+      <button type="button" class="button-86 small btn-add-med">+</button>
+    </td>`;
   medTableBody.appendChild(tr);
-  tr.querySelector('.btn-remove-med').addEventListener('click', () => tr.remove());
-});
 
-// 8) Guardar toda la consulta
+  // listeners
+  tr.querySelector('.med-price').addEventListener('input', recalcularTotal);
+  tr.querySelector('.btn-remove-med').addEventListener('click', () => {
+    tr.remove(); recalcularTotal();
+  });
+  tr.querySelector('.btn-add-med').addEventListener('click', addMedRow);
+}
+
+// engancha el +
+medTableBody.querySelector('.btn-add-med').addEventListener('click', addMedRow);
+
+// 8) Guardar consulta
 form.addEventListener('submit', e => {
   e.preventDefault();
 
-  // 8.1) Serializar medicamentos
-  const meds = Array.from(medTableBody.querySelectorAll('tr'))
-    .map(row => {
-      const n = row.querySelector('.med-name').value.trim();
-      const d = row.querySelector('.med-dosage').value.trim();
-      return n ? (d ? `${n} (${d})` : n) : null;
-    })
-    .filter(x=>x).join(', ');
-  hiddenMeds.value = meds;
+  // 8.1) serializar medicamentos + total
+  const lines = Array.from(medTableBody.querySelectorAll('tr')).map(tr => {
+    const n = tr.querySelector('.med-name').value.trim();
+    const q = tr.querySelector('.med-qty').value.trim();
+    const p = tr.querySelector('.med-price').value.trim();
+    if (!n) return null;
+    return `${n}|${q}|${p}`;
+  }).filter(x=>x);
+  const total = medTotalSpan.textContent;
+  hiddenMeds.value = lines.join(';') + `;Total:${total}`;
 
-  // 8.2) Enviar
+  // 8.2) preparar y enviar JSONP
   const fd = new FormData(form);
-  const consultaParams = new URLSearchParams();
-  consultaParams.append('sheet','Consulta');
-  consultaParams.append('nuevo','true');
-  fd.forEach((val,key)=>consultaParams.append(key,val));
+  const consultaParams = new URLSearchParams({ sheet:'Consulta', nuevo:'true' });
+  fd.forEach((v,k)=>consultaParams.append(k,v));
 
   window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams}`)
     .then(res => {
@@ -164,12 +186,17 @@ form.addEventListener('submit', e => {
       seccionAvanzada.style.display = 'none';
       clienteEdicion.style.display  = 'none';
       resultadoDiv.innerHTML        = '';
-      // dejar una fila vacía en la tabla
-      medTableBody.innerHTML = `<tr>
-        <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
-        <td><input type="text" class="med-dosage" placeholder="Dosis/Cant." /></td>
-        <td><button type="button" class="button-86 small" id="add-med-row">+</button></td>
-      </tr>`;
+      // reset meds tabla
+      medTableBody.innerHTML = `
+        <tr>
+          <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
+          <td><input type="number" class="med-qty" placeholder="Cantidad" min="0" step="1" /></td>
+          <td><input type="number" class="med-price" placeholder="Precio" min="0" step="0.01" /></td>
+          <td><button type="button" class="button-86 small btn-add-med">+</button></td>
+        </tr>`;
+      medTotalSpan.textContent = '0.00';
+      // reenganchar +
+      medTableBody.querySelector('.btn-add-med').addEventListener('click', addMedRow);
     })
     .catch(err => {
       console.error(err);
