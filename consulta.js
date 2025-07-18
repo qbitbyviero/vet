@@ -1,7 +1,7 @@
-// consulta.js (v10)
-console.log("🩺 consulta.js activo v10");
+// consulta.js (v11)
+console.log("🩺 consulta.js activo v11");
 
-// === URL de tu GAS (idéntica a la de main.js) ===
+// === URL de tu GAS (idéntica a main.js) ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
 // — nodos —
@@ -72,7 +72,6 @@ btnBuscar.addEventListener('click', () => {
 
 // 5) Cargar datos para editar
 function cargarEdicionCliente(c) {
-  console.log("🔑 Claves:", Object.keys(c)); // opcional: ver todas las propiedades
   document.getElementById('edit-ownerName').value  = c["Nombre del propietario"] || "";
   document.getElementById('edit-ownerPhone').value = c["Número de Teléfono"]    || "";
   document.getElementById('edit-ownerEmail').value = c["Correo"]                || "";
@@ -86,15 +85,19 @@ function cargarEdicionCliente(c) {
   clienteEdicion.style.display = 'block';
 }
 
-// 6) Actualizar cliente en “Clientes” usando ID fila (columna A)
+// 6) Actualizar cliente en “Clientes”
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
+
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-  // clave exacta para localizar la fila
-  params.append('ID fila',   seleccionado["ID fila"]);
-  // Campos editados (usamos el atributo `name=` del HTML)
+
+  // —— CLAVE MUY IMPORTANTE ——  
+  // Usamos rowNumber (número de fila), no el nombre de la mascota
+  params.append('rowNumber', seleccionado.rowNumber);
+
+  // Campos editados (coinciden con los name=… del HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
   params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
@@ -103,13 +106,12 @@ btnActualizar.addEventListener('click', () => {
   params.append('Raza',                    document.getElementById('edit-breed').value);
   params.append('Edad',                    document.getElementById('edit-age').value);
   params.append('Peso',                    document.getElementById('edit-weight').value);
-  params.append('esterilizado',            document.getElementById('edit-sterilized').value);
-  params.append('observaciones',           document.getElementById('edit-notes').value);
+  params.append('Esterilizado',            document.getElementById('edit-sterilized').value);
+  params.append('Observaciones',           document.getElementById('edit-notes').value);
 
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(res => {
-      console.log("🔄 update cliente →", res);
-      if (!res.success) throw new Error(res.error||'Error desconocido');
+    .then(_res => {
+      // Después de un update exitoso, recargamos el cache
       return window.loadAllClients();
     })
     .then(data => {
@@ -126,19 +128,20 @@ btnActualizar.addEventListener('click', () => {
 // 7) Guardar toda la consulta en la hoja “Consulta”
 form.addEventListener('submit', e => {
   e.preventDefault();
+
   const fd = new FormData(form);
   const consultaParams = new URLSearchParams();
   consultaParams.append('sheet', 'Consulta');
   consultaParams.append('nuevo', 'true');
-  // Añade cada par clave/valor (usa el name=… del HTML)
+
+  // Volcar todos los pares clave/valor (usa el name=… del HTML)
   fd.forEach((val,key) => consultaParams.append(key,val));
 
   window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
     .then(res => {
-      console.log("🔄 save consulta →", res);
       if (!res.success) throw new Error(res.error||'Error desconocido');
       alert('✅ Consulta guardada en hoja “Consulta”');
-      // reset de UI
+      // Reset UI
       form.reset();
       divNueva.style.display        = 'none';
       divExistente.style.display    = 'block';
@@ -153,4 +156,4 @@ form.addEventListener('submit', e => {
     });
 });
 
-console.log("✅ consulta.js v10 inicializado correctamente.");
+console.log("✅ consulta.js v11 inicializado correctamente.");
