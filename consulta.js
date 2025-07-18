@@ -2,7 +2,7 @@
 console.log("🩺 consulta.js activo v14");
 
 // === URL de tu GAS (idéntica a main.js) ===
-const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzIraMC3WCB95i1GrcuDtDD-Vvm4qfuboRTfmMctL-pyNO8weSJsYMym0rSkVU0a4vlPQ/exec";
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbx6Up0O9--0fSItcQ83NfmTQdwHG3BWTIt3uySDfbuQ32OyDFHMvnoEkb9-l4EunRC9MQ/exec";
 
 // — nodos —
 const btnToggle       = document.getElementById('toggle-avanzado');
