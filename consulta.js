@@ -1,5 +1,5 @@
-// consulta.js (v11)
-console.log("🩺 consulta.js activo v11");
+// consulta.js (v12)
+console.log("🩺 consulta.js activo v12");
 
 // === URL de tu GAS (idéntica a main.js) ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
@@ -40,6 +40,9 @@ window.loadAllClients()
   .then(data => {
     clientesData = data;
     console.log("🗄️ Clientes cargados:", data.length);
+    if (data.length) {
+      console.log("🔑 Claves disponibles:", Object.keys(data[0]));
+    }
   })
   .catch(err => console.error("Error cargando clientes:", err));
 
@@ -72,6 +75,7 @@ btnBuscar.addEventListener('click', () => {
 
 // 5) Cargar datos para editar
 function cargarEdicionCliente(c) {
+  console.log("📝 Cliente seleccionado:", c);
   document.getElementById('edit-ownerName').value  = c["Nombre del propietario"] || "";
   document.getElementById('edit-ownerPhone').value = c["Número de Teléfono"]    || "";
   document.getElementById('edit-ownerEmail').value = c["Correo"]                || "";
@@ -88,16 +92,13 @@ function cargarEdicionCliente(c) {
 // 6) Actualizar cliente en “Clientes”
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-
+  console.log("🔄 Actualizando cliente con ID:", seleccionado["cliente Id"]);
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-
-  // —— CLAVE MUY IMPORTANTE ——  
-  // Usamos rowNumber (número de fila), no el nombre de la mascota
-  params.append('rowNumber', seleccionado.rowNumber);
-
-  // Campos editados (coinciden con los name=… del HTML)
+  // —— CLAVE: usamos 'cliente Id' (columna A) ——
+  params.append('cliente Id clave', seleccionado["cliente Id"]);
+  // Campos editados (coinciden con name=… en el HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
   params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
@@ -110,10 +111,7 @@ btnActualizar.addEventListener('click', () => {
   params.append('Observaciones',           document.getElementById('edit-notes').value);
 
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(_res => {
-      // Después de un update exitoso, recargamos el cache
-      return window.loadAllClients();
-    })
+    .then(_ => window.loadAllClients())  // recargamos cache
     .then(data => {
       clientesData = data;
       clienteEdicion.style.display = 'none';
@@ -128,20 +126,16 @@ btnActualizar.addEventListener('click', () => {
 // 7) Guardar toda la consulta en la hoja “Consulta”
 form.addEventListener('submit', e => {
   e.preventDefault();
-
   const fd = new FormData(form);
   const consultaParams = new URLSearchParams();
   consultaParams.append('sheet', 'Consulta');
   consultaParams.append('nuevo', 'true');
-
-  // Volcar todos los pares clave/valor (usa el name=… del HTML)
   fd.forEach((val,key) => consultaParams.append(key,val));
 
   window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams.toString()}`)
     .then(res => {
       if (!res.success) throw new Error(res.error||'Error desconocido');
       alert('✅ Consulta guardada en hoja “Consulta”');
-      // Reset UI
       form.reset();
       divNueva.style.display        = 'none';
       divExistente.style.display    = 'block';
@@ -156,4 +150,4 @@ form.addEventListener('submit', e => {
     });
 });
 
-console.log("✅ consulta.js v11 inicializado correctamente.");
+console.log("✅ consulta.js v12 inicializado correctamente.");
