@@ -25,31 +25,49 @@
       </div>
 
       <!-- EDICIÓN DE CLIENTE (sólo existente) -->
-      <div id="cliente-edicion" style="display:none; margin-top:1em;">
-        <h4>✏️ Editar Datos del Cliente</h4>
-        <div class="grid-parejas">
-          <label>👤 Propietario:<input type="text" id="edit-ownerName" /></label>
-          <label>📞 Teléfono:<input type="tel" id="edit-ownerPhone" /></label>
-          <label>📧 Correo:<input type="email" id="edit-ownerEmail" /></label>
-          <label>🐾 Mascota:<input type="text" id="edit-petName" /></label>
-          <label>🧬 Especie:<input type="text" id="edit-species" /></label>
-          <label>🐕 Raza:<input type="text" id="edit-breed" /></label>
-          <label>🎂 Edad:<input type="number" id="edit-age" min="0" /></label>
-          <label>⚖️ Peso:<input type="number" id="edit-weight" step="0.1" /></label>
-          <label>💉 Esterilizado:
-            <select id="edit-sterilized">
-              <option value="Sí">Sí</option>
-              <option value="No">No</option>
-            </select>
-          </label>
-          <label>📝 Observaciones:<textarea id="edit-notes" rows="2"></textarea></label>
-        </div>
-        <button type="button" class="button-86" id="btn-actualizar-cliente">
-          ✏️ Actualizar Cliente
-        </button>
-      </div>
-
-      <!-- NUEVA CONSULTA (cliente+mascota) -->
+      <!-- EDICIÓN DE CLIENTE (solo existente) -->
+<div id="cliente-edicion" style="display:none; margin-top:1em;">
+  <h4>✏️ Editar Datos del Cliente</h4>
+  <div class="grid-parejas">
+    <label>👤 Propietario:
+      <input type="text" id="edit-ownerName" name="Nombre del propietario" />
+    </label>
+    <label>📞 Teléfono:
+      <input type="tel" id="edit-ownerPhone" name="Número de Teléfono" />
+    </label>
+    <label>📧 Correo:
+      <input type="email" id="edit-ownerEmail" name="Correo" />
+    </label>
+    <label>🐾 Mascota:
+      <input type="text" id="edit-petName" name="Nombre de la mascota" />
+    </label>
+    <label>🧬 Especie:
+      <input type="text" id="edit-species" name="Especie" />
+    </label>
+    <label>🐕 Raza:
+      <input type="text" id="edit-breed" name="Raza" />
+    </label>
+    <label>🎂 Edad:
+      <input type="number" id="edit-age" name="Edad" min="0" />
+    </label>
+    <label>⚖️ Peso:
+      <input type="number" id="edit-weight" name="Peso" step="0.1" />
+    </label>
+    <label>💉 Esterilizado:
+      <select id="edit-sterilized" name="esterilizado">
+        <option value="Sí">Sí</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+    <label>📝 Observaciones:
+      <textarea id="edit-notes" name="observaciones" rows="2"></textarea>
+    </label>
+  </div>
+  <button type="button" class="button-86" id="btn-actualizar-cliente">
+    ✏️ Actualizar Cliente
+  </button>
+</div>
+<!-- NUEVA CONSULTA (cliente+mascota) -->
       <div id="consulta-nueva" style="display:none; margin-top:1em;">
         <div class="grid-parejas">
           <label>👤 Propietario:<input type="text" name="Nombre del propietario" /></label>
