@@ -1,5 +1,5 @@
-// consulta.js (v10)
-console.log("🩺 consulta.js activo v13");
+// consulta.js (v14)
+console.log("🩺 consulta.js activo v14");
 
 // === URL de tu GAS (idéntica a main.js) ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
@@ -93,9 +93,9 @@ btnActualizar.addEventListener('click', () => {
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-  // —— CLAVE: rowNumber (número de fila real en la hoja) ——
-  params.append('rowNumber', seleccionado.rowNumber);
-  // Campos editados (coinciden con name=… en el HTML)
+  // —— CLAVE: use 'ID fila' para localizar la fila exacta en tu GAS ——
+  params.append('ID fila', seleccionado.rowNumber);
+  // Campos editados (coinciden con los name=… del HTML)
   params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
   params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
   params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
@@ -108,7 +108,7 @@ btnActualizar.addEventListener('click', () => {
   params.append('Observaciones',           document.getElementById('edit-notes').value);
 
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(_ => window.loadAllClients())  // recargamos cache
+    .then(_ => window.loadAllClients())  // recarga el cache tras el update
     .then(data => {
       clientesData = data;
       clienteEdicion.style.display = 'none';
@@ -147,4 +147,4 @@ form.addEventListener('submit', e => {
     });
 });
 
-console.log("✅ consulta.js v10 inicializado correctamente.");
+console.log("✅ consulta.js v14 inicializado correctamente.");
