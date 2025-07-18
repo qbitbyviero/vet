@@ -1,8 +1,8 @@
-// consulta.js (v15)
-console.log("🩺 consulta.js activo v18");
+// consulta.js v15
+console.log("🩺 consulta.js activo v19");
 
 // === URL de tu GAS ===
-const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbx6Up0O9--0fSItcQ83NfmTQdwHG3BWTIt3uySDfbuQ32OyDFHMvnoEkb9-l4EunRC9MQ/exec";
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbzb-UdlFaau_szrGZkksMaAwbufH5fIduVkCRNGnKCszSJrMJnf9LqIOhfcZtYcEG2brA/exec";
 
 // — nodos —
 const btnToggle       = document.getElementById('toggle-avanzado');
@@ -15,36 +15,102 @@ const resultadoDiv    = document.getElementById('consulta-result');
 const clienteEdicion  = document.getElementById('cliente-edicion');
 const btnActualizar   = document.getElementById('btn-actualizar-cliente');
 const form            = document.getElementById('form-consulta');
+const addMedicBtn     = document.getElementById('add-medicamento');
+const medsBody        = document.getElementById('meds-cuerpo');
+const medsTotalSpan   = document.getElementById('meds-total');
 
-// nodos tabla meds
-const medTableBody = document.querySelector('#med-table tbody');
-const medTotalSpan = document.getElementById('med-total');
-const hiddenMeds   = document.getElementById('medicsuministrados');
+// Cache y selección
+let clientesData = [];
+let seleccionado  = null;
 
-let clientesData = [];    // cache de clientes
-let seleccionado  = null; // cliente seleccionado
+// Mapa de diagramas
+const mapaDiagramas = {
+  "perro":    'svg/perro.png',
+  "canino":   'svg/perro.png',
+  "gato":     'svg/felino.svg',
+  "felino":   'svg/felino.svg',
+  "ave":      'svg/ave.png',
+  "tortuga":  'svg/tortuga.svg',
+  "serpiente":'svg/serpiente.svg',
+  "lagarto":  'svg/lagarto.png',
+  "pez":      'svg/pez.svg',
+  "roedor":   'svg/roedor.svg'
+};
 
-// 1) Alternar sección detallada
-btnToggle.addEventListener('click', () => {
-  seccionAvanzada.style.display =
-    seccionAvanzada.style.display === 'none' ? 'block' : 'none';
+// -------------------------
+// Tabla de Medicamentos
+// -------------------------
+function addMedicRow() {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="med-nombre" placeholder="Medicamento"></td>
+    <td><input type="text" class="med-cantidad" placeholder="Cantidad/Forma"></td>
+    <td><input type="number" class="med-precio" step="0.01" value="0"></td>
+    <td><button type="button" class="button-86 small remove-med">✖️</button></td>
+  `;
+  medsBody.appendChild(tr);
+  updateTotal();
+}
+
+function updateTotal() {
+  const precios = Array.from(document.querySelectorAll('.med-precio'))
+    .map(i => parseFloat(i.value) || 0);
+  const total = precios.reduce((a,b) => a + b, 0).toFixed(2);
+  medsTotalSpan.textContent = total;
+}
+
+addMedicBtn.addEventListener('click', addMedicRow);
+medsBody.addEventListener('click', e => {
+  if (e.target.matches('.remove-med')) {
+    e.target.closest('tr').remove();
+    updateTotal();
+  }
+});
+medsBody.addEventListener('input', e => {
+  if (e.target.matches('.med-precio')) updateTotal();
 });
 
-// 2) Alternar existente / nueva
+// -------------------------
+// Diagrama de Mascota
+// -------------------------
+function updateDiagrama(especie) {
+  const img = document.getElementById('diagrama-img');
+  const cont = document.getElementById('cliente-diagrama');
+  img.src = mapaDiagramas[especie.toLowerCase()] || 'svg/placeholder.png';
+  cont.style.display = 'block';
+}
+
+// -------------------------
+// Toggle Avanzado
+// -------------------------
+btnToggle.addEventListener('click', () => {
+  const show = seccionAvanzada.style.display === 'none';
+  seccionAvanzada.style.display = show ? 'block' : 'none';
+});
+
+// -------------------------
+// Alternar Existente/Nueva
+// -------------------------
 tipoRadios.forEach(radio => {
   radio.addEventListener('change', e => {
-    divExistente.style.display  = e.target.value === 'existente' ? 'block':'none';
-    divNueva.style.display       = e.target.value === 'nueva'     ? 'block':'none';
-    clienteEdicion.style.display = 'none';
+    const tipo = e.target.value;
+    divExistente.style.display   = (tipo === 'existente') ? 'block' : 'none';
+    divNueva.style.display        = (tipo === 'nueva')     ? 'block' : 'none';
+    clienteEdicion.style.display  = 'none';
+    document.getElementById('cliente-diagrama').style.display = 'none';
   });
 });
 
-// 3) Traer clientes al arrancar
+// -------------------------
+// Cargar Clientes
+// -------------------------
 window.loadAllClients()
-  .then(data => { clientesData = data; console.log("🗄️ Clientes cargados:", data.length); })
-  .catch(err => console.error("Error cargando clientes:", err));
+  .then(data => { clientesData = data; console.log('🗄️ Clientes cargados:', data.length); })
+  .catch(err => console.error('Error cargando clientes:', err));
 
-// 4) Buscar coincidencias
+// -------------------------
+// Buscar Coincidencias
+// -------------------------
 btnBuscar.addEventListener('click', () => {
   const q = document.getElementById('consulta-petName').value.trim().toLowerCase();
   if (!q) {
@@ -52,155 +118,123 @@ btnBuscar.addEventListener('click', () => {
     return;
   }
   const matches = clientesData.filter(c =>
-    (c["Nombre de la mascota"]||"").toLowerCase().includes(q)
+    (c['Nombre de la mascota']||'').toLowerCase().includes(q)
   );
   if (!matches.length) {
     resultadoDiv.innerHTML = '<span style="color:orange">🚫 No hay coincidencias</span>';
     return;
   }
   resultadoDiv.innerHTML = '<ul>' + matches.map((c,i) =>
-    `<li data-idx="${i}" class="button-86 small">
-       🐶 ${c["Nombre de la mascota"]} — ${c["Nombre del propietario"]}
-     </li>`
+    `<li data-idx="${i}" class="button-86 small">🐶 ${c['Nombre de la mascota']} — ${c['Nombre del propietario']}</li>`
   ).join('') + '</ul>';
-  resultadoDiv.querySelectorAll('li').forEach(li =>
+  resultadoDiv.querySelectorAll('li').forEach(li => {
     li.addEventListener('click', () => {
       seleccionado = matches[+li.dataset.idx];
       cargarEdicionCliente(seleccionado);
-    })
-  );
+    });
+  });
 });
 
-// 5) Cargar datos para editar
+// -------------------------
+// Cargar para Edición
+// -------------------------
 function cargarEdicionCliente(c) {
-  console.log("📝 Cliente seleccionado:", c);
-  document.getElementById('edit-ownerName').value  = c["Nombre del propietario"] || "";
-  document.getElementById('edit-ownerPhone').value = c["Número de Teléfono"]    || "";
-  document.getElementById('edit-ownerEmail').value = c["Correo"]                || "";
-  document.getElementById('edit-petName').value     = c["Nombre de la mascota"]  || "";
-  document.getElementById('edit-species').value    = c["Especie"]               || "";
-  document.getElementById('edit-breed').value      = c["Raza"]                  || "";
-  document.getElementById('edit-age').value        = c["Edad"]                  || "";
-  document.getElementById('edit-weight').value     = c["Peso"]                  || "";
-  document.getElementById('edit-sterilized').value = c["Esterilizado"]          || "Sí";
-  document.getElementById('edit-notes').value      = c["Observaciones"]         || "";
+  document.getElementById('edit-ownerName').value  = c['Nombre del propietario'] || '';
+  document.getElementById('edit-ownerPhone').value = c['Número de Teléfono']    || '';
+  document.getElementById('edit-ownerEmail').value = c['Correo']                || '';
+  document.getElementById('edit-petName').value    = c['Nombre de la mascota']  || '';
+  document.getElementById('edit-species').value    = c['Especie']               || '';
+  document.getElementById('edit-breed').value      = c['Raza']                  || '';
+  document.getElementById('edit-age').value        = c['Edad']                  || '';
+  document.getElementById('edit-weight').value     = c['Peso']                  || '';
+  document.getElementById('edit-sterilized').value = c['Esterilizado']          || 'Sí';
+  document.getElementById('edit-notes').value      = c['Observaciones']         || '';
   clienteEdicion.style.display = 'block';
+  updateDiagrama(c['Especie'] || '');
 }
 
-// 6) Actualizar cliente
+// -------------------------
+// Actualizar Cliente
+// -------------------------
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-  const params = new URLSearchParams({
-    sheet:      'Clientes',
-    actualizar: 'true',
-    rowNumber:  seleccionado.rowNumber
-  });
-  [
-    'Nombre del propietario','Número de Teléfono','Correo',
-    'Nombre de la mascota','Especie','Raza','Edad','Peso',
-    'Esterilizado','Observaciones'
-  ].forEach(col => {
+  const params = new URLSearchParams();
+  params.append('sheet', 'Clientes');
+  params.append('actualizar', 'true');
+  params.append('rowNumber', seleccionado.rowNumber);
+  ['Nombre del propietario','Número de Teléfono','Correo','Nombre de la mascota',
+   'Especie','Raza','Edad','Peso','Esterilizado','Observaciones']
+  .forEach(col => {
     const el = document.querySelector(`[name="${col}"]`);
     if (el) params.append(col, el.value);
   });
-
-  window.jsonpRequest(`${GAS_BASE_URL}?${params}`)
+  window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
     .then(res => {
       if (!res.success) throw new Error(res.error||'Error al actualizar');
       return window.loadAllClients();
     })
     .then(data => {
       clientesData = data;
-      seleccionado = clientesData.find(c => c.rowNumber===+params.get('rowNumber'));
-      cargarEdicionCliente(seleccionado);
+      seleccionado = clientesData.find(c => c.rowNumber === Number(params.get('rowNumber')));
+      if (seleccionado) cargarEdicionCliente(seleccionado);
       alert('✅ Cliente actualizado correctamente');
     })
     .catch(err => {
       console.error(err);
-      alert('❌ No se pudo actualizar cliente:\n'+err.message);
+      alert('❌ No se pudo actualizar cliente:\n' + err.message);
     });
 });
 
-// 7) Lógica de tabla de medicamentos
-
-// recalcula total de precios
-function recalcularTotal() {
-  let total = 0;
-  medTableBody.querySelectorAll('.med-price').forEach(inp => {
-    total += parseFloat(inp.value) || 0;
-  });
-  medTotalSpan.textContent = total.toFixed(2);
-}
-
-// añade una fila nueva
-function addMedRow() {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
-    <td><input type="number" class="med-qty" placeholder="Cantidad" min="0" step="1" /></td>
-    <td><input type="number" class="med-price" placeholder="Precio" min="0" step="0.01" /></td>
-    <td>
-      <button type="button" class="button-86 small btn-remove-med">−</button>
-      <button type="button" class="button-86 small btn-add-med">+</button>
-    </td>`;
-  medTableBody.appendChild(tr);
-
-  // listeners
-  tr.querySelector('.med-price').addEventListener('input', recalcularTotal);
-  tr.querySelector('.btn-remove-med').addEventListener('click', () => {
-    tr.remove(); recalcularTotal();
-  });
-  tr.querySelector('.btn-add-med').addEventListener('click', addMedRow);
-}
-
-// engancha el +
-medTableBody.querySelector('.btn-add-med').addEventListener('click', addMedRow);
-
-// 8) Guardar consulta
+// -------------------------
+// Guardar Consulta
+// -------------------------
 form.addEventListener('submit', e => {
   e.preventDefault();
-
-  // 8.1) serializar medicamentos + total
-  const lines = Array.from(medTableBody.querySelectorAll('tr')).map(tr => {
-    const n = tr.querySelector('.med-name').value.trim();
-    const q = tr.querySelector('.med-qty').value.trim();
-    const p = tr.querySelector('.med-price').value.trim();
-    if (!n) return null;
-    return `${n}|${q}|${p}`;
+  const params = new URLSearchParams();
+  params.append('sheet', 'Consulta');
+  params.append('nuevo', 'true');
+  // tipo
+  params.append('consultaType', document.querySelector('input[name="consultaType"]:checked').value);
+  // campos básicos y detallados
+  ['Nombre del propietario','Número de Teléfono','Correo','Nombre de la mascota',
+   'Especie','Raza','Edad','Peso','Esterilizado','Observaciones',
+   'motivoConsulta','historialMedico','vacunacion','desparasitacion','alimentacion','estadoCorporal']
+  .forEach(key => {
+    const el = document.querySelector(`[name="${key}"]`);
+    params.append(key, el ? el.value : '');
+  });
+  // medicamentos
+  const medsArr = Array.from(document.querySelectorAll('.med-nombre')).map((input,i) => {
+    const nom = input.value.trim();
+    const cant = document.querySelectorAll('.med-cantidad')[i].value.trim();
+    return nom + (cant ? ` (${cant})` : '');
   }).filter(x=>x);
-  const total = medTotalSpan.textContent;
-  hiddenMeds.value = lines.join(';') + `;Total:${total}`;
+  params.append('medicsuministrados', medsArr.join(', '));
+  // indicaciones
+  params.append('indicaciones', document.getElementById('indicaciones').value.trim());
 
-  // 8.2) preparar y enviar JSONP
-  const fd = new FormData(form);
-  const consultaParams = new URLSearchParams({ sheet:'Consulta', nuevo:'true' });
-  fd.forEach((v,k)=>consultaParams.append(k,v));
-
-  window.jsonpRequest(`${GAS_BASE_URL}?${consultaParams}`)
+  window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
     .then(res => {
-      if (!res.success) throw new Error(res.error||'Error al guardar');
+      if (!res.success) throw new Error(res.error||'');
       alert('✅ Consulta guardada en hoja “Consulta”');
       form.reset();
-      divNueva.style.display        = 'none';
-      divExistente.style.display    = 'block';
-      seccionAvanzada.style.display = 'none';
-      clienteEdicion.style.display  = 'none';
-      resultadoDiv.innerHTML        = '';
-      // reset meds tabla
-      medTableBody.innerHTML = `
-        <tr>
-          <td><input type="text" class="med-name" placeholder="Medicamento" /></td>
-          <td><input type="number" class="med-qty" placeholder="Cantidad" min="0" step="1" /></td>
-          <td><input type="number" class="med-price" placeholder="Precio" min="0" step="0.01" /></td>
-          <td><button type="button" class="button-86 small btn-add-med">+</button></td>
-        </tr>`;
-      medTotalSpan.textContent = '0.00';
-      // reenganchar +
-      medTableBody.querySelector('.btn-add-med').addEventListener('click', addMedRow);
+      divNueva.style.display       = 'none';
+      divExistente.style.display   = 'block';
+      seccionAvanzada.style.display= 'none';
+      clienteEdicion.style.display = 'none';
+      document.getElementById('cliente-diagrama').style.display = 'none';
+      resultadoDiv.innerHTML       = '';
+      medsBody.innerHTML = '';
+      updateTotal();
+      // Abrir receta con parámetros
+      window.open(
+        `Receta.html?meds=${encodeURIComponent(medsArr.join(', '))}` +
+        `&inds=${encodeURIComponent(document.getElementById('indicaciones').value.trim())}`
+      );
     })
     .catch(err => {
       console.error(err);
-      alert('❌ No se pudo guardar la consulta:\n'+err.message);
+      alert('❌ No se pudo guardar la consulta:\n' + err.message);
     });
 });
 
