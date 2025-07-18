@@ -89,33 +89,49 @@ function cargarEdicionCliente(c) {
 // 6) Actualizar cliente en “Clientes”
 btnActualizar.addEventListener('click', () => {
   if (!seleccionado) return;
-  console.log("🔄 Actualizando fila:", seleccionado.rowNumber);
+
+  // 1) Preparamos params con rowNumber
   const params = new URLSearchParams();
   params.append('sheet',      'Clientes');
   params.append('actualizar', 'true');
-  // —— CLAVE: use 'ID fila' para localizar la fila exacta en tu GAS ——
-  params.append('ID fila', seleccionado.rowNumber);
-  // Campos editados (coinciden con los name=… del HTML)
-  params.append('Nombre del propietario', document.getElementById('edit-ownerName').value);
-  params.append('Número de Teléfono',      document.getElementById('edit-ownerPhone').value);
-  params.append('Correo',                  document.getElementById('edit-ownerEmail').value);
-  params.append('Nombre de la mascota',    document.getElementById('edit-petName').value);
-  params.append('Especie',                 document.getElementById('edit-species').value);
-  params.append('Raza',                    document.getElementById('edit-breed').value);
-  params.append('Edad',                    document.getElementById('edit-age').value);
-  params.append('Peso',                    document.getElementById('edit-weight').value);
-  params.append('Esterilizado',            document.getElementById('edit-sterilized').value);
-  params.append('Observaciones',           document.getElementById('edit-notes').value);
+  params.append('rowNumber',  seleccionado.rowNumber);
 
+  // 2) Agregamos TODOS los campos editables tal y como definiste name="…"
+  [
+    'Nombre del propietario',
+    'Número de Teléfono',
+    'Correo',
+    'Nombre de la mascota',
+    'Especie',
+    'Raza',
+    'Edad',
+    'Peso',
+    'Esterilizado',
+    'Observaciones'
+  ].forEach(col => {
+    const el = document.querySelector(`[name="${col}"]`);
+    if (el) params.append(col, el.value);
+  });
+
+  // 3) Lanzamos JSONP y comprobamos res.success
   window.jsonpRequest(`${GAS_BASE_URL}?${params.toString()}`)
-    .then(_ => window.loadAllClients())  // recarga el cache tras el update
+    .then(res => {
+      console.log('🔄 respuesta update →', res);
+      if (!res.success) throw new Error(res.error||'Error desconocido al actualizar');
+      // 4) recargamos cache
+      return window.loadAllClients();
+    })
     .then(data => {
       clientesData = data;
-      clienteEdicion.style.display = 'none';
+      // 5) localizar la fila nuevamente en el nuevo cache
+      seleccionado = clientesData.find(c => c.rowNumber === Number(params.get('rowNumber')));
+      if (!seleccionado) throw new Error('No se encontró la fila recargada');
+      // 6) recargamos el formulario con los valores actualizados
+      cargarEdicionCliente(seleccionado);
       alert('✅ Cliente actualizado correctamente');
     })
     .catch(err => {
-      console.error(err);
+      console.error('❌ fallo update →', err);
       alert('❌ No se pudo actualizar cliente:\n' + err.message);
     });
 });
