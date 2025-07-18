@@ -1,6 +1,6 @@
 <!-- consulta.html -->
 <div class="modal-consulta">
-  <h2>Consulta Veterinaria 🩺 v8</h2>
+  <h2>Consulta Veterinaria 🩺 v9</h2>
 
   <form id="form-consulta">
     <!-- TIPO DE CONSULTA -->
@@ -52,13 +52,13 @@
             <input type="number" id="edit-weight" name="Peso" step="0.1" />
           </label>
           <label>💉 Esterilizado:
-            <select id="edit-sterilized" name="esterilizado">
+            <select id="edit-sterilized" name="Esterilizado">
               <option value="Sí">Sí</option>
               <option value="No">No</option>
             </select>
           </label>
           <label>📝 Observaciones:
-            <textarea id="edit-notes" name="observaciones" rows="2"></textarea>
+            <textarea id="edit-notes" name="Observaciones" rows="2"></textarea>
           </label>
         </div>
         <button type="button" class="button-86" id="btn-actualizar-cliente">
@@ -94,13 +94,13 @@
             <input type="number" name="Peso" step="0.1" />
           </label>
           <label>💉 Esterilizado:
-            <select name="esterilizado">
+            <select name="Esterilizado">
               <option>Sí</option>
               <option>No</option>
             </select>
           </label>
           <label>📝 Observaciones:
-            <textarea name="observaciones" rows="2"></textarea>
+            <textarea name="Observaciones" rows="2"></textarea>
           </label>
         </div>
       </div>
@@ -136,8 +136,37 @@
       </fieldset>
     </div>
 
+    <!-- MEDICAMENTOS SUMINISTRADOS -->
+    <fieldset style="margin-top:1em;">
+      <legend class="fieldset-titulo">💊 Medicamentos Suministrados</legend>
+      <table id="med-table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Medicamento</th>
+            <th style="text-align:left;">Dosis/Cantidad</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="text" class="med-name" placeholder="Ej. Vacuna antirrábica" /></td>
+            <td><input type="text" class="med-dosage" placeholder="0.5 ml" /></td>
+            <td><button type="button" class="button-86 small" id="add-med-row">+</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- hidden para serializar al enviar -->
+      <input type="hidden" name="medicsuministrados" id="medicsuministrados" />
+    </fieldset>
+
+    <!-- INDICACIONES -->
+    <fieldset style="margin-top:1em;">
+      <legend class="fieldset-titulo">📝 Indicaciones</legend>
+      <textarea name="indicaciones" id="indicaciones" rows="3" style="width:100%;"></textarea>
+    </fieldset>
+
     <!-- GUARDAR CONSULTA -->
-    <button type="submit" class="button-86">💾 Guardar Consulta</button>
+    <button type="submit" class="button-86" style="margin-top:1em;">💾 Guardar Consulta</button>
   </form>
 </div>
 
@@ -156,7 +185,7 @@
     border-radius: 6px;
     font-weight: bold;
     font-size: 1.1em;
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
   }
   .grid-parejas {
     display: grid;
@@ -169,18 +198,15 @@
     font-size: 0.95em;
     font-weight: bold;
   }
+  table#med-table th, table#med-table td {
+    border-bottom: 1px solid #ccc;
+    padding: 0.3em;
+  }
   textarea, input, select {
     padding: 0.4em;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 0.95em;
-  }
-  fieldset {
-    border: 1px solid #90caf9;
-    border-radius: 10px;
-    padding: 1em;
-    margin-bottom: 1.5em;
-    background-color: #f1f8ff;
   }
   .button-86 {
     background: #0288d1;
@@ -189,11 +215,10 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin-top: 1em;
   }
   .button-86.small {
     font-size: 0.8em;
-    padding: 0.4em 0.8em;
+    padding: 0.3em 0.6em;
   }
   .button-86:hover {
     background: #0277bd;
