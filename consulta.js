@@ -1,5 +1,5 @@
 // consulta.js (v15)
-console.log("🩺 consulta.js activo v17");
+console.log("🩺 consulta.js activo v18");
 
 // === URL de tu GAS ===
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbx6Up0O9--0fSItcQ83NfmTQdwHG3BWTIt3uySDfbuQ32OyDFHMvnoEkb9-l4EunRC9MQ/exec";
